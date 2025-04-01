@@ -247,7 +247,13 @@ var facetHandler = function (e) {
     e.preventDefault();
     $(this).toggleClass("menu-open");
     $(".menu-collapse").toggle();
+    setAriaExpandable(e);
 };
+
+function setAriaExpandable(e) {
+    let currentValue = $(e.target).attr("aria-expanded");
+    $(e.target).attr("aria-expanded", currentValue === "false");
+}
 
 function setPlaceholder() {
     let search_placeholder = $("#masthead_search option:selected").data(

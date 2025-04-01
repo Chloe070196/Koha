@@ -240,4 +240,21 @@ $(document).ready(function () {
         KOHA.Tags.add_tag_button(thisid, tag);
         return false;
     });
+    $(window).on("resize load", function () {
+        $(".menu-collapse-toggle").each(function () {
+            const beforeContent = window.getComputedStyle(
+                this,
+                "::before"
+            ).content;
+            if (beforeContent === "none") {
+                $(this).removeAttr("aria-expanded");
+                return;
+            }
+            if ($(".menu-collapse").is(":visible")) {
+                $(this).attr("aria-expanded", "true");
+                return;
+            }
+            $(this).attr("aria-expanded", "false");
+        });
+    });
 });
