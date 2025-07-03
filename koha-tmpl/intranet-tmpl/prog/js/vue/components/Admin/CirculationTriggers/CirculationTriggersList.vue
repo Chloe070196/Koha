@@ -2,7 +2,7 @@
     <Toolbar>
         <ToolbarButton
             :to="{
-                name: 'CirculationTriggersFormAdd',
+                name: 'CirculationTriggersFormConfirmContext',
                 query: {
                     library_id: selectedLibrary,
                     patron_category_id: selectedCategory,
@@ -340,17 +340,29 @@ export default {
             const library_id = this.selectedLibrary ?? "*";
             const patron_category_id = this.selectedCategory ?? "*";
             const item_type_id = this.selectedItemType ?? "*";
-            const displayAllApplicableRules =
-                this.displayAllApplicableRules ?? 1;
 
             const client = APIClient.circRule;
 
             // FIXME: update getAll so that it may retrieve all rows matching a WHERE col_name IN [...array of values] conditions
-            await client.circRules.getAll({}, { effective: false }).then(
+            // TODO: use the API as much as possible
+            const params = {};
+            params.effective = this.displayAllApplicableRules;
+            if (library_id) {
+                params.library_id = library_id;
+            }
+            if (item_type_id) {
+                params.item_type_id = item_type_id;
+            }
+            if (patron_category_id) {
+                params.patron_category_id = patron_category_id;
+            }
+
+            await client.circRules.getAll({}, params).then(
                 rules => {
                     const { numberOfTabs, rulesPerTrigger: circRules } =
                         this.splitCircRulesByTriggerNumber(rules);
                     this.numberOfTabs = numberOfTabs;
+                    this.circRules = circRules;
 
                     // TODO: implement the following to rule display
                     //Rules are applied from most specific to less specific, using the first found in this order:
@@ -364,64 +376,64 @@ export default {
                     //      default (all libraries), all patron categories, all item types
                     //      The system is currently set to match based on the cron
 
-                    if (displayAllApplicableRules == 0) {
-                        this.circRules = circRules.filter(
-                            circRule =>
-                                circRule.context.library_id === library_id &&
-                                circRule.context.patron_category_id ===
-                                    patron_category_id &&
-                                circRule.context.item_type_id === item_type_id
-                        );
-                    }
+                    // if (displayAllApplicableRules == 0) {
+                    //     this.circRules = circRules.filter(
+                    //         circRule =>
+                    //             circRule.context.library_id === library_id &&
+                    //             circRule.context.patron_category_id ===
+                    //                 patron_category_id &&
+                    //             circRule.context.item_type_id === item_type_id
+                    //     );
+                    // }
 
-                    if (displayAllApplicableRules == 1) {
-                        if (library_id !== "*") {
-                            this.circRules = circRules.filter(
-                                circRule =>
-                                    (circRule.context.library_id ===
-                                        library_id ||
-                                        circRule.context.library_id === "*") &&
-                                    circRule.context.patron_category_id ===
-                                        "*" &&
-                                    circRule.context.item_type_id === "*"
-                            );
-                            return;
-                        }
+                    // if (displayAllApplicableRules == 1) {
+                    //     if (library_id !== "*") {
+                    //         this.circRules = circRules.filter(
+                    //             circRule =>
+                    //                 (circRule.context.library_id ===
+                    //                     library_id ||
+                    //                     circRule.context.library_id === "*") &&
+                    //                 circRule.context.patron_category_id ===
+                    //                     "*" &&
+                    //                 circRule.context.item_type_id === "*"
+                    //         );
+                    //         return;
+                    //     }
 
-                        if (patron_category_id !== "*") {
-                            this.circRules = circRules.filter(
-                                circRule =>
-                                    (circRule.context.patron_category_id ===
-                                        patron_category_id ||
-                                        circRule.context.patron_category_id ===
-                                            "*") &&
-                                    circRule.context.library_id === "*" &&
-                                    circRule.context.item_type_id === "*"
-                            );
-                            return;
-                        }
-                        if (item_type_id !== "*") {
-                            this.circRules = circRules.filter(
-                                circRule =>
-                                    (circRule.context.item_type_id ===
-                                        item_type_id ||
-                                        circRule.context.item_type_id ===
-                                            "*") &&
-                                    circRule.context.library_id === "*" &&
-                                    circRule.context.patron_category_id === "*"
-                            );
-                            return;
-                        }
+                    //     if (patron_category_id !== "*") {
+                    //         this.circRules = circRules.filter(
+                    //             circRule =>
+                    //                 (circRule.context.patron_category_id ===
+                    //                     patron_category_id ||
+                    //                     circRule.context.patron_category_id ===
+                    //                         "*") &&
+                    //                 circRule.context.library_id === "*" &&
+                    //                 circRule.context.item_type_id === "*"
+                    //         );
+                    //         return;
+                    //     }
+                    //     if (item_type_id !== "*") {
+                    //         this.circRules = circRules.filter(
+                    //             circRule =>
+                    //                 (circRule.context.item_type_id ===
+                    //                     item_type_id ||
+                    //                     circRule.context.item_type_id ===
+                    //                         "*") &&
+                    //                 circRule.context.library_id === "*" &&
+                    //                 circRule.context.patron_category_id === "*"
+                    //         );
+                    //         return;
+                    //     }
 
-                        // default view
-                        this.circRules = circRules.filter(
-                            circRule =>
-                                circRule.context.library_id === library_id &&
-                                circRule.context.patron_category_id ===
-                                    patron_category_id &&
-                                circRule.context.item_type_id === item_type_id
-                        );
-                    }
+                    //     // default view
+                    //     this.circRules = circRules.filter(
+                    //         circRule =>
+                    //             circRule.context.library_id === library_id &&
+                    //             circRule.context.patron_category_id ===
+                    //                 patron_category_id &&
+                    //             circRule.context.item_type_id === item_type_id
+                    //     );
+                    // }
                 },
                 error => {}
             );

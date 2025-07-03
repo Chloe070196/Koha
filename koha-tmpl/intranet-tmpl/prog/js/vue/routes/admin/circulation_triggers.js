@@ -22,6 +22,26 @@ export default {
                     title: $__("Home"),
                     children: [
                         {
+                            path: "confirmContext",
+                            name: "CirculationTriggersFormConfirmContext",
+                            component: markRaw(CirculationTriggersFormAdd),
+                            title: $__("Confirm trigger context"),
+                            meta: {
+                                showModal: true,
+                            },
+                        },
+                        {
+                            path: "selectTriggerOrAdd",
+                            name: "CirculationTriggersSelectTriggerOrAdd",
+                            component: markRaw(CirculationTriggersFormAdd),
+                            title: $__(
+                                "Select a trigger to edit or select add"
+                            ),
+                            meta: {
+                                showModal: true,
+                            },
+                        },
+                        {
                             path: "add",
                             name: "CirculationTriggersFormAdd",
                             component: markRaw(CirculationTriggersFormAdd),
