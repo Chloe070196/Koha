@@ -90,7 +90,10 @@
             </p>
         </div>
         <div class="page-section" v-if="initialized">
-            <legend>Filter by context</legend>
+            <legend>
+                Filter by
+                <span style="color: blue; font-weight: bold">context</span>
+            </legend>
             <table>
                 <thead>
                     <tr>
@@ -163,13 +166,23 @@
             </table>
             <div class="toggle-view-all-applicable-wrapper">
                 <label for="filter-rules">{{ $__("Display ") }}</label>
-                <select id="filter-rules">
-                    <option>
-                        all rules that apply to this context, including
-                        defaults.
-                    </option>
-                    <option>only rules specific to this context.</option>
-                </select>
+                <v-select
+                    id="filter-rules"
+                    v-model="displayAllApplicableRules"
+                    :reduce="opt => opt.value"
+                    :options="[
+                        {
+                            value: 0,
+                            label: 'only rules defined specifically for this context.',
+                        },
+                        {
+                            value: 1,
+                            label: 'all rules that apply to this context, including defaults.',
+                        },
+                    ]"
+                    @update:modelValue="getCircRules()"
+                >
+                </v-select>
             </div>
         </div>
     </div>
@@ -262,6 +275,7 @@ export default {
             tabSelected: "Notice 1",
             showModal: false,
             lostValues: [],
+            displayAllApplicableRules: 1,
         };
     },
     beforeRouteEnter(to, from, next) {
@@ -326,6 +340,8 @@ export default {
             const library_id = this.selectedLibrary ?? "*";
             const patron_category_id = this.selectedCategory ?? "*";
             const item_type_id = this.selectedItemType ?? "*";
+            const displayAllApplicableRules =
+                this.displayAllApplicableRules ?? 1;
 
             const client = APIClient.circRule;
 
@@ -335,13 +351,77 @@ export default {
                     const { numberOfTabs, rulesPerTrigger: circRules } =
                         this.splitCircRulesByTriggerNumber(rules);
                     this.numberOfTabs = numberOfTabs;
-                    this.circRules = circRules.filter(
-                        circRule =>
-                            circRule.context.library_id === library_id &&
-                            circRule.context.patron_category_id ===
-                                patron_category_id &&
-                            circRule.context.item_type_id === item_type_id
-                    );
+
+                    // TODO: implement the following to rule display
+                    //Rules are applied from most specific to less specific, using the first found in this order:
+                    //      same library, same patron category, same item type
+                    //      same library, same patron category, all item types
+                    //      same library, all patron categories, same item type
+                    //      same library, all patron categories, all item types
+                    //      default (all libraries), same patron category, same item type
+                    //      default (all libraries), same patron category, all item types
+                    //      default (all libraries), all patron categories, same item type
+                    //      default (all libraries), all patron categories, all item types
+                    //      The system is currently set to match based on the cron
+
+                    if (displayAllApplicableRules == 0) {
+                        this.circRules = circRules.filter(
+                            circRule =>
+                                circRule.context.library_id === library_id &&
+                                circRule.context.patron_category_id ===
+                                    patron_category_id &&
+                                circRule.context.item_type_id === item_type_id
+                        );
+                    }
+
+                    if (displayAllApplicableRules == 1) {
+                        if (library_id !== "*") {
+                            this.circRules = circRules.filter(
+                                circRule =>
+                                    (circRule.context.library_id ===
+                                        library_id ||
+                                        circRule.context.library_id === "*") &&
+                                    circRule.context.patron_category_id ===
+                                        "*" &&
+                                    circRule.context.item_type_id === "*"
+                            );
+                            return;
+                        }
+
+                        if (patron_category_id !== "*") {
+                            this.circRules = circRules.filter(
+                                circRule =>
+                                    (circRule.context.patron_category_id ===
+                                        patron_category_id ||
+                                        circRule.context.patron_category_id ===
+                                            "*") &&
+                                    circRule.context.library_id === "*" &&
+                                    circRule.context.item_type_id === "*"
+                            );
+                            return;
+                        }
+                        if (item_type_id !== "*") {
+                            this.circRules = circRules.filter(
+                                circRule =>
+                                    (circRule.context.item_type_id ===
+                                        item_type_id ||
+                                        circRule.context.item_type_id ===
+                                            "*") &&
+                                    circRule.context.library_id === "*" &&
+                                    circRule.context.patron_category_id === "*"
+                            );
+                            return;
+                        }
+
+                        // default view
+                        this.circRules = circRules.filter(
+                            circRule =>
+                                circRule.context.library_id === library_id &&
+                                circRule.context.patron_category_id ===
+                                    patron_category_id &&
+                                circRule.context.item_type_id === item_type_id
+                        );
+                    }
                 },
                 error => {}
             );
