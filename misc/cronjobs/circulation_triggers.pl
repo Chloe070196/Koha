@@ -9,15 +9,12 @@
 # TODO: set and test sys prefs, amend accordingly
 # TODO: add test for Koha::Checkouts->filter_by_overdue()
 # DONE: modernized GetOverduesBy() to use filter_by_overdue() with SQL::Abstract syntax
-# TODO: address the following questions:
-#           - do we need a 'nomail' option ?
-#           - how much logging to we want to do throughout the script?
-#           - should account for 'DefaultLongOverduePatronCategories';
+# TODO: output everything to a file instead of the message queue - effectively works like a dryrun if combined --test in overdue_notices.pl -> we need a --dryrun flag
+# TODO: upgrade to UI later
+# TODO: address the following questions
+#           - should account for 'DefaultLongOverduePatronCategories';?
 #           - should update and then use LostItem()? (+update tests)
 #           - should account for WhenLostChargeReplacementFee ?
-#           - should refactor Koha::Checkouts::GetOverduesBy() ?
-#           - should give the option to request CSV output?
-#           - should be a system preference? or another circ rule?
 
 # Copyright 2008 Liblime
 # Copyright 2010 BibLibre
@@ -48,8 +45,9 @@ use DateTime::Duration;
 use Koha::Script -cron;
 use C4::Context;
 use C4::Letters;
-use C4::Overdues             qw( parse_overdues_letter );
-use C4::Log                  qw( cronlogaction );
+use C4::Overdues qw( parse_overdues_letter );
+use C4::Log      qw( cronlogaction );
+use Koha::Logger;
 use Koha::Patron::Debarments qw( AddUniqueDebarment );
 use Koha::DateUtils          qw( dt_from_string output_pref );
 use Koha::Calendar;
@@ -130,12 +128,14 @@ foreach my $branchcode (@overduebranches) {
         C4::Context->preference('AddressForFailedOverdueNotices') || $library->inbound_email_address;
 
     for my $borrower_category (@categories) {
-        my $overdue_checkouts = Koha::Checkouts->filter_by_overdue({
-            item_homebranch => $branchcode,
-            patron_categorycode => $borrower_category,
-            include_lost => 0,
-            require_notice => 1
-        });
+        my $overdue_checkouts = Koha::Checkouts->filter_by_overdue(
+            {
+                item_homebranch     => $branchcode,
+                patron_categorycode => $borrower_category,
+                include_lost        => 0,
+                require_notice      => 1
+            }
+        );
 
         my @overdues = map { $_->unblessed_all_relateds } $overdue_checkouts->as_list;
 
@@ -374,7 +374,7 @@ sub _get_charge_cost_rule {
 #         return $restrict;
 #     }
 #     # TODO:check if sys pref or other to serve as default?
-#     # TODO:if not, simplifyhttps://docs.google.com/document/d/1Vo7HdbloAz8kDcgwNIRYnMsLAvrT9Ehe93SSxi1mxpU/edit?tab=t.0
+#     # TODO:if not, simplify
 #     return undef;
 # }
 
