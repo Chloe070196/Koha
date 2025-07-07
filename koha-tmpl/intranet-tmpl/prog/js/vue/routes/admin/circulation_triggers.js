@@ -31,8 +31,8 @@ export default {
                             },
                         },
                         {
-                            path: "selectTriggerOrAdd",
-                            name: "CirculationTriggersSelectTriggerOrAdd",
+                            path: "selectOrAdd",
+                            name: "CirculationTriggersSelectOrAdd",
                             component: markRaw(CirculationTriggersFormAdd),
                             title: $__(
                                 "Select a trigger to edit or select add"

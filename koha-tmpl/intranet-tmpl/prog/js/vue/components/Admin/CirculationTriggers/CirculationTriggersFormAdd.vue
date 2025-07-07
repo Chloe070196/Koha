@@ -33,11 +33,7 @@
                                 :reduce="lib => lib.library_id"
                                 :options="libraries"
                                 @update:modelValue="handleContextChange($event)"
-                                :disabled="
-                                    !this.$route.path.includes(
-                                        '/confirmContext'
-                                    )
-                                "
+                                :disabled="editMode !== 'confirmContext'"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -61,11 +57,7 @@
                                 :reduce="cat => cat.patron_category_id"
                                 :options="categories"
                                 @update:modelValue="handleContextChange($event)"
-                                :disabled="
-                                    !this.$route.path.includes(
-                                        '/confirmContext'
-                                    )
-                                "
+                                :disabled="editMode !== 'confirmContext'"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -89,11 +81,7 @@
                                 :reduce="type => type.item_type_id"
                                 :options="itemTypes"
                                 @update:modelValue="handleContextChange($event)"
-                                :disabled="
-                                    !this.$route.path.includes(
-                                        '/confirmContext'
-                                    )
-                                "
+                                :disabled="editMode !== 'confirmContext'"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -107,16 +95,15 @@
                             <span class="required">{{ $__("Required") }}</span>
                         </li>
                     </ol>
-                    <div v-if="this.$route.path.includes('/confirmContext')">
+                    <div v-if="editMode === 'confirmContext'">
                         <router-link
                             :to="{
-                                name: 'CirculationTriggersSelectTriggerOrAdd',
+                                name: 'CirculationTriggersSelectOrAdd',
                                 query: {
                                     library_id: newRule.library_id,
                                     item_type_id: newRule.item_type_id,
                                     patron_category_id:
                                         newRule.patron_category_id,
-                                    triggerNumber: numberOfTriggers + 1,
                                 },
                             }"
                             class="btn btn-default btn-xs"
@@ -126,10 +113,7 @@
                     </div>
                     <div
                         class="page-section bg-warning-subtle"
-                        v-if="
-                            circRules.length &&
-                            !this.$route.path.includes('/confirmContext')
-                        "
+                        v-if="circRules.length && editMode !== 'confirmContext'"
                     >
                         <TriggersTable
                             :circRules="circRules"
@@ -145,7 +129,7 @@
 
                 <fieldset
                     class="rows"
-                    v-if="this.$route.path.includes('/edit')"
+                    v-if="editMode === 'edit' || editMode === 'add'"
                 >
                     <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
                         {{ $__("Add new trigger") }}
@@ -355,7 +339,7 @@
 
                 <fieldset
                     class="rows"
-                    v-if="this.$route.path.includes('/edit')"
+                    v-if="editMode === 'edit' || editMode === 'add'"
                 >
                     <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
                         {{ $__("Notice for trigger") }}
@@ -680,12 +664,14 @@ export default {
         },
         async checkForExistingRules(routeParams) {
             // We always pass library_id so we need to check for the existence of either item type or patron category
-            // FIXME: Why not base this off of the path instead?
-            const editMode = routeParams && routeParams.triggerNumber;
-            if (editMode) {
-                this.editMode = editMode;
+            this.editMode = this.$route.path.substring(
+                this.$route.path.lastIndexOf("/") + 1
+            );
+
+            if (this.editMode === "edit") {
                 this.triggerBeingEdited = routeParams.triggerNumber;
             }
+
             const library_id =
                 routeParams && routeParams.library_id
                     ? routeParams.library_id
@@ -717,9 +703,10 @@ export default {
                     const splitRules = this.filterCircRulesByContext(
                         this.ruleBeingEdited
                     );
-                    this.newTriggerNumber = editMode
-                        ? routeParams.triggerNumber
-                        : numberOfTriggers + 1;
+                    this.newTriggerNumber =
+                        this.editMode === "edit"
+                            ? routeParams.triggerNumber
+                            : numberOfTriggers + 1;
                     this.assignTriggerValues(
                         splitRules,
                         this.newTriggerNumber,

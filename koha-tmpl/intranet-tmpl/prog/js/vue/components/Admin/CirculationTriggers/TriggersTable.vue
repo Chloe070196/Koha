@@ -367,7 +367,7 @@
                     <td class="actions">
                         <router-link
                             :to="{
-                                name: 'CirculationTriggersFormEdit',
+                                name: 'CirculationTriggersFormAdd',
                                 query: {
                                     library_id:
                                         ruleBeingEdited.context.library_id,
