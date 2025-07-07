@@ -760,6 +760,9 @@ export default {
                         [`overdue_${i}_notice`]: null,
                         [`overdue_${i}_mtt`]: null,
                         [`overdue_${i}_restrict`]: null,
+                        [`overdue_${i}_set_lost`]: null,
+                        [`overdue_${i}_charge_cost`]: null,
+                        [`overdue_${i}_mark_as_returned`]: null,
                     };
 
                     // Add the new rule to contextRules
@@ -864,6 +867,21 @@ export default {
                           `overdue_${triggerNumber}_restrict`
                       ]
                     : null,
+                set_lost: rules[triggerNumber - 1]
+                    ? rules[triggerNumber - 1][
+                          `overdue_${triggerNumber}_set_lost`
+                      ]
+                    : null,
+                charge_cost: rules[triggerNumber - 1]
+                    ? rules[triggerNumber - 1][
+                          `overdue_${triggerNumber}_charge_cost`
+                      ]
+                    : null,
+                mark_as_returned: rules[triggerNumber - 1]
+                    ? rules[triggerNumber - 1][
+                          `overdue_${triggerNumber}_mark_as_returned`
+                      ]
+                    : null,
             };
             this.fallbackRule = {
                 delay: this.findFallbackRule(
@@ -881,6 +899,18 @@ export default {
                 restrict: this.findFallbackRule(
                     context,
                     `overdue_${triggerNumber}_restrict`
+                ),
+                restrict: this.findFallbackRule(
+                    context,
+                    `overdue_${triggerNumber}_set_lost`
+                ),
+                restrict: this.findFallbackRule(
+                    context,
+                    `overdue_${triggerNumber}_charge_cost`
+                ),
+                restrict: this.findFallbackRule(
+                    context,
+                    `overdue_${triggerNumber}_mark_as_returned`
                 ),
             };
         },
