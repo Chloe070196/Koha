@@ -511,6 +511,9 @@ export default {
                 notice: null,
                 mtt: null,
                 restrict: null,
+                set_lost: null,
+                charge_cost: null,
+                mark_as_returned: null,
             },
             fallbackRule: {
                 item_type_id: "*",
@@ -573,7 +576,7 @@ export default {
             };
 
             // this.checkForExistingRules will reset this.newRule - prevent this from affecting submission
-            // const ruleForSubmission = this.newRule
+            const ruleToSubmit = cloneDeep(this.newRule);
 
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
@@ -602,6 +605,7 @@ export default {
                         this.editMode === "edit"
                             ? routeParams.triggerNumber
                             : numberOfTriggers + 1;
+                    // update the form so that up-to-date trigger data is displayed
                     this.assignTriggerValues(
                         splitRules,
                         this.newTriggerNumber,
@@ -613,8 +617,10 @@ export default {
                                 this.ruleBeingEdited.context.patron_category_id,
                         }
                     );
+                    // prepare the alert message
                     this.alertMessage =
                         "Your changes could not be saved as this circulation trigger was updated elsewhere. Please see the updated trigger below.";
+                    // reload the form components that have changed, remain in edit mode
                     this.$router.push({
                         path: "/cgi-bin/koha/admin/circulation_triggers/edit",
                         query: {
@@ -630,20 +636,20 @@ export default {
                 context,
             };
             circRule[`overdue_${this.newTriggerNumber}_delay`] =
-                this.newRule.delay;
+                ruleToSubmit.delay;
             circRule[`overdue_${this.newTriggerNumber}_notice`] =
-                this.newRule.notice;
+                ruleToSubmit.notice;
             circRule[`overdue_${this.newTriggerNumber}_restrict`] =
-                this.newRule.restrict;
+                ruleToSubmit.restrict;
             circRule[`overdue_${this.newTriggerNumber}_set_lost`] =
-                this.newRule.set_lost;
+                ruleToSubmit.set_lost;
             circRule[`overdue_${this.newTriggerNumber}_charge_cost`] =
-                this.newRule.charge_cost;
+                ruleToSubmit.charge_cost;
             circRule[`overdue_${this.newTriggerNumber}_mark_as_returned`] =
-                this.newRule.mark_as_returned;
+                ruleToSubmit.mark_as_returned;
             circRule[`overdue_${this.newTriggerNumber}_mtt`] =
-                this.newRule.mtt && this.newRule.mtt.length
-                    ? this.newRule.mtt.join(",")
+                ruleToSubmit.mtt && ruleToSubmit.mtt.length
+                    ? ruleToSubmit.mtt.join(",")
                     : null;
 
             const client = APIClient.circRule;
