@@ -343,9 +343,7 @@
                     </td>
 
                     <td class="actions">
-                        {{ displayActions ? "" : $__("Read only") }}
                         <router-link
-                            v-if="displayActions"
                             :to="{
                                 name: 'CirculationTriggersFormEdit',
                                 query: {
@@ -405,7 +403,6 @@ export default {
         "libraries",
         "letters",
         "lostValues",
-        "displayActions",
     ],
     data() {
         return {
