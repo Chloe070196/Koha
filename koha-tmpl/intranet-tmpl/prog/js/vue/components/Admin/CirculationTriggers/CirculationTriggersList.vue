@@ -173,11 +173,11 @@
                     :options="[
                         {
                             value: 0,
-                            label: 'only rules defined specifically for this context.',
+                            label: 'defaults and overrides.',
                         },
                         {
                             value: 1,
-                            label: 'all rules that apply to this context, including defaults.',
+                            label: 'all patron categories and items types.',
                         },
                     ]"
                     @update:modelValue="getCircRules()"
@@ -228,7 +228,6 @@
                         :libraries="libraries"
                         :letters="letters"
                         :lostValues="this.lostValues"
-                        :displayActions="this.displayAllApplicableRules === 0"
                     />
                 </div>
             </template>
@@ -251,6 +250,7 @@ import { APIClient } from "../../../fetch/api-client.js";
 import TriggersTable from "./TriggersTable.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
+import { cloneDeep } from "lodash";
 
 export default {
     setup() {
@@ -269,8 +269,8 @@ export default {
             initialized: false,
             libraries: null,
             selectedLibrary: default_view,
-            selectedCategory: "*",
-            selectedItemType: "*",
+            selectedCategory: null,
+            selectedItemType: null,
             circRules: null,
             numberOfTabs: [1],
             tabSelected: "Notice 1",
@@ -338,106 +338,161 @@ export default {
             );
         },
         async getCircRules() {
-            const library_id = this.selectedLibrary ?? "*";
-            const patron_category_id = this.selectedCategory ?? "*";
-            const item_type_id = this.selectedItemType ?? "*";
-
             const client = APIClient.circRule;
 
-            // FIXME: update getAll so that it may retrieve all rows matching a WHERE col_name IN [...array of values] conditions
-            // TODO: use the API as much as possible
-            const params = {};
-            params.effective = this.displayAllApplicableRules;
-            if (library_id) {
-                params.library_id = library_id;
+            const selectedParams = {};
+            selectedParams.effective = this.displayAllApplicableRules;
+            if (this.selectedLibrary) {
+                selectedParams.library_id = this.selectedLibrary;
             }
-            if (item_type_id) {
-                params.item_type_id = item_type_id;
+            if (this.selectedCategory) {
+                selectedParams.patron_category_id = this.selectedCategory;
             }
-            if (patron_category_id) {
-                params.patron_category_id = patron_category_id;
+            if (this.selectedItemType) {
+                selectedParams.item_type_id = this.selectedItemType;
             }
 
-            await client.circRules.getAll({}, params).then(
-                rules => {
-                    const { numberOfTabs, rulesPerTrigger: circRules } =
-                        this.splitCircRulesByTriggerNumber(rules);
-                    this.numberOfTabs = numberOfTabs;
-                    this.circRules = circRules;
+            let rules;
 
-                    // TODO: implement the following to rule display
-                    //Rules are applied from most specific to less specific, using the first found in this order:
-                    //      same library, same patron category, same item type
-                    //      same library, same patron category, all item types
-                    //      same library, all patron categories, same item type
-                    //      same library, all patron categories, all item types
-                    //      default (all libraries), same patron category, same item type
-                    //      default (all libraries), same patron category, all item types
-                    //      default (all libraries), all patron categories, same item type
-                    //      default (all libraries), all patron categories, all item types
-                    //      The system is currently set to match based on the cron
+            try {
+                rules = await client.circRules.getAll({}, selectedParams);
+            } catch (e) {
+                throw e;
+            }
 
-                    // if (displayAllApplicableRules == 0) {
-                    //     this.circRules = circRules.filter(
-                    //         circRule =>
-                    //             circRule.context.library_id === library_id &&
-                    //             circRule.context.patron_category_id ===
-                    //                 patron_category_id &&
-                    //             circRule.context.item_type_id === item_type_id
-                    //     );
-                    // }
+            // generate a list of rule that is exhaustive (every single context combination listed)
+            let ruleList = [];
+            if (this.displayAllApplicableRules) {
+                ruleList = await this.getExhaustiveRuleList(
+                    rules,
+                    selectedParams
+                );
+            }
 
-                    // if (displayAllApplicableRules == 1) {
-                    //     if (library_id !== "*") {
-                    //         this.circRules = circRules.filter(
-                    //             circRule =>
-                    //                 (circRule.context.library_id ===
-                    //                     library_id ||
-                    //                     circRule.context.library_id === "*") &&
-                    //                 circRule.context.patron_category_id ===
-                    //                     "*" &&
-                    //                 circRule.context.item_type_id === "*"
-                    //         );
-                    //         return;
-                    //     }
+            const { numberOfTabs, rulesPerTrigger: circRules } =
+                this.splitCircRulesByTriggerNumber(
+                    this.displayAllApplicableRules ? ruleList : rules
+                );
+            this.numberOfTabs = numberOfTabs;
+            this.circRules = circRules;
+        },
+        // runs the generateExahustiveContextRuleList for the most specific context for which rules are found
+        async getExhaustiveRuleList(rules, selectedParams) {
+            const params = {
+                library_id: selectedParams.library_id ?? "*",
+                patron_category_id: selectedParams.patron_category_id ?? "*",
+                item_type_id: selectedParams.item_type_id ?? "*",
+            };
 
-                    //     if (patron_category_id !== "*") {
-                    //         this.circRules = circRules.filter(
-                    //             circRule =>
-                    //                 (circRule.context.patron_category_id ===
-                    //                     patron_category_id ||
-                    //                     circRule.context.patron_category_id ===
-                    //                         "*") &&
-                    //                 circRule.context.library_id === "*" &&
-                    //                 circRule.context.item_type_id === "*"
-                    //         );
-                    //         return;
-                    //     }
-                    //     if (item_type_id !== "*") {
-                    //         this.circRules = circRules.filter(
-                    //             circRule =>
-                    //                 (circRule.context.item_type_id ===
-                    //                     item_type_id ||
-                    //                     circRule.context.item_type_id ===
-                    //                         "*") &&
-                    //                 circRule.context.library_id === "*" &&
-                    //                 circRule.context.patron_category_id === "*"
-                    //         );
-                    //         return;
-                    //     }
+            if (rules.length !== 0) {
+                return this.generateExahustiveContextRuleList(rules, params);
+            }
 
-                    //     // default view
-                    //     this.circRules = circRules.filter(
-                    //         circRule =>
-                    //             circRule.context.library_id === library_id &&
-                    //             circRule.context.patron_category_id ===
-                    //                 patron_category_id &&
-                    //             circRule.context.item_type_id === item_type_id
-                    //     );
-                    // }
-                },
-                error => {}
+            delete selectedParams.item_type_id;
+
+            let defaultItemTypeRules;
+            try {
+                defaultItemTypeRules = await client.circRules.getAll(
+                    {},
+                    selectedParams
+                );
+            } catch (e) {
+                throw e;
+            }
+
+            if (rules.length !== 0) {
+                return this.generateExahustiveContextRuleList(
+                    defaultItemTypeRules,
+                    params
+                );
+            }
+
+            delete selectedParams.patron_category_id;
+
+            let defaultItemTypeAndPatronCategroyRules;
+            try {
+                defaultItemTypeAndPatronCategroyRules =
+                    await client.circRules.getAll({}, selectedParams);
+            } catch (e) {
+                throw e;
+            }
+
+            return this.generateExahustiveContextRuleList(
+                defaultItemTypeAndPatronCategroyRules,
+                params
             );
+        },
+        // takes in a set of defaults and generate an exhaustive list of all contexts these may apply to, narrowed down by library
+        // "placeholder" rules are only generated for contexts that no rule is found to match
+        generateExahustiveContextRuleList(rules, params) {
+            const ruleList = [];
+            rules.forEach(rule => {
+                const currentRule = cloneDeep(rule);
+                if (
+                    params.patron_category_id === "*" &&
+                    params.item_type_id === "*"
+                ) {
+                    this.patronCategories.forEach(category => {
+                        this.itemTypes.forEach(itemType => {
+                            if (
+                                !rules.find(
+                                    rule =>
+                                        rule.context.patron_category_id ===
+                                        category.patron_category_id
+                                ) &&
+                                !rules.find(
+                                    rule =>
+                                        rule.context.item_type_id ===
+                                        category.item_type_id
+                                )
+                            ) {
+                                const ruleGeneratedFromDefault =
+                                    cloneDeep(currentRule);
+                                ruleGeneratedFromDefault.context.patron_category_id =
+                                    category.patron_category_id;
+                                ruleGeneratedFromDefault.context.item_type_id =
+                                    itemType.item_type_id;
+                                ruleList.push(ruleGeneratedFromDefault);
+                            }
+                        });
+                    });
+                } else if (params.patron_category_id === "*") {
+                    this.patronCategories.forEach(category => {
+                        if (
+                            !rules.find(
+                                rule =>
+                                    rule.context.patron_category_id ===
+                                    category.patron_category_id
+                            )
+                        ) {
+                            const ruleGeneratedFromDefault =
+                                cloneDeep(currentRule);
+                            ruleGeneratedFromDefault.context.patron_category_id =
+                                category.patron_category_id;
+                            ruleList.push(ruleGeneratedFromDefault);
+                        }
+                    });
+                } else if (params.item_type_id === "*") {
+                    this.itemTypes.forEach(itemType => {
+                        if (
+                            !rules.find(
+                                rule =>
+                                    rule.context.item_type_id ===
+                                    itemType.item_type_id
+                            )
+                        ) {
+                            const ruleGeneratedFromDefault =
+                                cloneDeep(currentRule);
+                            ruleGeneratedFromDefault.context.item_type_id =
+                                itemType.item_type_id;
+                            ruleList.push(ruleGeneratedFromDefault);
+                        }
+                    });
+                } else {
+                    ruleList.push(currentRule);
+                }
+            });
+            return ruleList;
         },
         async getLostValues() {
             const client = APIClient.authorised_values;
