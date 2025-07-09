@@ -3,6 +3,7 @@ import { $__ } from "../../i18n";
 
 import CirculationTriggersList from "../../components/Admin/CirculationTriggers/CirculationTriggersList.vue";
 import CirculationTriggersFormAdd from "../../components/Admin/CirculationTriggers/CirculationTriggersFormAdd.vue";
+import CirculationTriggersFormConfirmDelete from "../../components/Admin/CirculationTriggers/CirculationTriggersFormConfirmDelete.vue";
 
 export default {
     title: $__("Administration"),
@@ -54,6 +55,17 @@ export default {
                             path: "edit",
                             name: "CirculationTriggersFormEdit",
                             component: markRaw(CirculationTriggersFormAdd),
+                            title: $__("Edit trigger"),
+                            meta: {
+                                showModal: true,
+                            },
+                        },
+                        {
+                            path: "delete",
+                            name: "CirculationTriggersFormConfirmDelete",
+                            component: markRaw(
+                                CirculationTriggersFormConfirmDelete
+                            ),
                             title: $__("Edit trigger"),
                             meta: {
                                 showModal: true,
