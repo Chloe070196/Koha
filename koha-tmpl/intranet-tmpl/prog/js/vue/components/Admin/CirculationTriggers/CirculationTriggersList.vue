@@ -228,6 +228,7 @@
                         :libraries="libraries"
                         :letters="letters"
                         :lostValues="this.lostValues"
+                        :displayActions="this.displayAllApplicableRules === 0"
                     />
                 </div>
             </template>
