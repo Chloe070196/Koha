@@ -238,7 +238,7 @@
     </div>
     <div v-if="showModal" class="modal" role="dialog">
         <div
-            class="modal-dialog modal-dialog-centered modal-lg"
+            class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
             role="document"
         >
             <router-view></router-view>
@@ -564,8 +564,10 @@ export default {
     height: 100%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
 }
-.modal-dialog {
-    overflow: auto;
-    height: 90%;
+.modal-dialog,
+.modal-dialog-centered,
+.modal-lg {
+    max-width: 90%;
+    width: fit-content;
 }
 </style>
