@@ -344,7 +344,7 @@ export default {
             const client = APIClient.circRule;
 
             const selectedParams = {};
-            selectedParams.effective = this.displayAllApplicableRules;
+            selectedParams.effective = false;
             if (this.selectedLibrary) {
                 selectedParams.library_id = this.selectedLibrary;
             }
