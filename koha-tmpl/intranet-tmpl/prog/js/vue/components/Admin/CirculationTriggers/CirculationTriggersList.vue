@@ -363,10 +363,11 @@ export default {
                 throw e;
             }
 
-            // generate a list of rule that is exhaustive (every single context combination listed)
             let ruleList = [];
+
             if (this.displayAllApplicableRules) {
-                ruleList = await this.getExhaustiveRuleList(
+                ruleList = await this.getExhaustiveRuleSetList(
+                    client,
                     rules,
                     selectedParams
                 );
@@ -379,127 +380,171 @@ export default {
             this.numberOfTabs = numberOfTabs;
             this.circRules = circRules;
         },
-        // runs the generateExahustiveContextRuleList for the most specific context for which rules are found
-        async getExhaustiveRuleList(rules, selectedParams) {
-            const params = {
-                library_id: selectedParams.library_id ?? "*",
-                patron_category_id: selectedParams.patron_category_id ?? "*",
-                item_type_id: selectedParams.item_type_id ?? "*",
-            };
+        async getExhaustiveRuleSetList(client, ruleSets, selectedParams) {
+            const currentParams = cloneDeep(selectedParams);
 
-            if (rules.length !== 0) {
-                return this.generateExahustiveContextRuleList(rules, params);
-            }
-
-            delete selectedParams.item_type_id;
-
-            let defaultItemTypeRules;
-            try {
-                defaultItemTypeRules = await client.circRules.getAll(
-                    {},
+            if (ruleSets.length !== 0) {
+                return this.generateExahustiveContextRuleList(
+                    ruleSets,
                     selectedParams
                 );
+            }
+
+            currentParams.item_type_id = "*";
+            let defaultItemTypeRuleSets;
+            try {
+                defaultItemTypeRuleSets = await client.circRules.getAll(
+                    {},
+                    currentParams
+                );
             } catch (e) {
                 throw e;
             }
-
-            if (rules.length !== 0) {
+            if (defaultItemTypeRuleSets.length !== 0) {
                 return this.generateExahustiveContextRuleList(
-                    defaultItemTypeRules,
-                    params
+                    defaultItemTypeRuleSets,
+                    selectedParams
                 );
             }
 
-            delete selectedParams.patron_category_id;
-
-            let defaultItemTypeAndPatronCategroyRules;
+            currentParams.patron_category_id = "*";
+            let defaultItemTypeAndPatronCategroyRuleSets;
             try {
-                defaultItemTypeAndPatronCategroyRules =
-                    await client.circRules.getAll({}, selectedParams);
+                defaultItemTypeAndPatronCategroyRuleSets =
+                    await client.circRules.getAll({}, currentParams);
             } catch (e) {
                 throw e;
             }
-
             return this.generateExahustiveContextRuleList(
-                defaultItemTypeAndPatronCategroyRules,
-                params
+                defaultItemTypeAndPatronCategroyRuleSets,
+                selectedParams
             );
         },
-        // takes in a set of defaults and generate an exhaustive list of all contexts these may apply to, narrowed down by library
+        // takes in a ruleSet and generate an exhaustive list of all contexts these may apply to, narrowed down by library
         // "placeholder" rules are only generated for contexts that no rule is found to match
-        generateExahustiveContextRuleList(rules, params) {
-            const ruleList = [];
-            rules.forEach(rule => {
-                const currentRule = cloneDeep(rule);
-                if (
-                    params.patron_category_id === "*" &&
-                    params.item_type_id === "*"
-                ) {
-                    this.patronCategories.forEach(category => {
-                        this.itemTypes.forEach(itemType => {
-                            if (
-                                !rules.find(
-                                    rule =>
-                                        rule.context.patron_category_id ===
-                                        category.patron_category_id
-                                ) &&
-                                !rules.find(
-                                    rule =>
-                                        rule.context.item_type_id ===
-                                        category.item_type_id
-                                )
-                            ) {
-                                const ruleGeneratedFromDefault =
-                                    cloneDeep(currentRule);
-                                ruleGeneratedFromDefault.context.patron_category_id =
-                                    category.patron_category_id;
-                                ruleGeneratedFromDefault.context.item_type_id =
-                                    itemType.item_type_id;
-                                ruleList.push(ruleGeneratedFromDefault);
-                            } else {
-                                ruleList.push(currentRule);
-                            }
-                        });
-                    });
-                } else if (params.patron_category_id === "*") {
-                    this.patronCategories.forEach(category => {
-                        if (
-                            !rules.find(
-                                rule =>
-                                    rule.context.patron_category_id ===
-                                    category.patron_category_id
-                            )
-                        ) {
-                            const ruleGeneratedFromDefault =
-                                cloneDeep(currentRule);
-                            ruleGeneratedFromDefault.context.patron_category_id =
-                                category.patron_category_id;
-                            ruleList.push(ruleGeneratedFromDefault);
-                        } else {
-                            ruleList.push(currentRule);
-                        }
-                    });
-                } else if (params.item_type_id === "*") {
+        // TODO: refactor for readability
+        generateExahustiveContextRuleList(ruleSets, params) {
+            const ruleSetList = [];
+            if (
+                !params.patron_category_id ||
+                (params.patron_category_id === "*" && !params.item_type_id) ||
+                params.item_type_id === "*"
+            ) {
+                this.patronCategories.forEach(category => {
+                    const matchingPatronCategoryRuleSet = cloneDeep(
+                        ruleSets.find(
+                            ruleSet =>
+                                ruleSet.context.patron_category_id ===
+                                category.patron_category_id
+                        )
+                    );
+                    const currentCategory = cloneDeep(category);
                     this.itemTypes.forEach(itemType => {
-                        if (
-                            !rules.find(
-                                rule =>
-                                    rule.context.item_type_id ===
-                                    itemType.item_type_id
+                        const currentItemType = cloneDeep(itemType);
+                        const matchingItemTypeRuleSet = cloneDeep(
+                            ruleSets.find(
+                                ruleSet =>
+                                    ruleSet.context.item_type_id ===
+                                    currentItemType.item_type_id
                             )
-                        ) {
-                            const ruleGeneratedFromDefault =
-                                cloneDeep(currentRule);
-                            ruleGeneratedFromDefault.context.item_type_id =
-                                itemType.item_type_id;
-                            ruleList.push(ruleGeneratedFromDefault);
-                        } else {
-                            ruleList.push(currentRule);
+                        );
+
+                        const matchingItemTypeAndPatronCategoryRuleSet =
+                            cloneDeep(
+                                ruleSets.find(
+                                    ruleSet =>
+                                        ruleSet.context.item_type_id ===
+                                            currentItemType.item_type_id &&
+                                        ruleSet.context.patron_category_id ===
+                                            currentItemType.patron_category_id
+                                )
+                            );
+
+                        if (matchingItemTypeAndPatronCategoryRuleSet) {
+                            ruleSetList.push(
+                                matchingItemTypeAndPatronCategoryRuleSet
+                            );
+                            return;
+                        }
+
+                        if (matchingItemTypeRuleSet) {
+                            matchingItemTypeRuleSet.context.patron_category_id =
+                                currentCategory.patron_category_id;
+                            ruleSetList.push(matchingItemTypeRuleSet);
+                            return;
+                        }
+
+                        if (matchingPatronCategoryRuleSet) {
+                            matchingPatronCategoryRuleSet.context.item_type_id =
+                                currentItemType.item_type_id;
+                            ruleSetList.push(matchingPatronCategoryRuleSet);
+                            return;
+                        }
+
+                        const ruleSetGeneratedFromDefault = cloneDeep(
+                            ruleSets.find(
+                                ruleSet =>
+                                    ruleSet.context.item_type_id == "*" &&
+                                    ruleSet.context.patron_category_id == "*"
+                            )
+                        );
+                        if (ruleSetGeneratedFromDefault) {
+                            ruleSetGeneratedFromDefault.context.patron_category_id =
+                                currentCategory.patron_category_id;
+                            ruleSetGeneratedFromDefault.context.item_type_id =
+                                currentItemType.item_type_id;
+                            ruleSetList.push(ruleSetGeneratedFromDefault);
                         }
                     });
-                }
-            });
-            return ruleList;
+                });
+            } else if (
+                !params.patron_category_id ||
+                params.patron_category_id === "*"
+            ) {
+                this.patronCategories.forEach(category => {
+                    const matchingRuleSet = ruleSets.find(
+                        ruleSet =>
+                            ruleSet.context.patron_category_id ===
+                            category.patron_category_id
+                    );
+
+                    if (matchingRuleSet) {
+                        ruleSetList.push(matchingRuleSet);
+                        return;
+                    }
+
+                    const ruleSetGeneratedFromDefault = cloneDeep(
+                        ruleSets.find(
+                            ruleSet => ruleSet.context.patron_category_id == "*"
+                        )
+                    );
+                    ruleSetGeneratedFromDefault.context.patron_category_id =
+                        category.patron_category_id;
+                    ruleSetList.push(ruleSetGeneratedFromDefault);
+                });
+            } else if (!params.item_type_id || params.item_type_id === "*") {
+                this.itemTypes.forEach(itemType => {
+                    const matchingRuleSet = ruleSets.find(
+                        ruleSet =>
+                            ruleSet.context.item_type_id ===
+                            itemType.item_type_id
+                    );
+
+                    if (matchingRuleSet) {
+                        ruleSetList.push(matchingRuleSet);
+                        return;
+                    }
+                    const ruleSetGeneratedFromDefault = cloneDeep(
+                        ruleSets.find(
+                            ruleSet => ruleSet.context.item_type_id == "*"
+                        )
+                    );
+                    ruleSetGeneratedFromDefault.context.item_type_id =
+                        itemType.item_type_id;
+                    ruleSetList.push(ruleSetGeneratedFromDefault);
+                });
+            }
+            return ruleSetList;
         },
         async getLostValues() {
             const client = APIClient.authorised_values;
