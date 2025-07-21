@@ -112,6 +112,7 @@
                                 :reduce="lib => lib.library_id"
                                 :options="libraries"
                                 @update:modelValue="getCircRules()"
+                                placeholder="any"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -131,6 +132,7 @@
                                 :reduce="cat => cat.patron_category_id"
                                 :options="patronCategories"
                                 @update:modelValue="getCircRules()"
+                                placeholder="any"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -150,6 +152,7 @@
                                 :reduce="itype => itype.item_type_id"
                                 :options="itemTypes"
                                 @update:modelValue="getCircRules()"
+                                placeholder="any"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
