@@ -456,6 +456,8 @@ export default {
                                 ruleGeneratedFromDefault.context.item_type_id =
                                     itemType.item_type_id;
                                 ruleList.push(ruleGeneratedFromDefault);
+                            } else {
+                                ruleList.push(currentRule);
                             }
                         });
                     });
@@ -473,6 +475,8 @@ export default {
                             ruleGeneratedFromDefault.context.patron_category_id =
                                 category.patron_category_id;
                             ruleList.push(ruleGeneratedFromDefault);
+                        } else {
+                            ruleList.push(currentRule);
                         }
                     });
                 } else if (params.item_type_id === "*") {
@@ -489,10 +493,10 @@ export default {
                             ruleGeneratedFromDefault.context.item_type_id =
                                 itemType.item_type_id;
                             ruleList.push(ruleGeneratedFromDefault);
+                        } else {
+                            ruleList.push(currentRule);
                         }
                     });
-                } else {
-                    ruleList.push(currentRule);
                 }
             });
             return ruleList;
