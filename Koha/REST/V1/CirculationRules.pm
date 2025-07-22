@@ -280,6 +280,31 @@ sub set_rules {
     }
 }
 
+=head3 delete_rules
+
+Delete rules for the given patron/item/branch combination
+
+=cut
+
+# TODO: flesh this out so it is ready for use, include error handling
+sub delete_rules {
+    my $c = shift->openapi->valid_input or return;
+
+    return try {
+        my $body = $c->req->json;
+
+        my $item_type       = $body->{context}->{item_type_id};
+        my $branchcode      = $body->{context}->{library_id};
+        my $patron_category = $body->{context}->{patron_category_id};
+        my $rule_set        = $body->{rule_set};
+
+        my $result = Koha::CirculationRules->delete($rule_set);
+
+        return $c->render( status => 200 );
+    }
+
+}
+
 =head3 _all_kinds
 
 Utility function to get a list of all valid rule kinds including those that are repeatable
