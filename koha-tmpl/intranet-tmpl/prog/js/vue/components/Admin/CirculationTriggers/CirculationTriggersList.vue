@@ -545,6 +545,16 @@ export default {
                         currentItemType.item_type_id;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
+            } else {
+                ruleSetList.push(
+                    ruleSets.find(
+                        ruleSet =>
+                            ruleSet.context.item_type_id ===
+                                params.item_type_id &&
+                            ruleSet.context.patron_category_id ===
+                                params.patron_category_id
+                    )
+                );
             }
             return ruleSetList;
         },
