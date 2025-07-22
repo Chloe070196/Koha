@@ -434,20 +434,6 @@ export default {
                     this.itemTypes.forEach(itemType => {
                         const currentCategory = cloneDeep(category);
                         const currentItemType = cloneDeep(itemType);
-                        const matchingPatronCategoryRuleSet = cloneDeep(
-                            ruleSets.find(
-                                ruleSet =>
-                                    ruleSet.context.patron_category_id ===
-                                    category.patron_category_id
-                            )
-                        );
-                        const matchingItemTypeRuleSet = cloneDeep(
-                            ruleSets.find(
-                                ruleSet =>
-                                    ruleSet.context.item_type_id ===
-                                    currentItemType.item_type_id
-                            )
-                        );
 
                         const matchingItemTypeAndPatronCategoryRuleSet =
                             cloneDeep(
@@ -456,7 +442,7 @@ export default {
                                         ruleSet.context.item_type_id ===
                                             currentItemType.item_type_id &&
                                         ruleSet.context.patron_category_id ===
-                                            currentItemType.patron_category_id
+                                            currentCategory.patron_category_id
                                 )
                             );
 
@@ -467,6 +453,13 @@ export default {
                             return;
                         }
 
+                        const matchingItemTypeRuleSet = cloneDeep(
+                            ruleSets.find(
+                                ruleSet =>
+                                    ruleSet.context.item_type_id ===
+                                    currentItemType.item_type_id
+                            )
+                        );
                         if (matchingItemTypeRuleSet) {
                             matchingItemTypeRuleSet.context.patron_category_id =
                                 currentCategory.patron_category_id;
@@ -474,6 +467,13 @@ export default {
                             return;
                         }
 
+                        const matchingPatronCategoryRuleSet = cloneDeep(
+                            ruleSets.find(
+                                ruleSet =>
+                                    ruleSet.context.patron_category_id ===
+                                    currentCategory.patron_category_id
+                            )
+                        );
                         if (matchingPatronCategoryRuleSet) {
                             matchingPatronCategoryRuleSet.context.item_type_id =
                                 currentItemType.item_type_id;
@@ -546,7 +546,7 @@ export default {
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
             } else {
-                ruleSetList.push(
+                const matchingItemTypeAndPatronCategoryRuleSet = cloneDeep(
                     ruleSets.find(
                         ruleSet =>
                             ruleSet.context.item_type_id ===
@@ -555,6 +555,52 @@ export default {
                                 params.patron_category_id
                     )
                 );
+                if (matchingItemTypeAndPatronCategoryRuleSet) {
+                    ruleSetList.push(matchingItemTypeAndPatronCategoryRuleSet);
+                    return ruleSetList;
+                }
+
+                const matchingItemTypeRuleSet = cloneDeep(
+                    ruleSets.find(
+                        ruleSet =>
+                            ruleSet.context.item_type_id === params.item_type_id
+                    )
+                );
+                if (matchingItemTypeRuleSet) {
+                    matchingItemTypeRuleSet.context.patron_category_id =
+                        params.patron_category_id;
+                    ruleSetList.push(matchingItemTypeRuleSet);
+                    return ruleSetList;
+                }
+
+                const matchingPatronCategoryRuleSet = cloneDeep(
+                    ruleSets.find(
+                        ruleSet =>
+                            ruleSet.context.patron_category_id ===
+                            params.patron_category_id
+                    )
+                );
+                if (matchingPatronCategoryRuleSet) {
+                    matchingPatronCategoryRuleSet.context.item_type_id =
+                        params.item_type_id;
+                    ruleSetList.push(matchingPatronCategoryRuleSet);
+                    return ruleSetList;
+                }
+
+                const ruleSetGeneratedFromDefault = cloneDeep(
+                    ruleSets.find(
+                        ruleSet =>
+                            ruleSet.context.item_type_id == "*" &&
+                            ruleSet.context.patron_category_id == "*"
+                    )
+                );
+                if (ruleSetGeneratedFromDefault) {
+                    ruleSetGeneratedFromDefault.context.patron_category_id =
+                        params.patron_category_id;
+                    ruleSetGeneratedFromDefault.context.item_type_id =
+                        params.item_type_id;
+                    ruleSetList.push(ruleSetGeneratedFromDefault);
+                }
             }
             return ruleSetList;
         },
