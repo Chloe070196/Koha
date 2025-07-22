@@ -112,7 +112,7 @@
                                 :reduce="lib => lib.library_id"
                                 :options="libraries"
                                 @update:modelValue="getCircRules()"
-                                placeholder="any"
+                                placeholder="Default rules for all libraries"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -425,6 +425,7 @@ export default {
         // TODO: refactor for readability
         generateExahustiveContextRuleList(ruleSets, params) {
             const ruleSetList = [];
+            // handle searches where no patron category or item type are specified
             if (
                 !params.patron_category_id ||
                 (params.patron_category_id === "*" && !params.item_type_id) ||
@@ -457,7 +458,8 @@ export default {
                             ruleSets.find(
                                 ruleSet =>
                                     ruleSet.context.item_type_id ===
-                                    currentItemType.item_type_id
+                                        currentItemType.item_type_id &&
+                                    ruleSet.context.patron_category_id === "*"
                             )
                         );
                         if (matchingItemTypeRuleSet) {
@@ -471,7 +473,8 @@ export default {
                             ruleSets.find(
                                 ruleSet =>
                                     ruleSet.context.patron_category_id ===
-                                    currentCategory.patron_category_id
+                                        currentCategory.patron_category_id &&
+                                    ruleSet.context.item_type_id === "*"
                             )
                         );
                         if (matchingPatronCategoryRuleSet) {
@@ -497,6 +500,7 @@ export default {
                         }
                     });
                 });
+                // handle searches where only the item type is specified
             } else if (
                 !params.patron_category_id ||
                 params.patron_category_id === "*"
@@ -523,6 +527,7 @@ export default {
                         currentCategory.patron_category_id;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
+                // handle searches where only the patron category is specified
             } else if (!params.item_type_id || params.item_type_id === "*") {
                 this.itemTypes.forEach(itemType => {
                     const currentItemType = cloneDeep(itemType);
@@ -545,6 +550,7 @@ export default {
                         currentItemType.item_type_id;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
+                // handle searches where both patron category and item type are specified
             } else {
                 const matchingItemTypeAndPatronCategoryRuleSet = cloneDeep(
                     ruleSets.find(
@@ -563,7 +569,9 @@ export default {
                 const matchingItemTypeRuleSet = cloneDeep(
                     ruleSets.find(
                         ruleSet =>
-                            ruleSet.context.item_type_id === params.item_type_id
+                            ruleSet.context.item_type_id ===
+                                params.item_type_id &&
+                            ruleSet.context.patron_category_id === "*"
                     )
                 );
                 if (matchingItemTypeRuleSet) {
@@ -577,7 +585,8 @@ export default {
                     ruleSets.find(
                         ruleSet =>
                             ruleSet.context.patron_category_id ===
-                            params.patron_category_id
+                                params.patron_category_id &&
+                            ruleSet.context.item_type_id === "*"
                     )
                 );
                 if (matchingPatronCategoryRuleSet) {
