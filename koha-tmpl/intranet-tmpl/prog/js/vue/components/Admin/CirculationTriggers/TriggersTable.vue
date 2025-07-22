@@ -361,6 +361,7 @@
                             {{ $__("Edit") }}</router-link
                         >
                         <router-link
+                            v-if="!rule.isGeneratedFromDefault"
                             :to="{
                                 name: 'CirculationTriggersFormConfirmDelete',
                                 query: {
@@ -371,6 +372,7 @@
                                     triggerNumber: modal
                                         ? i + 1
                                         : triggerNumber,
+                                    ruleSetForDeletion: rule,
                                 },
                             }"
                             class="btn btn-default btn-xs"
