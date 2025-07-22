@@ -390,6 +390,7 @@ export default {
                 );
             }
 
+            // no rule sets match this context, look for rule sets matching patron category only
             currentParams.item_type_id = "*";
             let defaultItemTypeRuleSets;
             try {
@@ -407,7 +408,9 @@ export default {
                 );
             }
 
+            // no rule sets match this context, look for default rules
             currentParams.patron_category_id = "*";
+            // currentParams.item_type_id = selectedParams.item_type_id
             let defaultItemTypeAndPatronCategroyRuleSets;
             try {
                 defaultItemTypeAndPatronCategroyRuleSets =
@@ -448,6 +451,7 @@ export default {
                             );
 
                         if (matchingItemTypeAndPatronCategoryRuleSet) {
+                            matchingItemTypeAndPatronCategoryRuleSet.isGeneratedFromDefault = false;
                             ruleSetList.push(
                                 matchingItemTypeAndPatronCategoryRuleSet
                             );
@@ -465,6 +469,7 @@ export default {
                         if (matchingItemTypeRuleSet) {
                             matchingItemTypeRuleSet.context.patron_category_id =
                                 currentCategory.patron_category_id;
+                            matchingItemTypeRuleSet.isGeneratedFromDefault = true;
                             ruleSetList.push(matchingItemTypeRuleSet);
                             return;
                         }
@@ -480,6 +485,7 @@ export default {
                         if (matchingPatronCategoryRuleSet) {
                             matchingPatronCategoryRuleSet.context.item_type_id =
                                 currentItemType.item_type_id;
+                            matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
                             ruleSetList.push(matchingPatronCategoryRuleSet);
                             return;
                         }
@@ -496,6 +502,7 @@ export default {
                                 currentCategory.patron_category_id;
                             ruleSetGeneratedFromDefault.context.item_type_id =
                                 currentItemType.item_type_id;
+                            ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                             ruleSetList.push(ruleSetGeneratedFromDefault);
                         }
                     });
@@ -514,6 +521,7 @@ export default {
                     );
 
                     if (matchingRuleSet) {
+                        matchingRuleSet.isGeneratedFromDefault = false;
                         ruleSetList.push(matchingRuleSet);
                         return;
                     }
@@ -525,6 +533,7 @@ export default {
                     );
                     ruleSetGeneratedFromDefault.context.patron_category_id =
                         currentCategory.patron_category_id;
+                    ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
                 // handle searches where only the patron category is specified
@@ -538,6 +547,7 @@ export default {
                     );
 
                     if (matchingRuleSet) {
+                        matchingRuleSet.isGeneratedFromDefault = false;
                         ruleSetList.push(matchingRuleSet);
                         return;
                     }
@@ -548,6 +558,7 @@ export default {
                     );
                     ruleSetGeneratedFromDefault.context.item_type_id =
                         currentItemType.item_type_id;
+                    ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
                 // handle searches where both patron category and item type are specified
@@ -562,6 +573,7 @@ export default {
                     )
                 );
                 if (matchingItemTypeAndPatronCategoryRuleSet) {
+                    matchingItemTypeAndPatronCategoryRuleSet.isGeneratedFromDefault = false;
                     ruleSetList.push(matchingItemTypeAndPatronCategoryRuleSet);
                     return ruleSetList;
                 }
@@ -577,6 +589,7 @@ export default {
                 if (matchingItemTypeRuleSet) {
                     matchingItemTypeRuleSet.context.patron_category_id =
                         params.patron_category_id;
+                    matchingItemTypeRuleSet.isGeneratedFromDefault = true;
                     ruleSetList.push(matchingItemTypeRuleSet);
                     return ruleSetList;
                 }
@@ -592,6 +605,7 @@ export default {
                 if (matchingPatronCategoryRuleSet) {
                     matchingPatronCategoryRuleSet.context.item_type_id =
                         params.item_type_id;
+                    matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
                     ruleSetList.push(matchingPatronCategoryRuleSet);
                     return ruleSetList;
                 }
@@ -608,6 +622,7 @@ export default {
                         params.patron_category_id;
                     ruleSetGeneratedFromDefault.context.item_type_id =
                         params.item_type_id;
+                    ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 }
             }

@@ -574,7 +574,10 @@ export default {
                 return { value: bestRule[key], isFallback: true };
             } else {
                 // If the current rule's value is not null, use it directly
-                return { value: ruleSet[key], isFallback: false };
+                return {
+                    value: ruleSet[key],
+                    isFallback: ruleSet.isGeneratedFromDefault,
+                };
             }
         },
     },
