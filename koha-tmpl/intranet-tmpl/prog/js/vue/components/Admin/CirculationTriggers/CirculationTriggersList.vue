@@ -431,16 +431,16 @@ export default {
                 params.item_type_id === "*"
             ) {
                 this.patronCategories.forEach(category => {
-                    const matchingPatronCategoryRuleSet = cloneDeep(
-                        ruleSets.find(
-                            ruleSet =>
-                                ruleSet.context.patron_category_id ===
-                                category.patron_category_id
-                        )
-                    );
-                    const currentCategory = cloneDeep(category);
                     this.itemTypes.forEach(itemType => {
+                        const currentCategory = cloneDeep(category);
                         const currentItemType = cloneDeep(itemType);
+                        const matchingPatronCategoryRuleSet = cloneDeep(
+                            ruleSets.find(
+                                ruleSet =>
+                                    ruleSet.context.patron_category_id ===
+                                    category.patron_category_id
+                            )
+                        );
                         const matchingItemTypeRuleSet = cloneDeep(
                             ruleSets.find(
                                 ruleSet =>
@@ -502,6 +502,7 @@ export default {
                 params.patron_category_id === "*"
             ) {
                 this.patronCategories.forEach(category => {
+                    const currentCategory = cloneDeep(category);
                     const matchingRuleSet = ruleSets.find(
                         ruleSet =>
                             ruleSet.context.patron_category_id ===
@@ -519,11 +520,12 @@ export default {
                         )
                     );
                     ruleSetGeneratedFromDefault.context.patron_category_id =
-                        category.patron_category_id;
+                        currentCategory.patron_category_id;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
             } else if (!params.item_type_id || params.item_type_id === "*") {
                 this.itemTypes.forEach(itemType => {
+                    const currentItemType = cloneDeep(itemType);
                     const matchingRuleSet = ruleSets.find(
                         ruleSet =>
                             ruleSet.context.item_type_id ===
@@ -540,7 +542,7 @@ export default {
                         )
                     );
                     ruleSetGeneratedFromDefault.context.item_type_id =
-                        itemType.item_type_id;
+                        currentItemType.item_type_id;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
             }
