@@ -537,6 +537,8 @@ export default {
                             ruleSet => ruleSet.context.patron_category_id == "*"
                         )
                     );
+                    ruleSetGeneratedFromDefault.context.item_type_id =
+                        params.item_type_id;
                     ruleSetGeneratedFromDefault.context.patron_category_id =
                         currentCategory.patron_category_id;
                     ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
@@ -564,6 +566,8 @@ export default {
                     );
                     ruleSetGeneratedFromDefault.context.item_type_id =
                         currentItemType.item_type_id;
+                    ruleSetGeneratedFromDefault.context.patron_category_id =
+                        params.patron_category_id;
                     ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
