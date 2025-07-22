@@ -224,7 +224,8 @@
                     :key="`noticeTabContent${i}`"
                 >
                     <TriggersTable
-                        :circRules="circRules"
+                        :contextSpecificCircRules="contextSpecificCircRules"
+                        :allCircRules="this.allCircRules"
                         :triggerNumber="number"
                         :categories="patronCategories"
                         :itemTypes="itemTypes"
@@ -280,6 +281,7 @@ export default {
             showModal: false,
             lostValues: [],
             displayAllApplicableRules: 1,
+            allCircRules: [],
         };
     },
     beforeRouteEnter(to, from, next) {
@@ -378,7 +380,11 @@ export default {
                     this.displayAllApplicableRules ? ruleList : rules
                 );
             this.numberOfTabs = numberOfTabs;
-            this.circRules = circRules;
+            this.contextSpecificCircRules = circRules;
+            this.allCircRules = await client.circRules.getAll(
+                {},
+                { effective: false }
+            );
         },
         async getExhaustiveRuleSetList(client, ruleSets, selectedParams) {
             const currentParams = cloneDeep(selectedParams);

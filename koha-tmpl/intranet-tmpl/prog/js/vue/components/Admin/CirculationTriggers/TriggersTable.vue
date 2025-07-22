@@ -410,7 +410,8 @@
 <script>
 export default {
     props: [
-        "circRules",
+        "contextSpecificCircRules",
+        "allCircRules",
         "triggerNumber",
         "modal",
         "ruleBeingEdited",
@@ -445,7 +446,7 @@ export default {
             const context = effectiveRule.context;
 
             // Filter rules that match the context
-            let contextRules = this.circRules.filter(rule => {
+            let contextRules = this.contextSpecificCircRules.filter(rule => {
                 return Object.keys(context).every(key => {
                     return context[key] === rule.context[key];
                 });
@@ -502,7 +503,7 @@ export default {
             return contextRules;
         },
         filterCircRulesByTabNumber(number) {
-            return this.circRules.filter(
+            return this.contextSpecificCircRules.filter(
                 rule =>
                     rule.triggerNumber === number &&
                     (rule[`overdue_${number}_delay`] ||
@@ -530,8 +531,20 @@ export default {
             // Check if the current rule's value for the key is null
             if (ruleSet[key] === null) {
                 // Filter rules to only those with non-null values for the specified key
-                const relevantRules = this.circRules.filter(
-                    rule => rule[key] !== null && rule[key] !== undefined
+                // and that are no excluded from the selected context
+                const relevantRules = this.allCircRules.filter(
+                    rule =>
+                        rule[key] !== null &&
+                        rule[key] !== undefined &&
+                        (rule.context.library_id ===
+                            ruleSet.context.library_id ||
+                            rule.context.library_id === "*") &&
+                        (rule.context.patron_category_id ===
+                            ruleSet.context.patron_category_id ||
+                            rule.context.patron_category_id === "*") &&
+                        (rule.context.item_type_id ===
+                            ruleSet.context.item_type_id ||
+                            rule.context.item_type_id === "*")
                 );
 
                 // Function to calculate specificity score
@@ -539,18 +552,19 @@ export default {
                     let score = 0;
                     if (
                         ruleContext.library_id !== "*" &&
-                        ruleContext.library_id === ruleSet.library_id
+                        ruleContext.library_id === ruleSet.context.library_id
                     )
                         score += 4;
                     if (
                         ruleContext.patron_category_id !== "*" &&
                         ruleContext.patron_category_id ===
-                            ruleSet.patron_category_id
+                            ruleSet.context.patron_category_id
                     )
                         score += 2;
                     if (
                         ruleContext.item_type_id !== "*" &&
-                        ruleContext.item_type_id === ruleSet.item_type_id
+                        ruleContext.item_type_id ===
+                            ruleSet.context.item_type_id
                     )
                         score += 1;
                     return score;
