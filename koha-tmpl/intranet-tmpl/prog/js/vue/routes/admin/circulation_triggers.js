@@ -66,7 +66,7 @@ export default {
                             component: markRaw(
                                 CirculationTriggersFormConfirmDelete
                             ),
-                            title: $__("Edit trigger"),
+                            title: $__("Confirm trigger deletion"),
                             meta: {
                                 showModal: true,
                             },

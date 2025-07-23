@@ -369,10 +369,7 @@
                                     item_type_id: rule.context.item_type_id,
                                     patron_category_id:
                                         rule.context.patron_category_id,
-                                    triggerNumber: modal
-                                        ? i + 1
-                                        : triggerNumber,
-                                    ruleSetForDeletion: rule,
+                                    triggerNumber: triggerNumber,
                                 },
                             }"
                             class="btn btn-default btn-xs"

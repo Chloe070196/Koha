@@ -1,9 +1,9 @@
 <template>
-    <div v-if="initialized" class="modal-content">
+    <div class="modal-content">
         <form @submit="deleteCircRule($event)">
             <div class="modal-header">
                 <h1 class="modal-title">
-                    {{ $__("Circulation Trigger Configuration") }}
+                    {{ $__("Confirm circulation rule set deletion") }}
                 </h1>
                 <router-link
                     class="btn-close"
@@ -14,98 +14,308 @@
                 ></router-link>
             </div>
             <div class="modal-body">
-                <div class="page-section bg-info" v-if="circRules.length">
-                    <h2>{{ $__("Circulation context") }}</h2>
-                    <TriggerContext :ruleInfo="ruleInfo" />
-                </div>
-
                 <fieldset class="rows">
                     <legend>{{ $__("Trigger context") }}</legend>
-                    <ol>
+                    <ol v-if="initialized">
                         <li>
-                            <label for="library_id" class="required"
-                                >{{ $__("Library") }}:</label
-                            >
-                            <v-select
-                                id="library_id"
-                                v-model="ruleForDeletion.library_id"
-                                label="name"
-                                :reduce="lib => lib.library_id"
-                                :options="libraries"
-                                @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode !== 'confirmContext'"
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        :required="!ruleForDeletion.library_id"
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                    />
-                                </template>
-                            </v-select>
-                            <span class="required">{{ $__("Required") }}</span>
+                            <p>
+                                <strong>{{ $__("Library") }}:</strong>
+                            </p>
+                            <p id="library_id">{{ $__(libraryName) }}</p>
                         </li>
                         <li>
-                            <label for="patron_category_id" class="required"
-                                >{{ $__("Patron category") }}:</label
-                            >
-                            <v-select
-                                id="patron_category_id"
-                                v-model="ruleForDeletion.patron_category_id"
-                                label="name"
-                                :reduce="cat => cat.patron_category_id"
-                                :options="categories"
-                                @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode !== 'confirmContext'"
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        :required="
-                                            !ruleForDeletion.patron_category_id
-                                        "
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                    />
-                                </template>
-                            </v-select>
-                            <span class="required">{{ $__("Required") }}</span>
+                            <p>
+                                <strong>{{ $__("Patron category") }}:</strong>
+                            </p>
+                            <p id="patron_category_id">
+                                {{ $__(categoryName) }}
+                            </p>
                         </li>
                         <li>
-                            <label for="item_type_id" class="required"
-                                >{{ $__("Item type") }}:</label
-                            >
-                            <v-select
-                                id="item_type_id"
-                                v-model="ruleForDeletion.item_type_id"
-                                label="description"
-                                :reduce="type => type.item_type_id"
-                                :options="itemTypes"
-                                @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode !== 'confirmContext'"
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        :required="
-                                            !ruleForDeletion.item_type_id
-                                        "
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                    />
-                                </template>
-                            </v-select>
-                            <span class="required">{{ $__("Required") }}</span>
+                            <p>
+                                <strong>{{ $__("Item type") }}:</strong>
+                            </p>
+                            <p id="item_type_id">{{ $__(itemTypeName) }}</p>
                         </li>
                     </ol>
+                    <div v-else>
+                        <p>{{ $__("Loading circulation context...") }}</p>
+                    </div>
                 </fieldset>
 
                 <fieldset class="rows">
-                    <legend>{{ $__("Trigger for deletion") }}</legend>
+                    <legend>{{ $__("Rule set for deletion") }}</legend>
                     <table>
-                        <thead></thead>
-                        <tbody></tbody>
+                        <thead>
+                            <th>
+                                {{ $__("Delay") }}
+                            </th>
+                            <th>
+                                {{ $__("Notice") }}
+                            </th>
+                            <th>
+                                {{ $__("Email") }}
+                            </th>
+                            <th>
+                                {{ $__("Print") }}
+                            </th>
+                            <th>
+                                {{ $__("SMS") }}
+                            </th>
+                            <th>
+                                {{ $__("Restricts checkouts") }}
+                            </th>
+                            <th>
+                                {{ $__("Set Lost Value") }}
+                            </th>
+                            <th>
+                                {{ $__("Charge Replacement Cost") }}
+                            </th>
+                            <th>
+                                {{ $__("Mark as returned") }}
+                            </th>
+                        </thead>
+                        <tbody v-if="initialized">
+                            <tr>
+                                <!-- Delay -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${triggerNumber}_delay`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${triggerNumber}_delay`
+                                            ).value +
+                                            " " +
+                                            $__("days")
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- Notice -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_notice`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            handleNotice(
+                                                findEffectiveRule(
+                                                    ruleSetForDeletion,
+                                                    `overdue_${
+                                                        triggerNumber
+                                                    }_notice`
+                                                ).value
+                                            )
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- Email -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${triggerNumber}_mtt`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_notice`
+                                            ).value !== ""
+                                                ? handleTransport(
+                                                      findEffectiveRule(
+                                                          ruleSetForDeletion,
+                                                          `overdue_${
+                                                              triggerNumber
+                                                          }_mtt`
+                                                      ).value,
+                                                      "email"
+                                                  )
+                                                : ""
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- Print -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${triggerNumber}_mtt`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_notice`
+                                            ).value !== ""
+                                                ? handleTransport(
+                                                      findEffectiveRule(
+                                                          ruleSetForDeletion,
+                                                          `overdue_${
+                                                              triggerNumber
+                                                          }_mtt`
+                                                      ).value,
+                                                      "print"
+                                                  )
+                                                : ""
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- SMS -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${triggerNumber}_mtt`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_notice`
+                                            ).value !== ""
+                                                ? handleTransport(
+                                                      findEffectiveRule(
+                                                          ruleSetForDeletion,
+                                                          `overdue_${
+                                                              triggerNumber
+                                                          }_mtt`
+                                                      ).value,
+                                                      "sms"
+                                                  )
+                                                : ""
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- Restricts Checkouts -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_restrict`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            handleRestrictions(
+                                                findEffectiveRule(
+                                                    ruleSetForDeletion,
+                                                    `overdue_${
+                                                        triggerNumber
+                                                    }_restrict`
+                                                ).value
+                                            )
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- Set Lost Value -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_set_lost`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            handleLostValue(
+                                                findEffectiveRule(
+                                                    ruleSetForDeletion,
+                                                    `overdue_${
+                                                        triggerNumber
+                                                    }_set_lost`
+                                                ).value
+                                            )
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- Charge Replacement Cost -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_charge_cost`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            handleRestrictions(
+                                                findEffectiveRule(
+                                                    ruleSetForDeletion,
+                                                    `overdue_${
+                                                        triggerNumber
+                                                    }_charge_cost`
+                                                ).value
+                                            )
+                                        }}
+                                    </span>
+                                </td>
+                                <!-- Mark as returned -->
+                                <td>
+                                    <span
+                                        :class="{
+                                            fallback: findEffectiveRule(
+                                                ruleSetForDeletion,
+                                                `overdue_${
+                                                    triggerNumber
+                                                }_mark_as_returned`
+                                            ).isFallback,
+                                        }"
+                                    >
+                                        {{
+                                            handleRestrictions(
+                                                findEffectiveRule(
+                                                    ruleSetForDeletion,
+                                                    `overdue_${
+                                                        triggerNumber
+                                                    }_mark_as_returned`
+                                                ).value
+                                            )
+                                        }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tbody v-else>
+                            <tr>
+                                {{
+                                    $__("Loading circulation rule set...")
+                                }}
+                            </tr>
+                        </tbody>
                     </table>
                 </fieldset>
 
@@ -114,55 +324,47 @@
                 </fieldset>
             </div>
             <div class="modal-footer">
-                <ButtonSubmit />
+                <ButtonSubmit text="Confirm" />
                 <router-link
                     :to="{
                         name: 'CirculationTriggersList',
                     }"
                     >{{ $__("Cancel") }}</router-link
                 >
-                <router-link
-                    :to="{
-                        name: 'CirculationTriggersList',
-                    }"
-                    >{{ $__("Confirm") }}</router-link
-                >
             </div>
         </form>
-    </div>
-    <div v-else>
-        <p>{{ $__("Loading...") }}</p>
     </div>
 </template>
 
 <script>
 import { APIClient } from "../../../fetch/api-client.js";
-import { inject } from "vue";
-import { storeToRefs } from "pinia";
 import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
-import { isEqual, cloneDeep } from "lodash";
+import { inject } from "vue";
+import { storeToRefs } from "pinia";
 
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
-        const { splitCircRulesByTriggerNumber } = circRulesStore;
         const { letters } = storeToRefs(circRulesStore);
-
-        return {
-            splitCircRulesByTriggerNumber,
-            letters,
-        };
+        return { letters };
     },
     data() {
         return {
-            triggerNumber: 0,
-            context: {
-                library_id: 0,
-                item_type_id: 0,
-                patron_category_id: 0,
-            },
-            ruleForDeletion: {
+            alertMessage: null,
+            initialized: false,
+            library_id: null,
+            patron_category_id: null,
+            item_type_id: null,
+            libraryName: null,
+            categoryName: null,
+            itemTypeName: null,
+            lostValues: null,
+            triggerNumber: null,
+            ruleSetForDeletion: {
+                item_type_id: "*",
+                library_id: "*",
+                patron_category_id: "*",
                 delay: null,
                 notice: null,
                 mtt: null,
@@ -171,87 +373,250 @@ export default {
                 charge_cost: null,
                 mark_as_returned: null,
             },
-            alertMessage: null,
-            initialized: null,
         };
     },
     beforeRouteEnter(to, from, next) {
         next(vm => {
-            // vm.getCircRules().then(() => {
             const { query } = to;
-            vm.checkForExistingRules(query).then(() => (vm.initialized = true));
-            // })
+            vm.getCircRuleSetForDeletion(query).then(() =>
+                vm
+                    .getLostValues()
+                    .then(() =>
+                        vm
+                            .getLibraryName()
+                            .then(() =>
+                                vm
+                                    .getCategoryName()
+                                    .then(() =>
+                                        vm
+                                            .getItemTypeName()
+                                            .then(() => (vm.initialized = true))
+                                    )
+                            )
+                    )
+            );
         });
     },
+    // TODO: determine which methods will be needed, limit amount of code repetition, consider extracting to circRuleStore
     methods: {
         async deleteCircRule(e) {
-            e.preventDefault();
+            //TODO: convert this draft into functional code
+            // e.preventDefault();
+            // // prevent race condition related edit conflicts
+            // // store the rule as loaded initially
+            // const oldCircRule = cloneDeep(this.ruleSetForDeletion);
+            // // refresh this.ruleSetForDeletion so it matches the database
+            // const routeParams = this.ruleSetForDeletion;
+            // routeParams.triggerNumber = this.triggerNumber;
+            // await this.setRulesForDeletion(routeParams);
+            // // if any changes are detected, inform the user, display the new values and go back to editing
+            // if (!isEqual(oldCircRule, this.ruleSetForDeletion)) {
+            //     const regex = /overdue_(\d+)_delay/g;
+            //     const numberOfTriggers = Object.keys(
+            //         this.ruleSetForDeletion
+            //     ).filter(
+            //         key => regex.test(key) && this.ruleSetForDeletion[key] !== null
+            //     ).length;
+            //     // update the rule value so it matches db state
+            //     // prepare the alert message
+            //     this.alertMessage =
+            //         "The ruleset for the selected trigger context could not be deleted as it was update elsewhere. Please see the updated trigger below.";
+            //     // reload the form components that have changed, remain in edit mode
+            //     this.$router.push({
+            //         path: "/cgi-bin/koha/admin/circulation_triggers/delete",
+            //         query: {
+            //             ...context,
+            //             triggerNumber: this.triggerNumber,
+            //         },
+            //     });
+            //     return;
+            // }
+            // const circRule = {
+            //     context,
+            //     triggerNumber: this.triggerNumber,
+            // };
+            // const client = APIClient.circRule;
+            // await client.circRules.delete(circRule).then(
+            //     () => {
+            //         this.$router
+            //             .push({
+            //                 name: "CirculationTriggersList",
+            //                 query: { trigger: this.triggerNumber },
+            //             })
+            //             .then(() => this.$router.go(0));
+            //     },
+            //     error => {}
+            // );
+        },
+        findEffectiveRule(ruleSet, key) {
+            // Check if the current rule's value for the key is null
+            if (ruleSet[key] === null) {
+                // Filter rules to only those with non-null values for the specified key
+                // and that are no excluded from the selected context
+                const relevantRules = this.allCircRules.filter(
+                    rule =>
+                        rule[key] !== null &&
+                        rule[key] !== undefined &&
+                        (rule.context.library_id ===
+                            ruleSet.context.library_id ||
+                            rule.context.library_id === "*") &&
+                        (rule.context.patron_category_id ===
+                            ruleSet.context.patron_category_id ||
+                            rule.context.patron_category_id === "*") &&
+                        (rule.context.item_type_id ===
+                            ruleSet.context.item_type_id ||
+                            rule.context.item_type_id === "*")
+                );
 
-            // prevent race condition related edit conflicts
+                // Function to calculate specificity score
+                const getSpecificityScore = ruleContext => {
+                    let score = 0;
+                    if (
+                        ruleContext.library_id !== "*" &&
+                        ruleContext.library_id === ruleSet.context.library_id
+                    )
+                        score += 4;
+                    if (
+                        ruleContext.patron_category_id !== "*" &&
+                        ruleContext.patron_category_id ===
+                            ruleSet.context.patron_category_id
+                    )
+                        score += 2;
+                    if (
+                        ruleContext.item_type_id !== "*" &&
+                        ruleContext.item_type_id ===
+                            ruleSet.context.item_type_id
+                    )
+                        score += 1;
+                    return score;
+                };
 
-            // store the rule as loaded initially
-            const oldCircRule = cloneDeep(this.ruleForDeletion);
-
-            // refresh this.ruleForDeletion so it matches the database
-            const routeParams = this.ruleForDeletion;
-            routeParams.triggerNumber = this.triggerNumber;
-
-            await this.setRulesForDeletion(routeParams);
-            // if any changes are detected, inform the user, display the new values and go back to editing
-            if (!isEqual(oldCircRule, this.ruleForDeletion)) {
-                const regex = /overdue_(\d+)_delay/g;
-                const numberOfTriggers = Object.keys(
-                    this.ruleForDeletion
-                ).filter(
-                    key => regex.test(key) && this.ruleForDeletion[key] !== null
-                ).length;
-
-                // update the rule value so it matches db state
-                // prepare the alert message
-                this.alertMessage =
-                    "The ruleset for the selected trigger context could not be deleted as it was update elsewhere. Please see the updated trigger below.";
-                // reload the form components that have changed, remain in edit mode
-                this.$router.push({
-                    path: "/cgi-bin/koha/admin/circulation_triggers/delete",
-                    query: {
-                        ...context,
-                        triggerNumber: this.triggerNumber,
-                    },
+                // Sort the rules based on specificity score, descending
+                const sortedRules = relevantRules.sort((a, b) => {
+                    return (
+                        getSpecificityScore(b.context) -
+                        getSpecificityScore(a.context)
+                    );
                 });
+
+                // If no rule found, return null
+                if (sortedRules.length === 0) {
+                    return { value: null, isFallback: true };
+                }
+
+                // Get the value from the most specific rule
+                const bestRule = sortedRules[0];
+                return { value: bestRule[key], isFallback: true };
+            } else {
+                // If the current rule's value is not null, use it directly
+                return {
+                    value: ruleSet[key],
+                    isFallback: ruleSet.isGeneratedFromDefault,
+                };
+            }
+        },
+        async getCategoryName() {
+            if (this.patron_category_id === "*") {
+                this.categoryName = "Default rule for all patron categories";
                 return;
             }
-
-            const circRule = {
-                context,
-                triggerNumber: this.triggerNumber,
-            };
+            const client = APIClient.patron;
+            let categories = await client.patronCategories.getAll();
+            let category = categories.find(
+                category =>
+                    category.patron_category_id === this.patron_category_id
+            );
+            this.categoryName = category.name;
+        },
+        async getCircRuleSetForDeletion(query) {
+            const {
+                library_id,
+                patron_category_id,
+                item_type_id,
+                triggerNumber,
+            } = query;
+            this.library_id = library_id;
+            this.patron_category_id = patron_category_id;
+            this.item_type_id = item_type_id;
+            this.triggerNumber = triggerNumber;
 
             const client = APIClient.circRule;
-            await client.circRules.delete(circRule).then(
-                () => {
-                    this.$router
-                        .push({
-                            name: "CirculationTriggersList",
-                            query: { trigger: this.triggerNumber },
-                        })
-                        .then(() => this.$router.go(0));
-                },
-                error => {}
+            const result = await client.circRules.getAll(
+                {},
+                {
+                    library_id: library_id,
+                    patron_category_id: patron_category_id,
+                    item_type_id: item_type_id,
+                }
             );
+            this.ruleSetForDeletion = result[0];
+        },
+        async getItemTypeName() {
+            if (this.item_type_id === "*") {
+                this.itemTypeName = "Default rule for all item types";
+                return;
+            }
+            const client = APIClient.item;
+            let types = await client.itemTypes.getAll();
+            let type = types.find(
+                type => type.item_type_id === this.item_type_id
+            );
+            this.itemTypeName = type.description;
+        },
+        async getLibraryName() {
+            if (this.library_id === "*") {
+                this.libraryName = "Default rule for all libraries";
+                return;
+            }
+            const client = APIClient.library;
+            let libraries = await client.libraries.get(this.library_id);
+            this.libraryName = libraries.name;
+        },
+        async getLostValues() {
+            const client = APIClient.authorised_values;
+            await client.values.get("lost").then(lostValues => {
+                this.lostValues = lostValues;
+            });
+        },
+        handleContext(value, data, type, displayProperty = "name") {
+            const item = data.find(item => item[type] === value);
+            return item[displayProperty];
+        },
+        handleLostValue(authorised_value_id) {
+            const lost_value = this.lostValues.find(
+                lost_value =>
+                    lost_value.authorised_value_id.toString() ===
+                    authorised_value_id
+            );
+            return lost_value ? lost_value.description : authorised_value_id;
+        },
+        handleNotice(notice) {
+            const letter = letters.find(letter => letter.code === notice);
+            return letter ? letter.name : notice;
+        },
+        handleRestrictions(value) {
+            return value === "1" ? this.$__("Yes") : this.$__("No");
+        },
+        handleTransport(value, type) {
+            return value
+                ? value.includes(type)
+                    ? this.$__("Yes")
+                    : this.$__("No")
+                : "";
         },
         async setRulesForDeletion(routeParams) {
             const library_id =
                 routeParams && routeParams.library_id
                     ? routeParams.library_id
-                    : this.ruleForDeletion.library_id || "*";
+                    : this.ruleSetForDeletion.library_id || "*";
             const item_type_id =
                 routeParams && routeParams.item_type_id
                     ? routeParams.item_type_id
-                    : this.ruleForDeletion.item_type_id || "*";
+                    : this.ruleSetForDeletion.item_type_id || "*";
             const patron_category_id =
                 routeParams && routeParams.patron_category_id
                     ? routeParams.patron_category_id
-                    : this.ruleForDeletion.patron_category_id || "*";
+                    : this.ruleSetForDeletion.patron_category_id || "*";
             const params = {
                 library_id,
                 item_type_id,
@@ -260,167 +625,8 @@ export default {
 
             const client = APIClient.circRule;
             const promise = await client.circRules.getAll({}, params);
-            this.ruleForDeletion = promise[0];
-            this.ruleForDeletion.context = params;
-        },
-        async checkForExistingRules(routeParams) {
-            // We always pass library_id so we need to check for the existence of either item type or patron category
-            this.editMode = this.$route.path.substring(
-                this.$route.path.lastIndexOf("/") + 1
-            );
-
-            try {
-                await this.setRulesForDeletion(routeParams);
-            } catch (e) {
-                throw e;
-            }
-
-            const regex = /overdue_(\d+)_delay/g;
-            const numberOfTriggers = Object.keys(this.ruleForDeletion).filter(
-                key => regex.test(key) && this.ruleForDeletion[key] !== null
-            ).length;
-            const splitRules = this.filterCircRulesByContext(
-                this.ruleForDeletion
-            );
-            this.triggerNumber =
-                this.editMode === "edit"
-                    ? routeParams.triggerNumber
-                    : numberOfTriggers + 1;
-            this.assignTriggerValues(splitRules, this.triggerNumber, {
-                library_id: this.ruleForDeletion.context.library_id,
-                item_type_id: this.ruleForDeletion.context.item_type_id,
-                patron_category_id:
-                    this.ruleForDeletion.context.patron_category_id,
-            });
-            this.ruleInfo = {
-                issuelength: this.ruleForDeletion.issuelength,
-                decreaseloanholds: this.ruleForDeletion.decreaseloanholds,
-                fine: this.ruleForDeletion.fine,
-                chargeperiod: this.ruleForDeletion.chargeperiod,
-                lengthunit: this.ruleForDeletion.lengthunit,
-                numberOfTriggers: numberOfTriggers,
-            };
-            this.setMinDelay();
-            this.setMaxDelay();
-            this.setFilteredLetters();
-        },
-        filterCircRulesByContext(effectiveRule) {
-            const context = effectiveRule.context;
-
-            // Filter rules that match the context
-            let contextRules = this.circRules.filter(rule => {
-                return Object.keys(context).every(key => {
-                    return context[key] === rule.context[key];
-                });
-            });
-
-            // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            const regex = /overdue_(\d+)_delay/g;
-            const numberOfTriggers = Object.keys(effectiveRule).filter(
-                key => regex.test(key) && effectiveRule[key] !== null
-            ).length;
-
-            // Ensure there is one contextRule per 'X' from 1 to numberOfTriggers
-            for (let i = 1; i <= numberOfTriggers; i++) {
-                // Check if there's already a rule for overdue_X_ in contextRules
-                const matchingRule = contextRules.find(
-                    rule => rule[`overdue_${i}_delay`] !== undefined
-                );
-
-                if (!matchingRule) {
-                    // Create a new rule with the same context and null overdue_X_* keys
-                    const placeholderRule = {
-                        context: { ...context }, // Clone the context
-                        [`overdue_${i}_delay`]: null,
-                        [`overdue_${i}_notice`]: null,
-                        [`overdue_${i}_mtt`]: null,
-                        [`overdue_${i}_restrict`]: null,
-                        [`overdue_${i}_set_lost`]: null,
-                        [`overdue_${i}_charge_cost`]: null,
-                        [`overdue_${i}_mark_as_returned`]: null,
-                    };
-
-                    // Add the new rule to contextRules
-                    contextRules.push(placeholderRule);
-                }
-            }
-
-            // Sort contextRules by the 'X' value in 'overdue_X_delay'
-            contextRules.sort((a, b) => {
-                const getX = rule => {
-                    const match = Object.keys(rule).find(key =>
-                        regex.test(key)
-                    );
-                    return match ? parseInt(match.match(/\d+/)[0], 10) : 0;
-                };
-
-                return getX(a) - getX(b);
-            });
-
-            return contextRules;
-        },
-        assignTriggerValues(rules, triggerNumber, context = null) {
-            this.ruleForDeletion = {
-                item_type_id: context
-                    ? context.item_type_id
-                    : rules[triggerNumber - 1].context.item_type_id || "*",
-                library_id: context
-                    ? context.library_id
-                    : rules[triggerNumber - 1].context.library_id || "*",
-                patron_category_id: context
-                    ? context.patron_category_id
-                    : rules[triggerNumber - 1].context.patron_category_id ||
-                      "*",
-                delay: rules[triggerNumber - 1]
-                    ? rules[triggerNumber - 1][`overdue_${triggerNumber}_delay`]
-                    : null,
-                notice: rules[triggerNumber - 1]
-                    ? rules[triggerNumber - 1][
-                          `overdue_${triggerNumber}_notice`
-                      ]
-                    : null,
-                mtt: rules[triggerNumber - 1]
-                    ? rules[triggerNumber - 1][`overdue_${triggerNumber}_mtt`]
-                        ? rules[triggerNumber - 1][
-                              `overdue_${triggerNumber}_mtt`
-                          ].split(",")
-                        : []
-                    : null,
-                restrict: rules[triggerNumber - 1]
-                    ? rules[triggerNumber - 1][
-                          `overdue_${triggerNumber}_restrict`
-                      ]
-                    : null,
-                set_lost: rules[triggerNumber - 1]
-                    ? rules[triggerNumber - 1][
-                          `overdue_${triggerNumber}_set_lost`
-                      ]
-                    : null,
-                charge_cost: rules[triggerNumber - 1]
-                    ? rules[triggerNumber - 1][
-                          `overdue_${triggerNumber}_charge_cost`
-                      ]
-                    : null,
-                mark_as_returned: rules[triggerNumber - 1]
-                    ? rules[triggerNumber - 1][
-                          `overdue_${triggerNumber}_mark_as_returned`
-                      ]
-                    : null,
-            };
-        },
-    },
-    watch: {
-        $route: {
-            immediate: true,
-            handler: function (newVal, oldVal) {
-                if (
-                    oldVal &&
-                    oldVal.query.triggerNumber &&
-                    newVal.query.triggerNumber !== oldVal.query.triggerNumber
-                ) {
-                    this.$router.go(0);
-                }
-            },
+            this.ruleSetForDeletion = promise[0];
+            this.ruleSetForDeletion.context = params;
         },
     },
     components: { ButtonSubmit, TriggerContext },
