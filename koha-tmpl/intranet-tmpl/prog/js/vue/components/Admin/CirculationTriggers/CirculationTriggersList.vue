@@ -282,11 +282,28 @@ export default {
 </script>
 
 <style scoped>
+.page-section table {
+    width: 100%;
+    table-layout: fixed;
+}
+.page-section th,
+.page-section td {
+    width: 33%;
+}
+.page-section td {
+    padding: 0.5em;
+    vertical-align: top;
+}
 .v-select {
-    display: inline-block;
+    display: block;
     background-color: white;
-    width: 30%;
-    margin-left: 10px;
+    margin: 10px;
+    height: auto;
+}
+.vs__search,
+.v__selected {
+    display: inline-block;
+    vertical-align: middle;
 }
 .active {
     cursor: pointer;
@@ -306,8 +323,10 @@ export default {
     height: 100%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
 }
-.modal-dialog {
-    overflow: auto;
-    height: 90%;
+.modal-dialog,
+.modal-dialog-centered,
+.modal-lg {
+    max-width: 90%;
+    width: fit-content;
 }
 </style>
