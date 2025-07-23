@@ -23,7 +23,7 @@
                 </div>
 
                 <fieldset class="rows">
-                    <legend>{{ $__("Select trigger context") }}</legend>
+                    <legend>{{ $__("Confirm trigger context") }}</legend>
                     <ol>
                         <li>
                             <label for="library_id" class="required"
@@ -36,7 +36,7 @@
                                 :reduce="lib => lib.library_id"
                                 :options="libraries"
                                 @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode ? true : false"
+                                :disabled="editMode !== 'confirmContext'"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -60,7 +60,7 @@
                                 :reduce="cat => cat.patron_category_id"
                                 :options="categories"
                                 @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode ? true : false"
+                                :disabled="editMode !== 'confirmContext'"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -84,7 +84,7 @@
                                 :reduce="type => type.item_type_id"
                                 :options="itemTypes"
                                 @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode ? true : false"
+                                :disabled="editMode !== 'confirmContext'"
                             >
                                 <template #search="{ attributes, events }">
                                     <input
@@ -98,10 +98,25 @@
                             <span class="required">{{ $__("Required") }}</span>
                         </li>
                     </ol>
-
+                    <div v-if="editMode === 'confirmContext'">
+                        <router-link
+                            :to="{
+                                name: 'CirculationTriggersSelectOrAdd',
+                                query: {
+                                    library_id: newRule.library_id,
+                                    item_type_id: newRule.item_type_id,
+                                    patron_category_id:
+                                        newRule.patron_category_id,
+                                },
+                            }"
+                            class="btn btn-default btn-xs"
+                            ><i class="fa-solid fa-pencil"></i>
+                            {{ $__("Confirm context") }}</router-link
+                        >
+                    </div>
                     <div
                         class="page-section bg-warning-subtle"
-                        v-if="circRules.length"
+                        v-if="circRules.length && editMode !== 'confirmContext'"
                     >
                         <TriggersTable
                             :circRules="circRules"
@@ -114,7 +129,10 @@
                     </div>
                 </fieldset>
 
-                <fieldset class="rows" v-if="editMode">
+                <fieldset
+                    class="rows"
+                    v-if="editMode === 'edit' || editMode === 'add'"
+                >
                     <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
                         {{ $__("Add new trigger") }}
                         {{ " " + newTriggerNumber }}
@@ -475,11 +493,50 @@ export default {
         },
         async checkForExistingRules(routeParams) {
             // We always pass library_id so we need to check for the existence of either item type or patron category
-            const editMode = routeParams && routeParams.triggerNumber;
-            if (editMode) {
-                this.editMode = editMode;
+            this.editMode = this.$route.path.substring(
+                this.$route.path.lastIndexOf("/") + 1
+            );
+
+            if (this.editMode === "edit") {
                 this.triggerBeingEdited = routeParams.triggerNumber;
             }
+
+            try {
+                await this.setRulesBeingEdited(routeParams);
+            } catch (e) {
+                throw e;
+            }
+
+            const regex = /overdue_(\d+)_delay/g;
+            const numberOfTriggers = Object.keys(this.ruleBeingEdited).filter(
+                key => regex.test(key) && this.ruleBeingEdited[key] !== null
+            ).length;
+            const splitRules = this.filterCircRulesByContext(
+                this.ruleBeingEdited
+            );
+            this.newTriggerNumber =
+                this.editMode === "edit"
+                    ? routeParams.triggerNumber
+                    : numberOfTriggers + 1;
+            this.assignTriggerValues(splitRules, this.newTriggerNumber, {
+                library_id: this.ruleBeingEdited.context.library_id,
+                item_type_id: this.ruleBeingEdited.context.item_type_id,
+                patron_category_id:
+                    this.ruleBeingEdited.context.patron_category_id,
+            });
+            this.ruleInfo = {
+                issuelength: this.ruleBeingEdited.issuelength,
+                decreaseloanholds: this.ruleBeingEdited.decreaseloanholds,
+                fine: this.ruleBeingEdited.fine,
+                chargeperiod: this.ruleBeingEdited.chargeperiod,
+                lengthunit: this.ruleBeingEdited.lengthunit,
+                numberOfTriggers: numberOfTriggers,
+            };
+            this.setMinDelay();
+            this.setMaxDelay();
+            this.setFilteredLetters();
+        },
+        async setRulesBeingEdited(routeParams) {
             const library_id =
                 routeParams && routeParams.library_id
                     ? routeParams.library_id
@@ -498,43 +555,15 @@ export default {
                 patron_category_id,
             };
 
-            // Fetch effective ruleset for context
             const client = APIClient.circRule;
-            await client.circRules.getAll({}, params).then(
-                rules => {
-                    this.ruleBeingEdited = rules[0];
-                    this.ruleBeingEdited.context = params;
-                    const regex = /overdue_(\d+)_delay/g;
-                    const numberOfTriggers = Object.keys(rules[0]).filter(
-                        key => regex.test(key) && rules[0][key] !== null
-                    ).length;
-                    const splitRules = this.filterCircRulesByContext(
-                        this.ruleBeingEdited
-                    );
-                    this.newTriggerNumber = editMode
-                        ? routeParams.triggerNumber
-                        : numberOfTriggers + 1;
-                    this.assignTriggerValues(
-                        splitRules,
-                        this.newTriggerNumber,
-                        params
-                    );
-
-                    this.ruleInfo = {
-                        issuelength: rules[0].issuelength,
-                        decreaseloanholds: rules[0].decreaseloanholds,
-                        fine: rules[0].fine,
-                        chargeperiod: rules[0].chargeperiod,
-                        lengthunit: rules[0].lengthunit,
-                        numberOfTriggers: numberOfTriggers,
-                    };
-
-                    this.setMinDelay();
-                    this.setMaxDelay();
-                    this.setFilteredLetters();
-                },
-                error => {}
-            );
+            let result
+            try {
+                result = await client.circRules.getAll({}, params)
+            } catch (e) {
+                throw(e)
+            }
+            this.ruleBeingEdited = result[0];
+            this.ruleBeingEdited.context = params;
         },
         filterCircRulesByContext(effectiveRule) {
             const context = effectiveRule.context;
