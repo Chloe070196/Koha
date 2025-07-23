@@ -2,7 +2,7 @@
     <Toolbar>
         <ToolbarButton
             :to="{
-                name: 'CirculationTriggersFormAdd',
+                name: 'CirculationTriggersFormConfirmContext',
                 query: { library_id: selectedLibrary },
             }"
             icon="plus"
