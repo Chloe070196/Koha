@@ -126,6 +126,10 @@
                     </div>
                 </fieldset>
 
+                <fieldset class="rows" v-if="alertMessage">
+                    <div class="alert alert-info">{{ alertMessage }}</div>
+                </fieldset>
+
                 <fieldset
                     class="rows"
                     v-if="editMode === 'edit' || editMode === 'add'"
@@ -335,6 +339,7 @@ import { inject } from "vue";
 import { storeToRefs } from "pinia";
 import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
+import { isEqual, cloneDeep } from "lodash";
 
 export default {
     setup() {
@@ -392,6 +397,7 @@ export default {
             minDelay: 0,
             maxDelay: Infinity,
             filteredLetters: [],
+            alertMessage: null,
         };
     },
     beforeRouteEnter(to, from, next) {
@@ -419,6 +425,63 @@ export default {
                 item_type_id: this.newRule.item_type_id || "*",
                 patron_category_id: this.newRule.patron_category_id || "*",
             };
+
+            // this.checkForExistingRules will reset this.newRule - prevent this from affecting submission
+            const ruleToSubmit = cloneDeep(this.newRule);
+
+            // prevent race condition related edit conflicts
+            if (this.editMode === "edit") {
+                // store the rule as loaded initially
+                const oldCircRule = cloneDeep(this.ruleBeingEdited);
+
+                // refresh this.ruleBeingEdited so it matches the database
+                const routeParams = this.newRule;
+                routeParams.triggerNumber = this.newTriggerNumber;
+                await this.setRulesBeingEdited(routeParams);
+
+                // if any changes are detected, inform the user, display the new values and go back to editing
+                if (!isEqual(oldCircRule, this.ruleBeingEdited)) {
+                    const regex = /overdue_(\d+)_delay/g;
+                    const numberOfTriggers = Object.keys(
+                        this.ruleBeingEdited
+                    ).filter(
+                        key =>
+                            regex.test(key) &&
+                            this.ruleBeingEdited[key] !== null
+                    ).length;
+                    const splitRules = this.filterCircRulesByContext(
+                        this.ruleBeingEdited
+                    );
+                    this.newTriggerNumber =
+                        this.editMode === "edit"
+                            ? routeParams.triggerNumber
+                            : numberOfTriggers + 1;
+                    // update the form so that up-to-date trigger data is displayed
+                    this.assignTriggerValues(
+                        splitRules,
+                        this.newTriggerNumber,
+                        {
+                            library_id: this.ruleBeingEdited.context.library_id,
+                            item_type_id:
+                                this.ruleBeingEdited.context.item_type_id,
+                            patron_category_id:
+                                this.ruleBeingEdited.context.patron_category_id,
+                        }
+                    );
+                    // prepare the alert message
+                    this.alertMessage =
+                        "Your changes could not be saved as this circulation trigger was updated elsewhere. Please see the updated trigger below.";
+                    // reload the form components that have changed, remain in edit mode
+                    this.$router.push({
+                        path: "/cgi-bin/koha/admin/circulation_triggers/edit",
+                        query: {
+                            ...context,
+                            triggerNumber: this.newTriggerNumber,
+                        },
+                    });
+                    return;
+                }
+            }
 
             const circRule = {
                 context,
