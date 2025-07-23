@@ -2,11 +2,8 @@
     <div v-if="initialized" class="modal-content">
         <form @submit="addCircRule($event)">
             <div class="modal-header">
-                <h1 class="modal-title" v-if="!editMode">
-                    {{ $__("Circulation triggers") }}
-                </h1>
-                <h1 class="modal-title" v-else>
-                    {{ $__("Edit circulation trigger") }}
+                <h1 class="modal-title">
+                    {{ $__("Circulation Trigger Configuration") }}
                 </h1>
                 <router-link
                     class="btn-close"
@@ -195,6 +192,59 @@
                             </div>
                         </li>
                         <li>
+                            <label for="restricts"
+                                >{{ $__("Restricts checkouts") }}:</label
+                            >
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="restricts-yes"
+                                    v-model="newRule.restrict"
+                                    :value="1"
+                                />
+                                {{ $__("Yes") }}
+
+                                <input
+                                    type="radio"
+                                    id="restricts-no"
+                                    v-model="newRule.restrict"
+                                    :value="0"
+                                />
+                                {{ $__("No") }}
+
+                                <input
+                                    type="radio"
+                                    id="restricts-fallback"
+                                    v-model="newRule.restrict"
+                                    :value="null"
+                                />
+                                {{ $__("Fallback to default") }}
+                                <span v-if="fallbackRule.restricts !== null">
+                                    ({{
+                                        fallbackRule.restricts === 1
+                                            ? $__("Yes")
+                                            : $__("No")
+                                    }})
+                                </span>
+                            </div>
+                        </li>
+                    </ol>
+                </fieldset>
+
+                <fieldset
+                    class="rows"
+                    v-if="editMode === 'edit' || editMode === 'add'"
+                >
+                    <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
+                        {{ $__("Notice for trigger") }}
+                        {{ " " + newTriggerNumber }}
+                    </legend>
+                    <legend v-else>
+                        {{ $__("Edit notice for trigger") }}
+                        {{ " " + newTriggerNumber }}
+                    </legend>
+                    <ol>
+                        <li>
                             <label for="letter_code"
                                 >{{ $__("Letter") }}:</label
                             >
@@ -258,43 +308,6 @@
                                     />
                                 </template>
                             </v-select>
-                        </li>
-                        <li>
-                            <label for="restricts"
-                                >{{ $__("Restricts checkouts") }}:</label
-                            >
-                            <div>
-                                <input
-                                    type="radio"
-                                    id="restricts-yes"
-                                    v-model="newRule.restrict"
-                                    :value="1"
-                                />
-                                {{ $__("Yes") }}
-
-                                <input
-                                    type="radio"
-                                    id="restricts-no"
-                                    v-model="newRule.restrict"
-                                    :value="0"
-                                />
-                                {{ $__("No") }}
-
-                                <input
-                                    type="radio"
-                                    id="restricts-fallback"
-                                    v-model="newRule.restrict"
-                                    :value="null"
-                                />
-                                {{ $__("Fallback to default") }}
-                                <span v-if="fallbackRule.restricts !== null">
-                                    ({{
-                                        fallbackRule.restricts === 1
-                                            ? $__("Yes")
-                                            : $__("No")
-                                    }})
-                                </span>
-                            </div>
                         </li>
                     </ol>
                 </fieldset>
