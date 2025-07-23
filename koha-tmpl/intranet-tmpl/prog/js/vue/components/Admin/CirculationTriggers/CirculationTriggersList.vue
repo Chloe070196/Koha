@@ -461,11 +461,7 @@ export default {
         generateExahustiveContextRuleList(ruleSets, params) {
             const ruleSetList = [];
             // handle searches where no patron category or item type are specified
-            if (
-                !params.patron_category_id ||
-                (params.patron_category_id === "*" && !params.item_type_id) ||
-                params.item_type_id === "*"
-            ) {
+            if (!params.patron_category_id && !params.item_type_id) {
                 this.patronCategories.forEach(category => {
                     this.itemTypes.forEach(itemType => {
                         const currentCategory = cloneDeep(category);
@@ -546,10 +542,7 @@ export default {
                     });
                 });
                 // handle searches where only the item type is specified
-            } else if (
-                !params.patron_category_id ||
-                params.patron_category_id === "*"
-            ) {
+            } else if (!params.patron_category_id) {
                 this.patronCategories.forEach(category => {
                     const currentCategory = cloneDeep(category);
                     const matchingRuleSet = ruleSets.find(
@@ -579,7 +572,7 @@ export default {
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
                 // handle searches where only the patron category is specified
-            } else if (!params.item_type_id || params.item_type_id === "*") {
+            } else if (!params.item_type_id) {
                 this.itemTypes.forEach(itemType => {
                     const currentItemType = cloneDeep(itemType);
                     const matchingRuleSet = ruleSets.find(
