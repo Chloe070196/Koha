@@ -421,9 +421,8 @@ export default {
                 );
             }
 
-            // no rule sets match this context, look for default rules
+            // no rule sets match this context, look for default rules for the select library
             currentParams.patron_category_id = "*";
-            // currentParams.item_type_id = selectedParams.item_type_id
             let defaultItemTypeAndPatronCategroyRuleSets;
             try {
                 defaultItemTypeAndPatronCategroyRuleSets =
@@ -431,10 +430,30 @@ export default {
             } catch (e) {
                 throw e;
             }
-            return this.generateExahustiveContextRuleList(
-                defaultItemTypeAndPatronCategroyRuleSets,
-                selectedParams
-            );
+            if (defaultItemTypeAndPatronCategroyRuleSets.length !== 0) {
+                return this.generateExahustiveContextRuleList(
+                    defaultItemTypeAndPatronCategroyRuleSets,
+                    selectedParams
+                );
+            }
+
+            // no rule sets match this context, look for default rules for all libraries
+            currentParams.library_id = "*";
+            let defaultLibraryAndItemTypeAndPatronCategroyRuleSets;
+            try {
+                defaultLibraryAndItemTypeAndPatronCategroyRuleSets =
+                    await client.circRules.getAll({}, currentParams);
+            } catch (e) {
+                throw e;
+            }
+            if (
+                defaultLibraryAndItemTypeAndPatronCategroyRuleSets.length !== 0
+            ) {
+                return this.generateExahustiveContextRuleList(
+                    defaultLibraryAndItemTypeAndPatronCategroyRuleSets,
+                    selectedParams
+                );
+            }
         },
         // takes in a ruleSet and generate an exhaustive list of all contexts these may apply to, narrowed down by library
         // "placeholder" rules are only generated for contexts that no rule is found to match
@@ -482,6 +501,8 @@ export default {
                         if (matchingItemTypeRuleSet) {
                             matchingItemTypeRuleSet.context.patron_category_id =
                                 currentCategory.patron_category_id;
+                            matchingItemTypeRuleSet.context.library_id =
+                                params.library_id;
                             matchingItemTypeRuleSet.isGeneratedFromDefault = true;
                             ruleSetList.push(matchingItemTypeRuleSet);
                             return;
@@ -498,6 +519,8 @@ export default {
                         if (matchingPatronCategoryRuleSet) {
                             matchingPatronCategoryRuleSet.context.item_type_id =
                                 currentItemType.item_type_id;
+                            matchingPatronCategoryRuleSet.context.library_id =
+                                params.library_id;
                             matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
                             ruleSetList.push(matchingPatronCategoryRuleSet);
                             return;
@@ -515,6 +538,8 @@ export default {
                                 currentCategory.patron_category_id;
                             ruleSetGeneratedFromDefault.context.item_type_id =
                                 currentItemType.item_type_id;
+                            ruleSetGeneratedFromDefault.context.library_id =
+                                params.library_id;
                             ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                             ruleSetList.push(ruleSetGeneratedFromDefault);
                         }
@@ -548,6 +573,8 @@ export default {
                         params.item_type_id;
                     ruleSetGeneratedFromDefault.context.patron_category_id =
                         currentCategory.patron_category_id;
+                    ruleSetGeneratedFromDefault.context.library_id =
+                        params.library_id;
                     ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
@@ -575,6 +602,8 @@ export default {
                         currentItemType.item_type_id;
                     ruleSetGeneratedFromDefault.context.patron_category_id =
                         params.patron_category_id;
+                    ruleSetGeneratedFromDefault.context.library_id =
+                        params.library_id;
                     ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
@@ -606,6 +635,8 @@ export default {
                 if (matchingItemTypeRuleSet) {
                     matchingItemTypeRuleSet.context.patron_category_id =
                         params.patron_category_id;
+                    matchingItemTypeRuleSet.context.library_id =
+                        params.library_id;
                     matchingItemTypeRuleSet.isGeneratedFromDefault = true;
                     ruleSetList.push(matchingItemTypeRuleSet);
                     return ruleSetList;
@@ -622,6 +653,8 @@ export default {
                 if (matchingPatronCategoryRuleSet) {
                     matchingPatronCategoryRuleSet.context.item_type_id =
                         params.item_type_id;
+                    matchingPatronCategoryRuleSet.context.library_id =
+                        params.library_id;
                     matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
                     ruleSetList.push(matchingPatronCategoryRuleSet);
                     return ruleSetList;
@@ -639,6 +672,8 @@ export default {
                         params.patron_category_id;
                     ruleSetGeneratedFromDefault.context.item_type_id =
                         params.item_type_id;
+                    ruleSetGeneratedFromDefault.context.library_id =
+                        params.library_id;
                     ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
                     ruleSetList.push(ruleSetGeneratedFromDefault);
                 }
