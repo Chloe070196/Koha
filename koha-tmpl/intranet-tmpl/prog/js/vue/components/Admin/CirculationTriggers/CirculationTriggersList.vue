@@ -3,7 +3,11 @@
         <ToolbarButton
             :to="{
                 name: 'CirculationTriggersFormConfirmContext',
-                query: { library_id: selectedLibrary },
+                query: {
+                    library_id: selectedLibrary,
+                    patron_category_id: selectedCategory,
+                    item_type_id: selectedItemType,
+                },
             }"
             icon="plus"
             :title="$__('Add new trigger')"
@@ -86,24 +90,83 @@
             </p>
         </div>
         <div class="page-section" v-if="initialized">
-            <label for="library_select">{{ $__("Select a library") }}:</label>
-            <v-select
-                id="library_select"
-                v-model="selectedLibrary"
-                label="name"
-                :reduce="lib => lib.library_id"
-                :options="libraries"
-                @update:modelValue="handleLibrarySelection($event)"
-            >
-                <template #search="{ attributes, events }">
-                    <input
-                        :required="!selectedLibrary"
-                        class="vs__search"
-                        v-bind="attributes"
-                        v-on="events"
-                    />
-                </template>
-            </v-select>
+            <legend>
+                Filter by
+                <span style="color: blue; font-weight: bold">context</span>
+            </legend>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ $__("Library") }}</th>
+                        <th>{{ $__("Category") }}</th>
+                        <th>{{ $__("Item type") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <v-select
+                                id="library_select"
+                                v-model="selectedLibrary"
+                                label="name"
+                                :reduce="lib => lib.library_id"
+                                :options="libraries"
+                                @update:modelValue="getCircRules()"
+                                placeholder="Default rules for all libraries"
+                            >
+                                <template #search="{ attributes, events }">
+                                    <input
+                                        :required="!selectedLibrary"
+                                        class="vs__search"
+                                        v-bind="attributes"
+                                        v-on="events"
+                                    />
+                                </template>
+                            </v-select>
+                        </td>
+                        <td>
+                            <v-select
+                                id="patron_category_select"
+                                v-model="selectedCategory"
+                                label="name"
+                                :reduce="cat => cat.patron_category_id"
+                                :options="patronCategories"
+                                @update:modelValue="getCircRules()"
+                                placeholder="any"
+                            >
+                                <template #search="{ attributes, events }">
+                                    <input
+                                        :required="!selectedCategory"
+                                        class="vs__search"
+                                        v-bind="attributes"
+                                        v-on="events"
+                                    />
+                                </template>
+                            </v-select>
+                        </td>
+                        <td>
+                            <v-select
+                                id="item_type_select"
+                                v-model="selectedItemType"
+                                label="description"
+                                :reduce="itype => itype.item_type_id"
+                                :options="itemTypes"
+                                @update:modelValue="getCircRules()"
+                                placeholder="any"
+                            >
+                                <template #search="{ attributes, events }">
+                                    <input
+                                        :required="!selectedItemType"
+                                        class="vs__search"
+                                        v-bind="attributes"
+                                        v-on="events"
+                                    />
+                                </template>
+                            </v-select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
     <div v-if="initialized">
@@ -143,8 +206,9 @@
                     <TriggersTable
                         :circRules="circRules"
                         :triggerNumber="number"
-                        :categories="categories"
+                        :categories="patronCategories"
                         :itemTypes="itemTypes"
+                        :libraries="libraries"
                         :letters="letters"
                     />
                 </div>
@@ -186,6 +250,8 @@ export default {
             initialized: false,
             libraries: null,
             selectedLibrary: default_view,
+            selectedCategory: null,
+            selectedItemType: null,
             circRules: null,
             numberOfTabs: [1],
             tabSelected: "Notice 1",
@@ -225,12 +291,12 @@ export default {
         async getCategories() {
             const client = APIClient.patron;
             await client.patronCategories.getAll().then(
-                categories => {
-                    categories.unshift({
+                patronCategories => {
+                    patronCategories.unshift({
                         patron_category_id: "*",
                         name: "Default rule",
                     });
-                    this.categories = categories;
+                    this.patronCategories = patronCategories;
                 },
                 error => {}
             );
@@ -248,22 +314,33 @@ export default {
                 error => {}
             );
         },
-        async getCircRules(params = {}) {
-            params.effective = false;
+        async getCircRules() {
             const client = APIClient.circRule;
-            await client.circRules.getAll({}, params).then(
-                rules => {
-                    const { numberOfTabs, rulesPerTrigger: circRules } =
-                        this.splitCircRulesByTriggerNumber(rules);
-                    this.numberOfTabs = numberOfTabs;
-                    this.circRules = circRules;
-                },
-                error => {}
-            );
-        },
-        async handleLibrarySelection(e) {
-            if (!e) e = "";
-            await this.getCircRules({ library_id: e });
+
+            const selectedParams = {};
+            selectedParams.effective = false;
+            if (this.selectedLibrary) {
+                selectedParams.library_id = this.selectedLibrary;
+            }
+            if (this.selectedCategory) {
+                selectedParams.patron_category_id = this.selectedCategory;
+            }
+            if (this.selectedItemType) {
+                selectedParams.item_type_id = this.selectedItemType;
+            }
+
+            let rules;
+
+            try {
+                rules = await client.circRules.getAll({}, selectedParams);
+            } catch (e) {
+                throw e;
+            }
+
+            const { numberOfTabs, rulesPerTrigger: circRules } =
+                this.splitCircRulesByTriggerNumber(rules);
+            this.numberOfTabs = numberOfTabs;
+            this.circRules = circRules;
         },
         changeTabContent(e) {
             this.tabSelected = e.target.getAttribute("data-content");
