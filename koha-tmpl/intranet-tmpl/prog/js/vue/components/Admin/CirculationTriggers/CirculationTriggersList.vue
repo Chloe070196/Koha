@@ -403,7 +403,7 @@ export default {
                 );
             }
 
-            // no rule sets match this context, look for rule sets matching patron category only
+            // no rule sets match this context, look for default rule sets for the patron category
             currentParams.item_type_id = "*";
             let defaultItemTypeRuleSets;
             try {
@@ -421,7 +421,7 @@ export default {
                 );
             }
 
-            // no rule sets match this context, look for default rules for the select library
+            // no rule sets match this context, look for default rule sets for the select library
             currentParams.patron_category_id = "*";
             let defaultItemTypeAndPatronCategroyRuleSets;
             try {
@@ -467,6 +467,7 @@ export default {
                         const currentCategory = cloneDeep(category);
                         const currentItemType = cloneDeep(itemType);
 
+                        // find context specific rule set, add to list OR
                         const matchingItemTypeAndPatronCategoryRuleSet =
                             cloneDeep(
                                 ruleSets.find(
@@ -477,7 +478,6 @@ export default {
                                             currentCategory.patron_category_id
                                 )
                             );
-
                         if (matchingItemTypeAndPatronCategoryRuleSet) {
                             matchingItemTypeAndPatronCategoryRuleSet.isGeneratedFromDefault = false;
                             ruleSetList.push(
@@ -486,6 +486,7 @@ export default {
                             return;
                         }
 
+                        // find item type specific rule set (default for all patron categories), add to list OR
                         const matchingItemTypeRuleSet = cloneDeep(
                             ruleSets.find(
                                 ruleSet =>
@@ -504,6 +505,7 @@ export default {
                             return;
                         }
 
+                        // find patron category specific rule set (default for all item types), add to list OR
                         const matchingPatronCategoryRuleSet = cloneDeep(
                             ruleSets.find(
                                 ruleSet =>
@@ -522,6 +524,7 @@ export default {
                             return;
                         }
 
+                        // no context specific rule set found, find the default, add to list
                         const ruleSetGeneratedFromDefault = cloneDeep(
                             ruleSets.find(
                                 ruleSet =>
@@ -551,12 +554,14 @@ export default {
                             category.patron_category_id
                     );
 
+                    // rule set matching context (item type only) found, add to list OR
                     if (matchingRuleSet) {
                         matchingRuleSet.isGeneratedFromDefault = false;
                         ruleSetList.push(matchingRuleSet);
                         return;
                     }
 
+                    // no context specific rule set found, find the default, add to list
                     const ruleSetGeneratedFromDefault = cloneDeep(
                         ruleSets.find(
                             ruleSet => ruleSet.context.patron_category_id == "*"
@@ -581,11 +586,14 @@ export default {
                             itemType.item_type_id
                     );
 
+                    // rule set matching context (patron category only) found, add to list
                     if (matchingRuleSet) {
                         matchingRuleSet.isGeneratedFromDefault = false;
                         ruleSetList.push(matchingRuleSet);
                         return;
                     }
+
+                    // no context specific rule set found, find the default, add to list
                     const ruleSetGeneratedFromDefault = cloneDeep(
                         ruleSets.find(
                             ruleSet => ruleSet.context.item_type_id == "*"
@@ -602,6 +610,7 @@ export default {
                 });
                 // handle searches where both patron category and item type are specified
             } else {
+                // find context specific rule set, add to list ORse {
                 const matchingItemTypeAndPatronCategoryRuleSet = cloneDeep(
                     ruleSets.find(
                         ruleSet =>
@@ -617,6 +626,7 @@ export default {
                     return ruleSetList;
                 }
 
+                // find item type specific rule set (default for all patron categories), add to list OR
                 const matchingItemTypeRuleSet = cloneDeep(
                     ruleSets.find(
                         ruleSet =>
@@ -635,6 +645,7 @@ export default {
                     return ruleSetList;
                 }
 
+                // find patron category specific rule set (default for all item types), add to list OR
                 const matchingPatronCategoryRuleSet = cloneDeep(
                     ruleSets.find(
                         ruleSet =>
@@ -653,6 +664,7 @@ export default {
                     return ruleSetList;
                 }
 
+                // no context specific rule set found, find the default, add to list
                 const ruleSetGeneratedFromDefault = cloneDeep(
                     ruleSets.find(
                         ruleSet =>
