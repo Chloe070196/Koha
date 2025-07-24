@@ -493,4 +493,13 @@ export default {
 .actions a {
     margin-right: 5px;
 }
+td.trigger_context {
+    color: black;
+}
+th.trigger_context {
+    color: blue;
+}
+.border_right {
+    border-right: solid 4px black;
+}
 </style>
