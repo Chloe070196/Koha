@@ -1,333 +1,323 @@
 <template>
-    <div v-if="initialized" class="modal-content">
-        <form @submit="addCircRule($event)">
-            <div class="modal-header">
-                <h1 class="modal-title">
-                    {{ $__("Circulation Trigger Configuration") }}
-                </h1>
-                <router-link
-                    class="btn-close"
-                    type="button"
-                    :to="{
-                        name: 'CirculationTriggersList',
-                    }"
-                ></router-link>
+    <form
+        v-if="initialized"
+        class="modal-content"
+        id="circulation-trigger-form-add"
+        @submit="addCircRule($event)"
+    >
+        <div class="modal-header">
+            <h1 class="modal-title">
+                {{ $__("Circulation Trigger Configuration") }}
+            </h1>
+            <router-link
+                class="btn-close"
+                type="button"
+                :to="{
+                    name: 'CirculationTriggersList',
+                }"
+            ></router-link>
+        </div>
+        <div class="modal-body">
+            <div class="page-section bg-info" v-if="circRules.length">
+                <h2>{{ $__("Circulation context") }}</h2>
+                <TriggerContext :ruleInfo="ruleInfo" />
             </div>
-            <div class="modal-body">
-                <div class="page-section bg-info" v-if="circRules.length">
-                    <h2>{{ $__("Circulation context") }}</h2>
-                    <TriggerContext :ruleInfo="ruleInfo" />
-                </div>
-
-                <fieldset class="rows">
-                    <legend>{{ $__("Confirm trigger context") }}</legend>
-                    <ol>
-                        <li>
-                            <label for="library_id" class="required"
-                                >{{ $__("Library") }}:</label
-                            >
-                            <v-select
-                                id="library_id"
-                                v-model="newRule.library_id"
-                                label="name"
-                                :reduce="lib => lib.library_id"
-                                :options="libraries"
-                                @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode !== 'confirmContext'"
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        :required="!newRule.library_id"
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                    />
-                                </template>
-                            </v-select>
-                            <span class="required">{{ $__("Required") }}</span>
-                        </li>
-                        <li>
-                            <label for="patron_category_id" class="required"
-                                >{{ $__("Patron category") }}:</label
-                            >
-                            <v-select
-                                id="patron_category_id"
-                                v-model="newRule.patron_category_id"
-                                label="name"
-                                :reduce="cat => cat.patron_category_id"
-                                :options="categories"
-                                @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode !== 'confirmContext'"
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        :required="!newRule.patron_category_id"
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                    />
-                                </template>
-                            </v-select>
-                            <span class="required">{{ $__("Required") }}</span>
-                        </li>
-                        <li>
-                            <label for="item_type_id" class="required"
-                                >{{ $__("Item type") }}:</label
-                            >
-                            <v-select
-                                id="item_type_id"
-                                v-model="newRule.item_type_id"
-                                label="description"
-                                :reduce="type => type.item_type_id"
-                                :options="itemTypes"
-                                @update:modelValue="handleContextChange($event)"
-                                :disabled="editMode !== 'confirmContext'"
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        :required="!newRule.item_type_id"
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                    />
-                                </template>
-                            </v-select>
-                            <span class="required">{{ $__("Required") }}</span>
-                        </li>
-                    </ol>
-                    <div v-if="editMode === 'confirmContext'">
-                        <router-link
-                            :to="{
-                                name: 'CirculationTriggersSelectOrAdd',
-                                query: {
-                                    library_id: newRule.library_id,
-                                    item_type_id: newRule.item_type_id,
-                                    patron_category_id:
-                                        newRule.patron_category_id,
-                                },
-                            }"
-                            class="btn btn-default btn-xs"
-                            ><i class="fa-solid fa-pencil"></i>
-                            {{ $__("Confirm context") }}</router-link
+            <fieldset class="rows">
+                <legend>{{ $__("Confirm trigger context") }}</legend>
+                <ol>
+                    <li>
+                        <label for="library_id" class="required"
+                            >{{ $__("Library") }}:</label
                         >
-                    </div>
-                    <div
-                        class="page-section bg-warning-subtle"
-                        v-if="circRules.length && editMode !== 'confirmContext'"
+                        <v-select
+                            id="library_id"
+                            v-model="newRule.library_id"
+                            label="name"
+                            :reduce="lib => lib.library_id"
+                            :options="libraries"
+                            @update:modelValue="handleContextChange($event)"
+                            :disabled="editMode !== 'confirmContext'"
+                        >
+                            <template #search="{ attributes, events }">
+                                <input
+                                    :required="!newRule.library_id"
+                                    class="vs__search"
+                                    v-bind="attributes"
+                                    v-on="events"
+                                />
+                            </template>
+                        </v-select>
+                        <span class="required">{{ $__("Required") }}</span>
+                    </li>
+                    <li>
+                        <label for="patron_category_id" class="required"
+                            >{{ $__("Patron category") }}:</label
+                        >
+                        <v-select
+                            id="patron_category_id"
+                            v-model="newRule.patron_category_id"
+                            label="name"
+                            :reduce="cat => cat.patron_category_id"
+                            :options="categories"
+                            @update:modelValue="handleContextChange($event)"
+                            :disabled="editMode !== 'confirmContext'"
+                        >
+                            <template #search="{ attributes, events }">
+                                <input
+                                    :required="!newRule.patron_category_id"
+                                    class="vs__search"
+                                    v-bind="attributes"
+                                    v-on="events"
+                                />
+                            </template>
+                        </v-select>
+                        <span class="required">{{ $__("Required") }}</span>
+                    </li>
+                    <li>
+                        <label for="item_type_id" class="required"
+                            >{{ $__("Item type") }}:</label
+                        >
+                        <v-select
+                            id="item_type_id"
+                            v-model="newRule.item_type_id"
+                            label="description"
+                            :reduce="type => type.item_type_id"
+                            :options="itemTypes"
+                            @update:modelValue="handleContextChange($event)"
+                            :disabled="editMode !== 'confirmContext'"
+                        >
+                            <template #search="{ attributes, events }">
+                                <input
+                                    :required="!newRule.item_type_id"
+                                    class="vs__search"
+                                    v-bind="attributes"
+                                    v-on="events"
+                                />
+                            </template>
+                        </v-select>
+                        <span class="required">{{ $__("Required") }}</span>
+                    </li>
+                </ol>
+                <div v-if="editMode === 'confirmContext'">
+                    <router-link
+                        :to="{
+                            name: 'CirculationTriggersSelectOrAdd',
+                            query: {
+                                library_id: newRule.library_id,
+                                item_type_id: newRule.item_type_id,
+                                patron_category_id: newRule.patron_category_id,
+                            },
+                        }"
+                        class="btn btn-default btn-xs"
+                        ><i class="fa-solid fa-pencil"></i>
+                        {{ $__("Confirm context") }}</router-link
                     >
-                        <TriggersTable
-                            :contextSpecificCircRules="circRules"
-                            :allCircRules="[]"
-                            :triggerNumber="newTriggerNumber - 1"
-                            :modal="true"
-                            :ruleBeingEdited="ruleBeingEdited"
-                            :triggerBeingEdited="triggerBeingEdited"
-                            :letters="filteredLetters"
-                        />
-                    </div>
-                </fieldset>
-
-                <fieldset class="rows" v-if="alertMessage">
-                    <div class="alert alert-info">{{ alertMessage }}</div>
-                </fieldset>
-
-                <fieldset
-                    class="rows"
-                    v-if="editMode === 'edit' || editMode === 'add'"
+                </div>
+                <div
+                    class="page-section bg-warning-subtle"
+                    v-if="circRules.length && editMode !== 'confirmContext'"
                 >
-                    <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
-                        {{ $__("Add new trigger") }}
-                        {{ " " + newTriggerNumber }}
-                    </legend>
-                    <legend v-else>
-                        {{ $__("Edit trigger") }} {{ " " + newTriggerNumber }}
-                    </legend>
-                    <ol>
-                        <li>
-                            <label for="overdue_delay"
-                                >{{ $__("Delay") }}:
-                            </label>
-                            <div class="numeric-input-wrapper">
-                                <div class="input-with-clear">
-                                    <input
-                                        id="overdue_delay"
-                                        v-model="newRule.delay"
-                                        type="number"
-                                        :placeholder="fallbackRule.delay"
-                                        :min="minDelay"
-                                        :max="maxDelay"
-                                        class="numeric-input"
-                                    />
-                                    <button
-                                        v-if="
-                                            newRule.delay !== null &&
-                                            newRule.delay !== undefined
-                                        "
-                                        type="button"
-                                        class="clear-btn"
-                                        @click="newRule.delay = null"
+                    <TriggersTable
+                        :contextSpecificCircRules="circRules"
+                        :allCircRules="[]"
+                        :triggerNumber="newTriggerNumber - 1"
+                        :modal="true"
+                        :ruleBeingEdited="ruleBeingEdited"
+                        :triggerBeingEdited="triggerBeingEdited"
+                        :letters="filteredLetters"
+                    />
+                </div>
+            </fieldset>
+            <fieldset class="rows" v-if="alertMessage">
+                <div class="alert alert-info">{{ alertMessage }}</div>
+            </fieldset>
+            <fieldset
+                class="rows"
+                v-if="editMode === 'edit' || editMode === 'add'"
+            >
+                <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
+                    {{ $__("Add new trigger") }}
+                    {{ " " + newTriggerNumber }}
+                </legend>
+                <legend v-else>
+                    {{ $__("Edit trigger") }} {{ " " + newTriggerNumber }}
+                </legend>
+                <ol>
+                    <li>
+                        <label for="overdue_delay">{{ $__("Delay") }}: </label>
+                        <div class="numeric-input-wrapper">
+                            <div class="input-with-clear">
+                                <input
+                                    id="overdue_delay"
+                                    v-model="newRule.delay"
+                                    type="number"
+                                    :placeholder="fallbackRule.delay"
+                                    :min="minDelay"
+                                    :max="maxDelay"
+                                    class="numeric-input"
+                                />
+                                <button
+                                    v-if="
+                                        newRule.delay !== null &&
+                                        newRule.delay !== undefined
+                                    "
+                                    type="button"
+                                    class="clear-btn"
+                                    @click="newRule.delay = null"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="10"
+                                        height="10"
                                     >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="10"
-                                            height="10"
-                                        >
-                                            <path
-                                                d="M6.895455 5l2.842897-2.842898c.348864-.348863.348864-.914488 0-1.263636L9.106534.261648c-.348864-.348864-.914489-.348864-1.263636 0L5 3.104545 2.157102.261648c-.348863-.348864-.914488-.348864-1.263636 0L.261648.893466c-.348864.348864-.348864.914489 0 1.263636L3.104545 5 .261648 7.842898c-.348864.348863-.348864.914488 0 1.263636l.631818.631818c.348864.348864.914773.348864 1.263636 0L5 6.895455l2.842898 2.842897c.348863.348864.914772.348864 1.263636 0l.631818-.631818c.348864-.348864.348864-.914489 0-1.263636L6.895455 5z"
-                                            ></path>
-                                        </svg>
+                                        <path
+                                            d="M6.895455 5l2.842897-2.842898c.348864-.348863.348864-.914488 0-1.263636L9.106534.261648c-.348864-.348864-.914489-.348864-1.263636 0L5 3.104545 2.157102.261648c-.348863-.348864-.914488-.348864-1.263636 0L.261648.893466c-.348864.348864-.348864.914489 0 1.263636L3.104545 5 .261648 7.842898c-.348864.348863-.348864.914488 0 1.263636l.631818.631818c.348864.348864.914773.348864 1.263636 0L5 6.895455l2.842898 2.842897c.348863.348864.914772.348864 1.263636 0l.631818-.631818c.348864-.348864.348864-.914489 0-1.263636L6.895455 5z"
+                                        ></path>
+                                    </svg>
+                                </button>
+                                <div class="chevron-buttons">
+                                    <button
+                                        type="button"
+                                        class="increment-btn"
+                                        @click="incrementDelay"
+                                    >
+                                        ▴
                                     </button>
-                                    <div class="chevron-buttons">
-                                        <button
-                                            type="button"
-                                            class="increment-btn"
-                                            @click="incrementDelay"
-                                        >
-                                            ▴
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="decrement-btn"
-                                            @click="decrementDelay"
-                                        >
-                                            ▾
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        class="decrement-btn"
+                                        @click="decrementDelay"
+                                    >
+                                        ▾
+                                    </button>
                                 </div>
                             </div>
-                        </li>
-                        <li>
-                            <label for="restricts"
-                                >{{ $__("Restricts checkouts") }}:</label
-                            >
-                            <div>
-                                <input
-                                    type="radio"
-                                    id="restricts-yes"
-                                    v-model="newRule.restrict"
-                                    :value="1"
-                                />
-                                {{ $__("Yes") }}
-
-                                <input
-                                    type="radio"
-                                    id="restricts-no"
-                                    v-model="newRule.restrict"
-                                    :value="0"
-                                />
-                                {{ $__("No") }}
-
-                                <input
-                                    type="radio"
-                                    id="restricts-fallback"
-                                    v-model="newRule.restrict"
-                                    :value="null"
-                                />
-                                {{ $__("Fallback to default") }}
-                                <span v-if="fallbackRule.restricts !== null">
-                                    ({{
-                                        fallbackRule.restricts === 1
-                                            ? $__("Yes")
-                                            : $__("No")
-                                    }})
-                                </span>
-                            </div>
-                        </li>
-                    </ol>
-                </fieldset>
-
-                <fieldset
-                    class="rows"
-                    v-if="editMode === 'edit' || editMode === 'add'"
-                >
-                    <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
-                        {{ $__("Notice for trigger") }}
-                        {{ " " + newTriggerNumber }}
-                    </legend>
-                    <legend v-else>
-                        {{ $__("Edit notice for trigger") }}
-                        {{ " " + newTriggerNumber }}
-                    </legend>
-                    <ol>
-                        <li>
-                            <label for="letter_code"
-                                >{{ $__("Letter") }}:</label
-                            >
-                            <v-select
-                                id="letter_code"
-                                v-model="newRule.notice"
-                                label="name"
-                                :reduce="type => type.code"
-                                :options="filteredLetters"
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                        :placeholder="
-                                            newRule.notice === null ||
-                                            newRule.notice === undefined
-                                                ? letters.find(
-                                                      letter =>
-                                                          letter.code ===
-                                                          fallbackRule.notice
-                                                  )?.name || fallbackRule.notice
-                                                : ''
-                                        "
-                                    />
-                                </template>
-                            </v-select>
-                        </li>
-                        <li
-                            v-if="
-                                newRule.notice !== '' ||
-                                ((newRule.notice === null ||
-                                    newRule.notice === undefined) &&
-                                    fallbackRule.notice !== '')
-                            "
+                        </div>
+                    </li>
+                    <li>
+                        <label for="restricts"
+                            >{{ $__("Restricts checkouts") }}:</label
                         >
-                            <label for="mtt"
-                                >{{ $__("Transport type(s)") }}:</label
-                            >
-                            <v-select
-                                id="mtt"
-                                v-model="newRule.mtt"
-                                label="name"
-                                :reduce="type => type.code"
-                                :options="mtts"
-                                multiple
-                            >
-                                <template #search="{ attributes, events }">
-                                    <input
-                                        class="vs__search"
-                                        v-bind="attributes"
-                                        v-on="events"
-                                        :placeholder="
-                                            newRule.mtt === null ||
-                                            newRule.mtt === undefined ||
-                                            newRule.mtt.length === 0
-                                                ? fallbackRule.mtt
-                                                : ''
-                                        "
-                                    />
-                                </template>
-                            </v-select>
-                        </li>
-                    </ol>
-                </fieldset>
-            </div>
-            <div class="modal-footer">
-                <ButtonSubmit />
-                <router-link
-                    :to="{
-                        name: 'CirculationTriggersList',
-                    }"
-                    >{{ $__("Cancel") }}</router-link
-                >
-            </div>
-        </form>
-    </div>
+                        <div>
+                            <input
+                                type="radio"
+                                id="restricts-yes"
+                                v-model="newRule.restrict"
+                                :value="1"
+                            />
+                            {{ $__("Yes") }}
+                            <input
+                                type="radio"
+                                id="restricts-no"
+                                v-model="newRule.restrict"
+                                :value="0"
+                            />
+                            {{ $__("No") }}
+                            <input
+                                type="radio"
+                                id="restricts-fallback"
+                                v-model="newRule.restrict"
+                                :value="null"
+                            />
+                            {{ $__("Fallback to default") }}
+                            <span v-if="fallbackRule.restricts !== null">
+                                ({{
+                                    fallbackRule.restricts === 1
+                                        ? $__("Yes")
+                                        : $__("No")
+                                }})
+                            </span>
+                        </div>
+                    </li>
+                </ol>
+            </fieldset>
+            <fieldset
+                class="rows"
+                v-if="editMode === 'edit' || editMode === 'add'"
+            >
+                <legend v-if="ruleInfo.numberOfTriggers < newTriggerNumber">
+                    {{ $__("Notice for trigger") }}
+                    {{ " " + newTriggerNumber }}
+                </legend>
+                <legend v-else>
+                    {{ $__("Edit notice for trigger") }}
+                    {{ " " + newTriggerNumber }}
+                </legend>
+                <ol>
+                    <li>
+                        <label for="letter_code">{{ $__("Letter") }}:</label>
+                        <v-select
+                            id="letter_code"
+                            v-model="newRule.notice"
+                            label="name"
+                            :reduce="type => type.code"
+                            :options="filteredLetters"
+                        >
+                            <template #search="{ attributes, events }">
+                                <input
+                                    class="vs__search"
+                                    v-bind="attributes"
+                                    v-on="events"
+                                    :placeholder="
+                                        newRule.notice === null ||
+                                        newRule.notice === undefined
+                                            ? letters.find(
+                                                  letter =>
+                                                      letter.code ===
+                                                      fallbackRule.notice
+                                              )?.name || fallbackRule.notice
+                                            : ''
+                                    "
+                                />
+                            </template>
+                        </v-select>
+                    </li>
+                    <li
+                        v-if="
+                            newRule.notice !== '' ||
+                            ((newRule.notice === null ||
+                                newRule.notice === undefined) &&
+                                fallbackRule.notice !== '')
+                        "
+                    >
+                        <label for="mtt">{{ $__("Transport type(s)") }}:</label>
+                        <v-select
+                            id="mtt"
+                            v-model="newRule.mtt"
+                            label="name"
+                            :reduce="type => type.code"
+                            :options="mtts"
+                            multiple
+                        >
+                            <template #search="{ attributes, events }">
+                                <input
+                                    class="vs__search"
+                                    v-bind="attributes"
+                                    v-on="events"
+                                    :placeholder="
+                                        newRule.mtt === null ||
+                                        newRule.mtt === undefined ||
+                                        newRule.mtt.length === 0
+                                            ? fallbackRule.mtt
+                                            : ''
+                                    "
+                                />
+                            </template>
+                        </v-select>
+                    </li>
+                </ol>
+            </fieldset>
+        </div>
+        <div class="modal-footer">
+            <ButtonSubmit />
+            <router-link
+                :to="{
+                    name: 'CirculationTriggersList',
+                }"
+                >{{ $__("Cancel") }}</router-link
+            >
+        </div>
+    </form>
     <div v-else>
         <p>{{ $__("Loading...") }}</p>
     </div>
@@ -633,11 +623,11 @@ export default {
             };
 
             const client = APIClient.circRule;
-            let result
+            let result;
             try {
-                result = await client.circRules.getAll({}, params)
+                result = await client.circRules.getAll({}, params);
             } catch (e) {
-                throw(e)
+                throw e;
             }
             this.ruleBeingEdited = result[0];
             this.ruleBeingEdited.context = params;
@@ -889,6 +879,10 @@ export default {
 </script>
 
 <style scoped>
+#circulation-trigger-form-add {
+    max-height: 90vh;
+}
+
 form li {
     display: flex;
     align-items: center;
