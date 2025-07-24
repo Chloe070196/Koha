@@ -116,7 +116,8 @@
                         v-if="circRules.length && editMode !== 'confirmContext'"
                     >
                         <TriggersTable
-                            :circRules="circRules"
+                            :contextSpecificCircRules="circRules"
+                            :allCircRules="[]"
                             :triggerNumber="newTriggerNumber - 1"
                             :modal="true"
                             :ruleBeingEdited="ruleBeingEdited"
