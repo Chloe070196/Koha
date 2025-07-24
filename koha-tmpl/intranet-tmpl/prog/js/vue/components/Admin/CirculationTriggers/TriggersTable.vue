@@ -276,6 +276,22 @@
                             ><i class="fa-solid fa-pencil"></i>
                             {{ $__("Edit") }}</router-link
                         >
+                        <router-link
+                            v-if="!rule.isGeneratedFromDefault"
+                            :to="{
+                                name: 'CirculationTriggersFormConfirmDelete',
+                                query: {
+                                    library_id: rule.context.library_id,
+                                    item_type_id: rule.context.item_type_id,
+                                    patron_category_id:
+                                        rule.context.patron_category_id,
+                                    triggerNumber: triggerNumber,
+                                },
+                            }"
+                            class="btn btn-default btn-xs"
+                            ><i class="fa-solid fa-pencil"></i>
+                            {{ $__("Delete") }}</router-link
+                        >
                     </td>
                 </tr>
                 <tr v-if="modal">

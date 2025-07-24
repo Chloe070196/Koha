@@ -245,7 +245,7 @@
     </div>
     <div v-if="showModal" class="modal" role="dialog">
         <div
-            class="modal-dialog modal-dialog-centered modal-lg"
+            class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
             role="document"
         >
             <router-view></router-view>
