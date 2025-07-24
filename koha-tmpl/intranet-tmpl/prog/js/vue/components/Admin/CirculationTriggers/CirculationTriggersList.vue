@@ -88,6 +88,13 @@
                     ).format(from_branch)
                 }}
             </p>
+            <p>
+                {{
+                    $__(
+                        "NOTE: Delay for a given trigger can be pushed forward or backwards only within the bounds of what its two neighbouring triggers allows."
+                    )
+                }}
+            </p>
         </div>
         <div class="page-section" v-if="initialized">
             <legend>
