@@ -487,14 +487,14 @@ export default {
                 context,
             };
             circRule[`overdue_${this.newTriggerNumber}_delay`] =
-                this.newRule.delay;
+                ruleToSubmit.delay;
             circRule[`overdue_${this.newTriggerNumber}_notice`] =
-                this.newRule.notice;
+                ruleToSubmit.notice;
             circRule[`overdue_${this.newTriggerNumber}_restrict`] =
-                this.newRule.restrict;
+                ruleToSubmit.restrict;
             circRule[`overdue_${this.newTriggerNumber}_mtt`] =
-                this.newRule.mtt && this.newRule.mtt.length
-                    ? this.newRule.mtt.join(",")
+                ruleToSubmit.mtt && ruleToSubmit.mtt.length
+                    ? ruleToSubmit.mtt.join(",")
                     : null;
 
             const client = APIClient.circRule;
