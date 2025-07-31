@@ -352,7 +352,10 @@ export default {
             selectedParams.effective = false;
             if (this.selectedLibrary) {
                 selectedParams.library_id = this.selectedLibrary;
+            } else {
+                selectedParams.library_id = "*";
             }
+
             if (this.selectedCategory) {
                 selectedParams.patron_category_id = this.selectedCategory;
             }
@@ -364,18 +367,21 @@ export default {
 
             try {
                 rules = await client.circRules.getAll({}, selectedParams);
+                this.allCircRules = await client.circRules.getAll(
+                    {},
+                    { effective: false }
+                );
             } catch (e) {
                 throw e;
             }
 
             let ruleList = [];
 
-            if (this.displayAllApplicableRules) {
-                ruleList = await this.getExhaustiveRuleSetList(
-                    client,
-                    rules,
-                    selectedParams
-                );
+            if (this.displayAllApplicableRules && this.allCircRules) {
+                ruleList =
+                    this.generateExhaustiveRuleListForSearchParams(
+                        selectedParams
+                    );
             }
             const { numberOfTabs, rulesPerTrigger: circRules } =
                 this.splitCircRulesByTriggerNumber(
@@ -383,301 +389,123 @@ export default {
                 );
             this.numberOfTabs = numberOfTabs;
             this.contextSpecificCircRules = circRules;
-            this.allCircRules = await client.circRules.getAll(
-                {},
-                { effective: false }
-            );
         },
-        async getExhaustiveRuleSetList(client, ruleSets, selectedParams) {
-            const currentParams = cloneDeep(selectedParams);
-
-            if (ruleSets.length !== 0) {
-                return this.generateExahustiveContextRuleList(
-                    ruleSets,
-                    selectedParams
-                );
+        generateContextRuleSet(categoryId, itemTypeId, libraryId) {
+            // find context specific rule set, add to list OR
+            const matchingItemTypeAndPatronCategoryRuleSet = cloneDeep(
+                this.allCircRules.find(
+                    ruleSet =>
+                        ruleSet.context.item_type_id === itemTypeId &&
+                        ruleSet.context.patron_category_id === categoryId
+                )
+            );
+            if (matchingItemTypeAndPatronCategoryRuleSet) {
+                matchingItemTypeAndPatronCategoryRuleSet.isGeneratedFromDefault = false;
+                return matchingItemTypeAndPatronCategoryRuleSet;
             }
-
-            // no rule sets match this context, look for default rule sets for the patron category
-            currentParams.item_type_id = "*";
-            let defaultItemTypeRuleSets;
-            try {
-                defaultItemTypeRuleSets = await client.circRules.getAll(
-                    {},
-                    currentParams
-                );
-            } catch (e) {
-                throw e;
+            // find patron category specific rule set (default for all item types), add to list OR
+            const matchingPatronCategoryRuleSet = cloneDeep(
+                this.allCircRules.find(
+                    ruleSet =>
+                        ruleSet.context.patron_category_id === categoryId &&
+                        ruleSet.context.item_type_id === "*"
+                )
+            );
+            if (matchingPatronCategoryRuleSet) {
+                matchingPatronCategoryRuleSet.context.item_type_id = itemTypeId;
+                matchingPatronCategoryRuleSet.context.library_id = libraryId;
+                matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
+                return matchingPatronCategoryRuleSet;
             }
-            if (defaultItemTypeRuleSets.length !== 0) {
-                return this.generateExahustiveContextRuleList(
-                    defaultItemTypeRuleSets,
-                    selectedParams
-                );
+            // find item type specific rule set (default for all patron categories), add to list OR
+            const matchingItemTypeRuleSet = cloneDeep(
+                this.allCircRules.find(
+                    ruleSet =>
+                        ruleSet.context.item_type_id === itemTypeId &&
+                        ruleSet.context.patron_category_id === "*"
+                )
+            );
+            if (matchingItemTypeRuleSet) {
+                matchingItemTypeRuleSet.context.patron_category_id = categoryId;
+                matchingItemTypeRuleSet.context.library_id = libraryId;
+                matchingItemTypeRuleSet.isGeneratedFromDefault = true;
+                return matchingItemTypeRuleSet;
             }
-
-            // no rule sets match this context, look for default rule sets for the select library
-            currentParams.patron_category_id = "*";
-            let defaultItemTypeAndPatronCategroyRuleSets;
-            try {
-                defaultItemTypeAndPatronCategroyRuleSets =
-                    await client.circRules.getAll({}, currentParams);
-            } catch (e) {
-                throw e;
-            }
-            if (defaultItemTypeAndPatronCategroyRuleSets.length !== 0) {
-                return this.generateExahustiveContextRuleList(
-                    defaultItemTypeAndPatronCategroyRuleSets,
-                    selectedParams
-                );
-            }
-
-            // no rule sets match this context, look for default rules for all libraries
-            currentParams.library_id = "*";
-            let defaultLibraryAndItemTypeAndPatronCategroyRuleSets;
-            try {
-                defaultLibraryAndItemTypeAndPatronCategroyRuleSets =
-                    await client.circRules.getAll({}, currentParams);
-            } catch (e) {
-                throw e;
-            }
-            if (
-                defaultLibraryAndItemTypeAndPatronCategroyRuleSets.length !== 0
-            ) {
-                return this.generateExahustiveContextRuleList(
-                    defaultLibraryAndItemTypeAndPatronCategroyRuleSets,
-                    selectedParams
-                );
-            }
+            // no context specific rule set found, find the default, add to list
+            const ruleSetGeneratedFromDefault = cloneDeep(
+                this.allCircRules.find(
+                    ruleSet =>
+                        ruleSet.context.item_type_id == "*" &&
+                        ruleSet.context.patron_category_id == "*"
+                )
+            );
+            ruleSetGeneratedFromDefault.context.patron_category_id = categoryId;
+            ruleSetGeneratedFromDefault.context.item_type_id = itemTypeId;
+            ruleSetGeneratedFromDefault.context.library_id = libraryId;
+            ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
+            return ruleSetGeneratedFromDefault;
         },
         // takes in a ruleSet and generate an exhaustive list of all contexts these may apply to, narrowed down by library
         // "placeholder" rules are only generated for contexts that no rule is found to match
         // TODO: refactor for readability
-        generateExahustiveContextRuleList(ruleSets, params) {
-            const ruleSetList = [];
+        generateExhaustiveRuleListForSearchParams(params) {
             // handle searches where no patron category or item type are specified
+            const ruleSetList = [];
             if (!params.patron_category_id && !params.item_type_id) {
                 this.patronCategories.forEach(category => {
                     this.itemTypes.forEach(itemType => {
                         const currentCategory = cloneDeep(category);
                         const currentItemType = cloneDeep(itemType);
-
-                        // find context specific rule set, add to list OR
-                        const matchingItemTypeAndPatronCategoryRuleSet =
-                            cloneDeep(
-                                ruleSets.find(
-                                    ruleSet =>
-                                        ruleSet.context.item_type_id ===
-                                            currentItemType.item_type_id &&
-                                        ruleSet.context.patron_category_id ===
-                                            currentCategory.patron_category_id
-                                )
-                            );
-                        if (matchingItemTypeAndPatronCategoryRuleSet) {
-                            matchingItemTypeAndPatronCategoryRuleSet.isGeneratedFromDefault = false;
-                            ruleSetList.push(
-                                matchingItemTypeAndPatronCategoryRuleSet
-                            );
-                            return;
-                        }
-
-                        // find item type specific rule set (default for all patron categories), add to list OR
-                        const matchingItemTypeRuleSet = cloneDeep(
-                            ruleSets.find(
-                                ruleSet =>
-                                    ruleSet.context.item_type_id ===
-                                        currentItemType.item_type_id &&
-                                    ruleSet.context.patron_category_id === "*"
+                        ruleSetList.push(
+                            this.generateContextRuleSet(
+                                currentCategory.patron_category_id,
+                                currentItemType.item_type_id,
+                                params.library_id
                             )
                         );
-                        if (matchingItemTypeRuleSet) {
-                            matchingItemTypeRuleSet.context.patron_category_id =
-                                currentCategory.patron_category_id;
-                            matchingItemTypeRuleSet.context.library_id =
-                                params.library_id;
-                            matchingItemTypeRuleSet.isGeneratedFromDefault = true;
-                            ruleSetList.push(matchingItemTypeRuleSet);
-                            return;
-                        }
-
-                        // find patron category specific rule set (default for all item types), add to list OR
-                        const matchingPatronCategoryRuleSet = cloneDeep(
-                            ruleSets.find(
-                                ruleSet =>
-                                    ruleSet.context.patron_category_id ===
-                                        currentCategory.patron_category_id &&
-                                    ruleSet.context.item_type_id === "*"
-                            )
-                        );
-                        if (matchingPatronCategoryRuleSet) {
-                            matchingPatronCategoryRuleSet.context.item_type_id =
-                                currentItemType.item_type_id;
-                            matchingPatronCategoryRuleSet.context.library_id =
-                                params.library_id;
-                            matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
-                            ruleSetList.push(matchingPatronCategoryRuleSet);
-                            return;
-                        }
-
-                        // no context specific rule set found, find the default, add to list
-                        const ruleSetGeneratedFromDefault = cloneDeep(
-                            ruleSets.find(
-                                ruleSet =>
-                                    ruleSet.context.item_type_id == "*" &&
-                                    ruleSet.context.patron_category_id == "*"
-                            )
-                        );
-                        if (ruleSetGeneratedFromDefault) {
-                            ruleSetGeneratedFromDefault.context.patron_category_id =
-                                currentCategory.patron_category_id;
-                            ruleSetGeneratedFromDefault.context.item_type_id =
-                                currentItemType.item_type_id;
-                            ruleSetGeneratedFromDefault.context.library_id =
-                                params.library_id;
-                            ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
-                            ruleSetList.push(ruleSetGeneratedFromDefault);
-                        }
                     });
                 });
-                // handle searches where only the item type is specified
-            } else if (!params.patron_category_id) {
+                return ruleSetList;
+            }
+
+            // handle searches where only the item type is specified
+            if (!params.patron_category_id) {
                 this.patronCategories.forEach(category => {
                     const currentCategory = cloneDeep(category);
-                    const matchingRuleSet = ruleSets.find(
-                        ruleSet =>
-                            ruleSet.context.patron_category_id ===
-                            category.patron_category_id
-                    );
-
-                    // rule set matching context (item type only) found, add to list OR
-                    if (matchingRuleSet) {
-                        matchingRuleSet.isGeneratedFromDefault = false;
-                        ruleSetList.push(matchingRuleSet);
-                        return;
-                    }
-
-                    // no context specific rule set found, find the default, add to list
-                    const ruleSetGeneratedFromDefault = cloneDeep(
-                        ruleSets.find(
-                            ruleSet => ruleSet.context.patron_category_id == "*"
+                    ruleSetList.push(
+                        this.generateContextRuleSet(
+                            currentCategory.patron_category_id,
+                            params.item_type_id,
+                            params.library_id
                         )
                     );
-                    ruleSetGeneratedFromDefault.context.item_type_id =
-                        params.item_type_id;
-                    ruleSetGeneratedFromDefault.context.patron_category_id =
-                        currentCategory.patron_category_id;
-                    ruleSetGeneratedFromDefault.context.library_id =
-                        params.library_id;
-                    ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
-                    ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
-                // handle searches where only the patron category is specified
-            } else if (!params.item_type_id) {
+                return ruleSetList;
+            }
+
+            // handle searches where only the patron category is specified
+            if (!params.item_type_id) {
                 this.itemTypes.forEach(itemType => {
                     const currentItemType = cloneDeep(itemType);
-                    const matchingRuleSet = ruleSets.find(
-                        ruleSet =>
-                            ruleSet.context.item_type_id ===
-                            itemType.item_type_id
-                    );
-
-                    // rule set matching context (patron category only) found, add to list
-                    if (matchingRuleSet) {
-                        matchingRuleSet.isGeneratedFromDefault = false;
-                        ruleSetList.push(matchingRuleSet);
-                        return;
-                    }
-
-                    // no context specific rule set found, find the default, add to list
-                    const ruleSetGeneratedFromDefault = cloneDeep(
-                        ruleSets.find(
-                            ruleSet => ruleSet.context.item_type_id == "*"
+                    ruleSetList.push(
+                        this.generateContextRuleSet(
+                            params.patron_category_id,
+                            currentItemType.item_type_id,
+                            params.library_id
                         )
                     );
-                    ruleSetGeneratedFromDefault.context.item_type_id =
-                        currentItemType.item_type_id;
-                    ruleSetGeneratedFromDefault.context.patron_category_id =
-                        params.patron_category_id;
-                    ruleSetGeneratedFromDefault.context.library_id =
-                        params.library_id;
-                    ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
-                    ruleSetList.push(ruleSetGeneratedFromDefault);
                 });
-                // handle searches where both patron category and item type are specified
-            } else {
-                // find context specific rule set, add to list ORse {
-                const matchingItemTypeAndPatronCategoryRuleSet = cloneDeep(
-                    ruleSets.find(
-                        ruleSet =>
-                            ruleSet.context.item_type_id ===
-                                params.item_type_id &&
-                            ruleSet.context.patron_category_id ===
-                                params.patron_category_id
-                    )
-                );
-                if (matchingItemTypeAndPatronCategoryRuleSet) {
-                    matchingItemTypeAndPatronCategoryRuleSet.isGeneratedFromDefault = false;
-                    ruleSetList.push(matchingItemTypeAndPatronCategoryRuleSet);
-                    return ruleSetList;
-                }
-
-                // find item type specific rule set (default for all patron categories), add to list OR
-                const matchingItemTypeRuleSet = cloneDeep(
-                    ruleSets.find(
-                        ruleSet =>
-                            ruleSet.context.item_type_id ===
-                                params.item_type_id &&
-                            ruleSet.context.patron_category_id === "*"
-                    )
-                );
-                if (matchingItemTypeRuleSet) {
-                    matchingItemTypeRuleSet.context.patron_category_id =
-                        params.patron_category_id;
-                    matchingItemTypeRuleSet.context.library_id =
-                        params.library_id;
-                    matchingItemTypeRuleSet.isGeneratedFromDefault = true;
-                    ruleSetList.push(matchingItemTypeRuleSet);
-                    return ruleSetList;
-                }
-
-                // find patron category specific rule set (default for all item types), add to list OR
-                const matchingPatronCategoryRuleSet = cloneDeep(
-                    ruleSets.find(
-                        ruleSet =>
-                            ruleSet.context.patron_category_id ===
-                                params.patron_category_id &&
-                            ruleSet.context.item_type_id === "*"
-                    )
-                );
-                if (matchingPatronCategoryRuleSet) {
-                    matchingPatronCategoryRuleSet.context.item_type_id =
-                        params.item_type_id;
-                    matchingPatronCategoryRuleSet.context.library_id =
-                        params.library_id;
-                    matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
-                    ruleSetList.push(matchingPatronCategoryRuleSet);
-                    return ruleSetList;
-                }
-
-                // no context specific rule set found, find the default, add to list
-                const ruleSetGeneratedFromDefault = cloneDeep(
-                    ruleSets.find(
-                        ruleSet =>
-                            ruleSet.context.item_type_id == "*" &&
-                            ruleSet.context.patron_category_id == "*"
-                    )
-                );
-                if (ruleSetGeneratedFromDefault) {
-                    ruleSetGeneratedFromDefault.context.patron_category_id =
-                        params.patron_category_id;
-                    ruleSetGeneratedFromDefault.context.item_type_id =
-                        params.item_type_id;
-                    ruleSetGeneratedFromDefault.context.library_id =
-                        params.library_id;
-                    ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
-                    ruleSetList.push(ruleSetGeneratedFromDefault);
-                }
+                return ruleSetList;
             }
+
+            // handle searches where both patron category and item type are specified
+            ruleSetList.push(
+                this.generateContextRuleSet(
+                    params.patron_category_id,
+                    params.item_type_id,
+                    params.library_id
+                )
+            );
             return ruleSetList;
         },
         changeTabContent(e) {
