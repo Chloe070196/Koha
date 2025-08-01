@@ -15,6 +15,22 @@
             </div>
             <div class="modal-body">
                 <fieldset class="rows">
+                    <div class="page-section bg-info">
+                        <p>
+                            {{
+                                $__(
+                                    "Deleting this rule set for the chosen context will have an impact on all the contexts that used to fall back on this rule set."
+                                )
+                            }}
+                        </p>
+                        <p>
+                            {{
+                                $__(
+                                    "To better understand which contexts will be affected, use 'Display all patron categories and items types.' on the circulations triggers page."
+                                )
+                            }}
+                        </p>
+                    </div>
                     <legend>{{ $__("Trigger context") }}</legend>
                     <ol v-if="initialized">
                         <li>
