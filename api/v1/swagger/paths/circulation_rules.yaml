@@ -131,6 +131,54 @@
     x-koha-authorization:
       permissions:
         - circulate: circulate_remaining_permissions
+/circulation_rules/{circulation_rule_id}:
+  delete:
+    x-mojo-to: CirculationRules#delete_rule
+    operationId: deleteCirculationRules
+    tags:
+      - circulation_rules
+    summary: Delete a set of overdue circulation rule
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    responses:
+      "200":
+        description: A successfully updated circulation rules set
+        schema:
+          items:
+            $ref: "../swagger.yaml#/definitions/circulation_rules"
+      "400":
+        description: |
+          Bad request.
+        schema:
+          $ref: "../swagger.yaml#/definitions/error"
+      "403":
+        description: Access forbidden
+        schema:
+          $ref: "../swagger.yaml#/definitions/error"
+      "404":
+        description: Resource not found
+        schema:
+          $ref: "../swagger.yaml#/definitions/error"
+      "409":
+        description: Conflict in deleting resource
+        schema:
+          $ref: "../swagger.yaml#/definitions/error"
+      "500":
+        description: |
+          Internal server error. Possible `error_code` attribute values:
+
+          * `internal_server_error`
+        schema:
+          $ref: "../swagger.yaml#/definitions/error"
+      "503":
+        description: Under maintenance
+        schema:
+          $ref: "../swagger.yaml#/definitions/error"
+    x-koha-authorization:
+      permissions:
+        - circulate: circulate_remaining_permissions
 /circulation_rules/kinds:
   get:
     x-mojo-to: CirculationRules#get_kinds
