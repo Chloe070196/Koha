@@ -328,12 +328,11 @@ export default {
     methods: {
         async deleteCircRule(e) {
             //TODO: convert this draft into functional code
-            // e.preventDefault();
+            e.preventDefault();
             // // prevent race condition related edit conflicts
             // // store the rule as loaded initially
             // const oldCircRule = cloneDeep(this.ruleSetForDeletion);
             // // refresh this.ruleSetForDeletion so it matches the database
-            // const routeParams = this.ruleSetForDeletion;
             // routeParams.triggerNumber = this.triggerNumber;
             // await this.setRulesForDeletion(routeParams);
             // // if any changes are detected, inform the user, display the new values and go back to editing
@@ -349,31 +348,46 @@ export default {
             //     this.alertMessage =
             //         "The ruleset for the selected trigger context could not be deleted as it was update elsewhere. Please see the updated trigger below.";
             //     // reload the form components that have changed, remain in edit mode
-            //     this.$router.push({
-            //         path: "/cgi-bin/koha/admin/circulation_triggers/delete",
-            //         query: {
-            //             ...context,
-            //             triggerNumber: this.triggerNumber,
-            //         },
-            //     });
+            // this.$router.push({
+            //     path: "/cgi-bin/koha/admin/circulation_triggers/delete",
+            //     query: {
+            //         ...context,
+            //         triggerNumber: this.triggerNumber,
+            //     },
+            // });
             //     return;
             // }
             // const circRule = {
             //     context,
             //     triggerNumber: this.triggerNumber,
             // };
-            // const client = APIClient.circRule;
-            // await client.circRules.delete(circRule).then(
-            //     () => {
-            //         this.$router
-            //             .push({
-            //                 name: "CirculationTriggersList",
-            //                 query: { trigger: this.triggerNumber },
-            //             })
-            //             .then(() => this.$router.go(0));
-            //     },
-            //     error => {}
-            // );
+            const circRule = { context: this.ruleSetForDeletion.context };
+
+            if (this.ruleSetForDeletion.delay) {
+                circRule[`overdue_${this.newTriggerNumber}_delay`] = null;
+            }
+            if (this.ruleSetForDeletion.notice) {
+                circRule[`overdue_${this.newTriggerNumber}_notice`] = null;
+            }
+            if (this.ruleSetForDeletion.restrict) {
+                circRule[`overdue_${this.newTriggerNumber}_restrict`] = null;
+            }
+            if (this.ruleSetForDeletion.mtt) {
+                circRule[`overdue_${this.newTriggerNumber}_mtt`] = null;
+            }
+
+            const client = APIClient.circRule;
+            await client.circRules.update(circRule).then(
+                () => {
+                    this.$router
+                        .push({
+                            name: "CirculationTriggersList",
+                            query: { trigger: this.newTriggerNumber },
+                        })
+                        .then(() => this.$router.go(0));
+                },
+                error => {}
+            );
         },
         findEffectiveRule(ruleSet, key) {
             // Check if the current rule's value for the key is null
