@@ -506,41 +506,6 @@ sub delete {
     }
 }
 
-
-=head3 delete_overdue_rules
-
-Delete the set of overdue circulation rules matching a specific context and trigger number
-
-=cut
-
-# TODO: WIP - DRAFT -> Test and amend accordingly, write tests, consider swapping for soft delete (?)
-sub delete_overdue_rules {
-    my ( $self, $params ) = @_;
-
-    my $branchcode        = $params->{branchcode}        if exists $params->{branchcode};
-    my $categorycode      = $params->{categorycode}      if exists $params->{categorycode};
-    my $itemtype          = $params->{itemtype}          if exists $params->{itemtype};
-    my $triggernumber     = $params->{triggernumber}     if exists $params->{triggernumber};
-    my $rules = $params->{rules};
-
-    # TODO: consider adding a find here (instead of relying on the client to trigger a database state check)
-
-    # only delete the rules that match the context and trigger number
-    while ( my $rule = $rules ) {
-        if (
-            $rule->branchcode == $branchcode &&
-            $rule->categorycode == $categorycode &&
-            $rule->itemtype == $itemtype &&
-            index( $rule->rule_name, "overdue_${triggernumber}_" ) != -1
-        ) {
-            $rule->delete;
-        }
-    }
-
-    # TODO: determine desired return value (ruleset that the overdue rules were removed from?)
-    return;
-}
-
 =head3 clone
 
 Clone a set of circulation rules to another branch

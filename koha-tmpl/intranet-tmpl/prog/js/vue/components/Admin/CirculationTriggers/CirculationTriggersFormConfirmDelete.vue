@@ -277,6 +277,7 @@ import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
+import { isEqual, cloneDeep } from "lodash";
 
 export default {
     setup() {
@@ -331,37 +332,28 @@ export default {
             e.preventDefault();
             // // prevent race condition related edit conflicts
             // // store the rule as loaded initially
-            // const oldCircRule = cloneDeep(this.ruleSetForDeletion);
-            // // refresh this.ruleSetForDeletion so it matches the database
+            const oldCircRule = cloneDeep(this.ruleSetForDeletion);
+            // refresh this.ruleSetForDeletion so it matches the database
             // routeParams.triggerNumber = this.triggerNumber;
-            // await this.setRulesForDeletion(routeParams);
+            await this.setRulesForDeletion(this.ruleSetForDeletion.context);
             // // if any changes are detected, inform the user, display the new values and go back to editing
-            // if (!isEqual(oldCircRule, this.ruleSetForDeletion)) {
-            //     const regex = /overdue_(\d+)_delay/g;
-            //     const numberOfTriggers = Object.keys(
-            //         this.ruleSetForDeletion
-            //     ).filter(
-            //         key => regex.test(key) && this.ruleSetForDeletion[key] !== null
-            //     ).length;
-            //     // update the rule value so it matches db state
-            //     // prepare the alert message
-            //     this.alertMessage =
-            //         "The ruleset for the selected trigger context could not be deleted as it was update elsewhere. Please see the updated trigger below.";
-            //     // reload the form components that have changed, remain in edit mode
-            // this.$router.push({
-            //     path: "/cgi-bin/koha/admin/circulation_triggers/delete",
-            //     query: {
-            //         ...context,
-            //         triggerNumber: this.triggerNumber,
-            //     },
-            // });
-            //     return;
-            // }
-            // const circRule = {
-            //     context,
-            //     triggerNumber: this.triggerNumber,
-            // };
-            const circRule = { context: this.ruleSetForDeletion.context };
+            if (!isEqual(oldCircRule, this.ruleSetForDeletion)) {
+                // update the rule value so it matches db state
+                // prepare the alert message
+                this.alertMessage =
+                    "The ruleset for the selected trigger context could not be deleted as it was update elsewhere. Please see the updated trigger below.";
+                // reload the form components that have changed, remain in edit mode
+            this.$router.push({
+                path: "/cgi-bin/koha/admin/circulation_triggers/delete",
+                query: {
+                    ...context,
+                    triggerNumber: this.triggerNumber,
+                },
+            });
+                return;
+            }
+
+            const circRule = { context: this.ruleSetForDeletion.context }
 
             if (this.ruleSetForDeletion.delay) {
                 circRule[`overdue_${this.newTriggerNumber}_delay`] = null;
@@ -480,14 +472,14 @@ export default {
             this.patron_category_id = patron_category_id;
             this.item_type_id = item_type_id;
             this.triggerNumber = triggerNumber;
-
+            
             const client = APIClient.circRule;
             const result = await client.circRules.getAll(
                 {},
                 {
-                    library_id: library_id,
-                    patron_category_id: patron_category_id,
-                    item_type_id: item_type_id,
+                    library_id: this.library_id,
+                    patron_category_id: this.patron_category_id,
+                    item_type_id: this.item_type_id,
                 }
             );
             this.ruleSetForDeletion = result[0];
@@ -551,8 +543,8 @@ export default {
             };
 
             const client = APIClient.circRule;
-            const promise = await client.circRules.getAll({}, params);
-            this.ruleSetForDeletion = promise[0];
+            const response = await client.circRules.getAll({}, params);
+            this.ruleSetForDeletion = response[0];
             this.ruleSetForDeletion.context = params;
         },
     },

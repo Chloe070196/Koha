@@ -19,16 +19,6 @@ export class CircRuleAPIClient {
                     endpoint: "",
                     body: rule,
                 }),
-            // TODO: WIP - DRAFT: test and amend accordingly
-            // deletes a rule set as defined by the rule context (library_id, patron_category_id, item_id) and trigger number combination
-            delete: (ruleSet, triggernumber) =>
-                this.httpClient.delete({
-                    endpoint: "",
-                    body: {
-                        rule_set: ruleSet,
-                        triggernumber: triggernumber
-                    },
-                }),
             count: (query = {}) =>
                 this.httpClient.count({
                     endpoint:
