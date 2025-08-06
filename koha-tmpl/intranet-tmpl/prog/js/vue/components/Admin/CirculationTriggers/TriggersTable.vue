@@ -286,6 +286,7 @@
                                     patron_category_id:
                                         rule.context.patron_category_id,
                                     triggerNumber: triggerNumber,
+                                    allCircRules: allCircRules,
                                 },
                             }"
                             class="btn btn-default btn-xs"

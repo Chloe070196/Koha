@@ -330,23 +330,18 @@ export default {
         async resetCircRule(e) {
             //TODO: convert this draft into functional code
             e.preventDefault();
-            // // prevent race condition related edit conflicts
-            // // store the rule as loaded initially
-            const oldCircRule = cloneDeep(this.ruleSetForReset);
-            // refresh this.ruleSetForReset so it matches the database
-            // routeParams.triggerNumber = this.triggerNumber;
-            await this.setRulesForReset(this.ruleSetForReset.context);
-            // // if any changes are detected, inform the user, display the new values and go back to editing
-            if (!isEqual(oldCircRule, this.ruleSetForReset)) {
-                // update the rule value so it matches db state
-                // prepare the alert message
+
+            // prevent race condition related edit conflicts
+            // if any changes are detected, inform the user, display the new values and go back to editing
+
+            if (await this.checkForChanges()) {
                 this.alertMessage =
-                    "The ruleset for the selected trigger context could not be reset as it was update elsewhere. Please see the updated trigger below.";
+                    "The ruleset for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger below.";
                 // reload the form components that have changed, remain in edit mode
                 this.$router.push({
                     path: "/cgi-bin/koha/admin/circulation_triggers/reset",
                     query: {
-                        ...context,
+                        ...this.ruleSetForReset.context,
                         triggerNumber: this.triggerNumber,
                     },
                 });
@@ -355,31 +350,52 @@ export default {
 
             const circRule = { context: this.ruleSetForReset.context };
 
-            if (this.ruleSetForReset.delay) {
-                circRule[`overdue_${this.newTriggerNumber}_delay`] = null;
+            if (
+                this.ruleSetForReset[`overdue_${this.triggerNumber}_delay`] !==
+                null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_delay`] = null;
             }
-            if (this.ruleSetForReset.notice) {
-                circRule[`overdue_${this.newTriggerNumber}_notice`] = null;
+            if (
+                this.ruleSetForReset[`overdue_${this.triggerNumber}_notice`] !==
+                null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_notice`] = null;
             }
-            if (this.ruleSetForReset.restrict) {
-                circRule[`overdue_${this.newTriggerNumber}_restrict`] = null;
+            if (
+                this.ruleSetForReset[
+                    `overdue_${this.triggerNumber}_restrict`
+                ] !== null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_restrict`] = null;
             }
-            if (this.ruleSetForReset.mtt) {
-                circRule[`overdue_${this.newTriggerNumber}_mtt`] = null;
+            if (
+                this.ruleSetForReset[`overdue_${this.triggerNumber}_mtt`] !==
+                null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_mtt`] = null;
             }
 
             const client = APIClient.circRule;
-            await client.circRules.update(circRule).then(
+            client.circRules.update(circRule).then(
                 () => {
                     this.$router
                         .push({
                             name: "CirculationTriggersList",
-                            query: { trigger: this.newTriggerNumber },
+                            query: { trigger: this.triggerNumber },
                         })
                         .then(() => this.$router.go(0));
                 },
                 error => {}
             );
+        },
+        async checkForChanges() {
+            const oldCircRule = cloneDeep(this.ruleSetForReset);
+            await this.getCircRuleSetForReset({
+                ...this.ruleSetForReset.context,
+                triggerNumber: this.triggerNumber,
+            });
+            return !isEqual(oldCircRule, this.ruleSetForReset);
         },
         findEffectiveRule(ruleSet, key) {
             // Check if the current rule's value for the key is null
@@ -480,9 +496,11 @@ export default {
                     library_id: this.library_id,
                     patron_category_id: this.patron_category_id,
                     item_type_id: this.item_type_id,
+                    effective: false,
                 }
             );
             this.ruleSetForReset = result[0];
+            this.allCircRules = query.allCircRules;
         },
         async getItemTypeName() {
             if (this.item_type_id === "*") {
@@ -522,30 +540,6 @@ export default {
                     ? this.$__("Yes")
                     : this.$__("No")
                 : "";
-        },
-        async setRulesForReset(routeParams) {
-            const library_id =
-                routeParams && routeParams.library_id
-                    ? routeParams.library_id
-                    : this.ruleSetForReset.library_id || "*";
-            const item_type_id =
-                routeParams && routeParams.item_type_id
-                    ? routeParams.item_type_id
-                    : this.ruleSetForReset.item_type_id || "*";
-            const patron_category_id =
-                routeParams && routeParams.patron_category_id
-                    ? routeParams.patron_category_id
-                    : this.ruleSetForReset.patron_category_id || "*";
-            const params = {
-                library_id,
-                item_type_id,
-                patron_category_id,
-            };
-
-            const client = APIClient.circRule;
-            const response = await client.circRules.getAll({}, params);
-            this.ruleSetForReset = response[0];
-            this.ruleSetForReset.context = params;
         },
     },
     components: { ButtonSubmit, TriggerContext },
