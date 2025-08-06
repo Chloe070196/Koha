@@ -119,7 +119,7 @@
                 >
                     <TriggersTable
                         :contextSpecificCircRules="circRules"
-                        :allCircRules="[]"
+                        :allCircRules="allCircRules"
                         :triggerNumber="newTriggerNumber - 1"
                         :modal="true"
                         :ruleBeingEdited="ruleBeingEdited"

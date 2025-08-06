@@ -433,7 +433,7 @@ export default {
             if (ruleSet[key] === null) {
                 // Filter rules to only those with non-null values for the specified key
                 // and that are no excluded from the selected context
-                const relevantRules = this.allCircRules.filter(
+                const relevantRules = this.contextSpecificCircRules.filter(
                     rule =>
                         rule[key] !== null &&
                         rule[key] !== undefined &&
