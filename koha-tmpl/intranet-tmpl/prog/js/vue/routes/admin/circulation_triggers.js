@@ -3,7 +3,7 @@ import { $__ } from "../../i18n";
 
 import CirculationTriggersList from "../../components/Admin/CirculationTriggers/CirculationTriggersList.vue";
 import CirculationTriggersFormAdd from "../../components/Admin/CirculationTriggers/CirculationTriggersFormAdd.vue";
-import CirculationTriggersFormConfirmDelete from "../../components/Admin/CirculationTriggers/CirculationTriggersFormConfirmDelete.vue";
+import CirculationTriggersFormConfirmReset from "../../components/Admin/CirculationTriggers/CirculationTriggersFormConfirmReset.vue";
 
 export default {
     title: $__("Administration"),
@@ -61,12 +61,12 @@ export default {
                             },
                         },
                         {
-                            path: "delete",
-                            name: "CirculationTriggersFormConfirmDelete",
+                            path: "reset",
+                            name: "CirculationTriggersFormConfirmReset",
                             component: markRaw(
-                                CirculationTriggersFormConfirmDelete
+                                CirculationTriggersFormConfirmReset
                             ),
-                            title: $__("Confirm trigger deletion"),
+                            title: $__("Confirm trigger reset"),
                             meta: {
                                 showModal: true,
                             },
