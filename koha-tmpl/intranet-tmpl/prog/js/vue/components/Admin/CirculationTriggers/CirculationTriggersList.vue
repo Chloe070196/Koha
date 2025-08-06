@@ -183,11 +183,11 @@
                     :options="[
                         {
                             value: 0,
-                            label: 'defaults and overrides.',
+                            label: 'explictly set rules.',
                         },
                         {
                             value: 1,
-                            label: 'all patron categories and items types.',
+                            label: 'all applied rules.',
                         },
                     ]"
                     @update:modelValue="getCircRules()"
