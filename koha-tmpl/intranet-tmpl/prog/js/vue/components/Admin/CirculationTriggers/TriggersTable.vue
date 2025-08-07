@@ -1,6 +1,6 @@
 <template>
     <div class="page-section">
-        <div class="page-section bg-info" v-if="!modal">
+        <div v-if="!modal" class="page-section bg-info">
             {{
                 $__(
                     "Bolid italic values denote fallback values where an override has not been set for the context."
@@ -48,7 +48,7 @@
                     v-for="(rule, i) in modal
                         ? filterCircRulesByContext(ruleBeingEdited)
                         : filterCircRulesByTabNumber(triggerNumber)"
-                    v-bind:key="'rule' + i"
+                    :key="'rule' + i"
                     :class="{
                         selected_rule:
                             modal && i + 1 === parseInt(triggerBeingEdited),
@@ -277,7 +277,10 @@
                             {{ $__("Edit") }}</router-link
                         >
                         <router-link
-                            v-if="!rule.isGeneratedFromDefault"
+                            v-if="
+                                (modal && !isDefaultRuleSet(rule)) ||
+                                (!modal && !rule.isGeneratedFromDefault)
+                            "
                             :to="{
                                 name: 'CirculationTriggersFormConfirmReset',
                                 query: {
@@ -495,6 +498,22 @@ export default {
                 };
             }
         },
+        isDefaultRuleSet(ruleSet) {
+            const overdueRulePattern = /^overdue_\d+_.+$/;
+
+            // Collect all values of keys matching the pattern
+            const overdueValues = Object.entries(ruleSet)
+                .filter(([key]) => overdueRulePattern.test(key))
+                .map(([, value]) => value);
+
+            // Check if all matched values are null
+            const allOverdueRulesNull =
+                overdueValues.length > 0 &&
+                overdueValues.every(value => value === null);
+
+            // Return boolean
+            return allOverdueRulesNull;
+        },
     },
 };
 </script>
@@ -503,19 +522,24 @@ export default {
 .selected_rule > td {
     background-color: yellow !important;
 }
+
 .fallback {
     font-style: italic;
     font-weight: bold;
 }
+
 .actions a {
     margin-right: 5px;
 }
+
 td.trigger_context {
     color: black;
 }
+
 th.trigger_context {
     color: blue;
 }
+
 .border_right {
     border-right: solid 4px black;
 }
