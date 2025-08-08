@@ -119,7 +119,7 @@
                 >
                     <TriggersTable
                         :contextSpecificCircRules="circRules"
-                        :allCircRules="allCircRules"
+                        :allCircRules="circRules"
                         :triggerNumber="newTriggerNumber - 1"
                         :modal="true"
                         :ruleBeingEdited="ruleBeingEdited"
@@ -652,7 +652,11 @@ export default {
             for (let i = 1; i <= numberOfTriggers; i++) {
                 // Check if there's already a rule for overdue_X_ in contextRules
                 const matchingRule = contextRules.find(
-                    rule => rule[`overdue_${i}_delay`] !== undefined
+                    rule =>
+                        rule[`overdue_${i}_delay`] !== undefined ||
+                        rule[`overdue_${i}_notice`] !== undefined ||
+                        rule[`overdue_${i}_mtt`] !== undefined ||
+                        rule[`overdue_${i}_restrict`] !== undefined
                 );
 
                 if (!matchingRule) {

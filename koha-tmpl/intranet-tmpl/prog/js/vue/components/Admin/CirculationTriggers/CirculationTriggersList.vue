@@ -349,7 +349,7 @@ export default {
             const client = APIClient.circRule;
 
             const selectedParams = {};
-            selectedParams.effective = false;
+            selectedParams.effective = true;
             if (this.selectedLibrary) {
                 selectedParams.library_id = this.selectedLibrary;
             } else {
@@ -364,7 +364,6 @@ export default {
             }
 
             let rules;
-
             try {
                 rules = await client.circRules.getAll({}, selectedParams);
                 this.allCircRules = await client.circRules.getAll(
@@ -391,7 +390,13 @@ export default {
             this.contextSpecificCircRules = circRules;
         },
         // generate an exhaustive list of the rule sets that will apply to each possible context parameter combination
-        generateContextRuleSet(categoryId, itemTypeId, libraryId = "*") {
+        // MUST BE TRIGGER SPECIFIC
+        generateContextAndTriggerSpecificRuleSet(
+            categoryId,
+            itemTypeId,
+            libraryId = "*",
+            triggerNumber
+        ) {
             // find context specific rule set OR
             const matchingItemTypeAndPatronCategoryAndLibraryRuleSet =
                 cloneDeep(
@@ -399,11 +404,21 @@ export default {
                         ruleSet =>
                             ruleSet.context.item_type_id === itemTypeId &&
                             ruleSet.context.patron_category_id === categoryId &&
-                            ruleSet.context.library_id === libraryId
+                            ruleSet.context.library_id === libraryId &&
+                            (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                                undefined ||
+                                ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                    undefined ||
+                                ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                    undefined ||
+                                ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                    undefined)
                     )
                 );
             if (matchingItemTypeAndPatronCategoryAndLibraryRuleSet) {
-                matchingItemTypeAndPatronCategoryAndLibraryRuleSet.isGeneratedFromDefault = false;
+                matchingItemTypeAndPatronCategoryAndLibraryRuleSet[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = true;
                 return matchingItemTypeAndPatronCategoryAndLibraryRuleSet;
             }
 
@@ -413,7 +428,15 @@ export default {
                     ruleSet =>
                         ruleSet.context.patron_category_id === categoryId &&
                         ruleSet.context.item_type_id === "*" &&
-                        ruleSet.context.library_id === libraryId
+                        ruleSet.context.library_id === libraryId &&
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                            undefined ||
+                            ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                undefined)
                 )
             );
             if (matchingPatronCategoryAndLibraryRuleSet) {
@@ -421,7 +444,9 @@ export default {
                     itemTypeId;
                 matchingPatronCategoryAndLibraryRuleSet.context.library_id =
                     libraryId;
-                matchingPatronCategoryAndLibraryRuleSet.isGeneratedFromDefault = true;
+                matchingPatronCategoryAndLibraryRuleSet[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = false;
                 return matchingPatronCategoryAndLibraryRuleSet;
             }
 
@@ -431,7 +456,15 @@ export default {
                     ruleSet =>
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === "*" &&
-                        ruleSet.context.library_id === libraryId
+                        ruleSet.context.library_id === libraryId &&
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                            undefined ||
+                            ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                undefined)
                 )
             );
             if (matchingItemTypeAndLibraryRuleSet) {
@@ -439,7 +472,9 @@ export default {
                     categoryId;
                 matchingItemTypeAndLibraryRuleSet.context.library_id =
                     libraryId;
-                matchingItemTypeAndLibraryRuleSet.isGeneratedFromDefault = true;
+                matchingItemTypeAndLibraryRuleSet[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = false;
                 return matchingItemTypeAndLibraryRuleSet;
             }
 
@@ -449,14 +484,24 @@ export default {
                     ruleSet =>
                         ruleSet.context.item_type_id === "*" &&
                         ruleSet.context.patron_category_id === "*" &&
-                        ruleSet.context.library_id === libraryId
+                        ruleSet.context.library_id === libraryId &&
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                            undefined ||
+                            ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                undefined)
                 )
             );
             if (matchingLibraryRuleSet) {
                 matchingLibraryRuleSet.context.patron_category_id = categoryId;
                 matchingLibraryRuleSet.context.item_type_id = itemTypeId;
                 matchingLibraryRuleSet.context.library_id = libraryId;
-                matchingLibraryRuleSet.isGeneratedFromDefault = true;
+                matchingLibraryRuleSet[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = false;
                 return matchingLibraryRuleSet;
             }
 
@@ -466,11 +511,21 @@ export default {
                     ruleSet =>
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === categoryId &&
-                        ruleSet.context.library_id === "*"
+                        ruleSet.context.library_id === "*" &&
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                            undefined ||
+                            ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                undefined)
                 )
             );
             if (matchingItemTypeAndPatronCategoryRuleSet) {
-                matchingItemTypeAndPatronCategoryRuleSet.isGeneratedFromDefault = false;
+                matchingItemTypeAndPatronCategoryRuleSet[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = false;
                 return matchingItemTypeAndPatronCategoryRuleSet;
             }
 
@@ -480,13 +535,23 @@ export default {
                     ruleSet =>
                         ruleSet.context.patron_category_id === categoryId &&
                         ruleSet.context.item_type_id === "*" &&
-                        ruleSet.context.library_id === "*"
+                        ruleSet.context.library_id === "*" &&
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                            undefined ||
+                            ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                undefined)
                 )
             );
             if (matchingPatronCategoryRuleSet) {
                 matchingPatronCategoryRuleSet.context.item_type_id = itemTypeId;
                 matchingPatronCategoryRuleSet.context.library_id = libraryId;
-                matchingPatronCategoryRuleSet.isGeneratedFromDefault = true;
+                matchingPatronCategoryRuleSet[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = false;
                 return matchingPatronCategoryRuleSet;
             }
 
@@ -496,13 +561,23 @@ export default {
                     ruleSet =>
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === "*" &&
-                        ruleSet.context.library_id === "*"
+                        ruleSet.context.library_id === "*" &&
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                            undefined ||
+                            ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                undefined)
                 )
             );
             if (matchingItemTypeRuleSet) {
                 matchingItemTypeRuleSet.context.patron_category_id = categoryId;
                 matchingItemTypeRuleSet.context.library_id = libraryId;
-                matchingItemTypeRuleSet.isGeneratedFromDefault = true;
+                matchingItemTypeRuleSet[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = false;
                 return matchingItemTypeRuleSet;
             }
 
@@ -512,74 +587,136 @@ export default {
                     ruleSet =>
                         ruleSet.context.item_type_id == "*" &&
                         ruleSet.context.patron_category_id == "*" &&
-                        ruleSet.context.library_id === "*"
+                        ruleSet.context.library_id === "*" &&
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
+                            undefined ||
+                            ruleSet[`overdue_${triggerNumber}_notice`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
+                                undefined ||
+                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
+                                undefined)
                 )
             );
-            ruleSetGeneratedFromDefault.context.patron_category_id = categoryId;
-            ruleSetGeneratedFromDefault.context.item_type_id = itemTypeId;
-            ruleSetGeneratedFromDefault.context.library_id = libraryId;
-            ruleSetGeneratedFromDefault.isGeneratedFromDefault = true;
-            return ruleSetGeneratedFromDefault;
+            if (ruleSetGeneratedFromDefault) {
+                ruleSetGeneratedFromDefault.context.patron_category_id =
+                    categoryId;
+                ruleSetGeneratedFromDefault.context.item_type_id = itemTypeId;
+                ruleSetGeneratedFromDefault.context.library_id = libraryId;
+                ruleSetGeneratedFromDefault[
+                    `overdue_${triggerNumber}_ruleset_exists_in_db`
+                ] = false;
+                return ruleSetGeneratedFromDefault;
+            }
+            // no ruleSet exist for the specific trigger
+            return {};
         },
         // handles searches for rules by context using 'all patron categories and item types'
+        // MUST CREATE OR UPDATE
         generateExhaustiveRuleListForSearchParams(params) {
             // handle searches where no patron category or item type are specified
             const ruleSetList = [];
-            if (!params.patron_category_id && !params.item_type_id) {
-                this.patronCategories.forEach(category => {
-                    this.itemTypes.forEach(itemType => {
+
+            // get the number of triggers
+            const regex = /overdue_(\d+)_delay/g;
+            const numberOfTriggers = Object.keys(this.allCircRules[0]).filter(
+                key => regex.test(key)
+            ).length;
+
+            for (let i = 1; i <= numberOfTriggers; i++) {
+                if (!params.patron_category_id && !params.item_type_id) {
+                    this.patronCategories.forEach(category => {
+                        this.itemTypes.forEach(itemType => {
+                            const currentCategory = cloneDeep(category);
+                            const currentItemType = cloneDeep(itemType);
+
+                            const ruleSubSet =
+                                this.generateContextAndTriggerSpecificRuleSet(
+                                    currentCategory.patron_category_id,
+                                    currentItemType.item_type_id,
+                                    params.library_id,
+                                    i
+                                );
+
+                            if (i === 1) {
+                                ruleSetList.push(ruleSubSet);
+                                return;
+                            }
+
+                            const ruleSetIndex = ruleSetList.findIndex(
+                                ruleSet =>
+                                    ruleSet.context.item_type_id ===
+                                        currentItemType.item_type_id &&
+                                    ruleSet.context.patron_category_id ===
+                                        currentCategory.patron_category_id &&
+                                    ruleSet.context.library_id ===
+                                        params.library_id
+                            );
+
+                            const updatedRuleSet = {
+                                ...ruleSetList[ruleSetIndex],
+                                [`overdue_${i}_delay`]:
+                                    ruleSubSet[`overdue_${i}_delay`] ?? null,
+                                [`overdue_${i}_notice`]:
+                                    ruleSubSet[`overdue_${i}_notice`] ?? null,
+                                [`overdue_${i}_mtt`]:
+                                    ruleSubSet[`overdue_${i}_mtt`] ?? null,
+                                [`overdue_${i}_restrict`]:
+                                    ruleSubSet[`overdue_${i}_restrict`] ?? null,
+                                [`overdue_${i}_ruleset_exists_in_db`]:
+                                    ruleSubSet[
+                                        `overdue_${i}_ruleset_exists_in_db`
+                                    ] ?? null,
+                            };
+                            ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
+                            return;
+                        });
+                    });
+                    continue;
+                }
+
+                // handle searches where only the item type is specified
+                if (!params.patron_category_id) {
+                    this.patronCategories.forEach(category => {
                         const currentCategory = cloneDeep(category);
-                        const currentItemType = cloneDeep(itemType);
                         ruleSetList.push(
-                            this.generateContextRuleSet(
+                            this.generateContextAndTriggerSpecificRuleSet(
                                 currentCategory.patron_category_id,
-                                currentItemType.item_type_id,
-                                params.library_id
+                                params.item_type_id,
+                                params.library_id,
+                                i
                             )
                         );
                     });
-                });
-                return ruleSetList;
-            }
+                    continue;
+                }
 
-            // handle searches where only the item type is specified
-            if (!params.patron_category_id) {
-                this.patronCategories.forEach(category => {
-                    const currentCategory = cloneDeep(category);
-                    ruleSetList.push(
-                        this.generateContextRuleSet(
-                            currentCategory.patron_category_id,
-                            params.item_type_id,
-                            params.library_id
-                        )
-                    );
-                });
-                return ruleSetList;
-            }
+                // handle searches where only the patron category is specified
+                if (!params.item_type_id) {
+                    this.itemTypes.forEach(itemType => {
+                        const currentItemType = cloneDeep(itemType);
+                        ruleSetList.push(
+                            this.generateContextAndTriggerSpecificRuleSet(
+                                params.patron_category_id,
+                                currentItemType.item_type_id,
+                                params.library_id,
+                                i
+                            )
+                        );
+                    });
+                    continue;
+                }
 
-            // handle searches where only the patron category is specified
-            if (!params.item_type_id) {
-                this.itemTypes.forEach(itemType => {
-                    const currentItemType = cloneDeep(itemType);
-                    ruleSetList.push(
-                        this.generateContextRuleSet(
-                            params.patron_category_id,
-                            currentItemType.item_type_id,
-                            params.library_id
-                        )
-                    );
-                });
-                return ruleSetList;
+                // handle searches where both patron category and item type are specified
+                ruleSetList.push(
+                    this.generateContextAndTriggerSpecificRuleSet(
+                        params.patron_category_id,
+                        params.item_type_id,
+                        params.library_id,
+                        i
+                    )
+                );
             }
-
-            // handle searches where both patron category and item type are specified
-            ruleSetList.push(
-                this.generateContextRuleSet(
-                    params.patron_category_id,
-                    params.item_type_id,
-                    params.library_id
-                )
-            );
             return ruleSetList;
         },
         changeTabContent(e) {

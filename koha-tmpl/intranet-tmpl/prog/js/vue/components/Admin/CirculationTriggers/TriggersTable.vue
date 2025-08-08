@@ -92,7 +92,8 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_delay`
+                                    }_delay`,
+                                    modal ? i + 1 : triggerNumber
                                 ).isFallback,
                             }"
                         >
@@ -101,7 +102,8 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_delay`
+                                    }_delay`,
+                                    modal ? i + 1 : triggerNumber
                                 ).value +
                                 " " +
                                 $__("days")
@@ -117,7 +119,8 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_notice`
+                                    }_notice`,
+                                    modal ? i + 1 : triggerNumber
                                 ).isFallback,
                             }"
                         >
@@ -127,7 +130,8 @@
                                         rule,
                                         `overdue_${
                                             modal ? i + 1 : triggerNumber
-                                        }_notice`
+                                        }_notice`,
+                                        modal ? i + 1 : triggerNumber
                                     ).value
                                 )
                             }}
@@ -142,7 +146,8 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_mtt`
+                                    }_mtt`,
+                                    modal ? i + 1 : triggerNumber
                                 ).isFallback,
                             }"
                         >
@@ -151,14 +156,16 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_notice`
+                                    }_notice`,
+                                    modal ? i + 1 : triggerNumber
                                 ).value !== ""
                                     ? handleTransport(
                                           findEffectiveRule(
                                               rule,
                                               `overdue_${
                                                   modal ? i + 1 : triggerNumber
-                                              }_mtt`
+                                              }_mtt`,
+                                              modal ? i + 1 : triggerNumber
                                           ).value,
                                           "email"
                                       )
@@ -175,7 +182,8 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_mtt`
+                                    }_mtt`,
+                                    modal ? i + 1 : triggerNumber
                                 ).isFallback,
                             }"
                         >
@@ -191,7 +199,8 @@
                                               rule,
                                               `overdue_${
                                                   modal ? i + 1 : triggerNumber
-                                              }_mtt`
+                                              }_mtt`,
+                                              modal ? i + 1 : triggerNumber
                                           ).value,
                                           "print"
                                       )
@@ -208,7 +217,8 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_mtt`
+                                    }_mtt`,
+                                    modal ? i + 1 : triggerNumber
                                 ).isFallback,
                             }"
                         >
@@ -224,7 +234,8 @@
                                               rule,
                                               `overdue_${
                                                   modal ? i + 1 : triggerNumber
-                                              }_mtt`
+                                              }_mtt`,
+                                              modal ? i + 1 : triggerNumber
                                           ).value,
                                           "sms"
                                       )
@@ -241,7 +252,8 @@
                                     rule,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
-                                    }_restrict`
+                                    }_restrict`,
+                                    modal ? i + 1 : triggerNumber
                                 ).isFallback,
                             }"
                         >
@@ -251,7 +263,8 @@
                                         rule,
                                         `overdue_${
                                             modal ? i + 1 : triggerNumber
-                                        }_restrict`
+                                        }_restrict`,
+                                        modal ? i + 1 : triggerNumber
                                     ).value
                                 )
                             }}
@@ -278,8 +291,9 @@
                         >
                         <router-link
                             v-if="
-                                (modal && !isDefaultRuleSet(rule)) ||
-                                (!modal && !rule.isGeneratedFromDefault)
+                                rule[
+                                    `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                ]
                             "
                             :to="{
                                 name: 'CirculationTriggersFormConfirmReset',
@@ -384,11 +398,19 @@ export default {
             // Ensure there is one contextRule per 'X' from 1 to numberOfTriggers
             for (let i = 1; i <= this.numberOfTriggers; i++) {
                 // Check if there's already a rule for overdue_X_ in contextRules
-                const matchingRule = contextRules.find(
-                    rule => rule[`overdue_${i}_delay`] !== undefined
+                const matchingRuleIndex = contextRules.findIndex(
+                    rule =>
+                        (rule[`overdue_${i}_delay`] !== undefined &&
+                            rule[`overdue_${i}_delay`] !== null) ||
+                        (rule[`overdue_${i}_notice`] !== undefined &&
+                            rule[`overdue_${i}_notice`] !== null) ||
+                        (rule[`overdue_${i}_mtt`] !== undefined &&
+                            rule[`overdue_${i}_mtt`] !== null) ||
+                        (rule[`overdue_${i}_restrict`] !== undefined &&
+                            rule[`overdue_${i}_restrict`] !== null)
                 );
 
-                if (!matchingRule) {
+                if (matchingRuleIndex === -1) {
                     // Create a new rule with the same context and null overdue_X_* keys
                     const newRule = {
                         context: { ...context }, // Clone the context
@@ -396,10 +418,17 @@ export default {
                         [`overdue_${i}_notice`]: null,
                         [`overdue_${i}_mtt`]: null,
                         [`overdue_${i}_restrict`]: null,
+                        [`overdue_${i}_ruleset_exists_in_db`]: false,
                     };
 
                     // Add the new rule to contextRules
                     contextRules.push(newRule);
+                } else {
+                    const updatedRuleSet = {
+                        ...contextRules[matchingRuleIndex],
+                        [`overdue_${i}_ruleset_exists_in_db`]: true,
+                    };
+                    contextRules.splice(matchingRuleIndex, 1, updatedRuleSet);
                 }
             }
 
@@ -431,7 +460,7 @@ export default {
             const letter = this.letters.find(letter => letter.code === notice);
             return letter ? letter.name : notice;
         },
-        findEffectiveRule(ruleSet, key) {
+        findEffectiveRule(ruleSet, key, triggerNumber) {
             // Check if the current rule's value for the key is null
             if (ruleSet[key] === null) {
                 // Filter rules to only those with non-null values for the specified key
@@ -494,7 +523,10 @@ export default {
                 // If the current rule's value is not null, use it directly
                 return {
                     value: ruleSet[key],
-                    isFallback: ruleSet.isGeneratedFromDefault,
+                    isFallback:
+                        !ruleSet[
+                            `overdue_${triggerNumber}_ruleset_exists_in_db`
+                        ],
                 };
             }
         },
