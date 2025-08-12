@@ -303,7 +303,7 @@
                                     patron_category_id:
                                         rule.context.patron_category_id,
                                     triggerNumber: triggerNumber,
-                                    allCircRules: allCircRules,
+                                    allCircRules: allCircRulesForTrigger,
                                 },
                             }"
                             class="btn btn-default btn-xs"
@@ -344,7 +344,7 @@
 export default {
     props: [
         "contextSpecificCircRules",
-        "allCircRules",
+        "allCircRulesForTrigger",
         "triggerNumber",
         "modal",
         "ruleBeingEdited",
@@ -465,7 +465,7 @@ export default {
             if (ruleSet[key] === null) {
                 // Filter rules to only those with non-null values for the specified key
                 // and that are no excluded from the selected context
-                const relevantRules = this.contextSpecificCircRules.filter(
+                const relevantRules = this.allCircRulesForTrigger.filter(
                     rule =>
                         rule[key] !== null &&
                         rule[key] !== undefined &&

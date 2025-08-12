@@ -232,7 +232,7 @@
                 >
                     <TriggersTable
                         :contextSpecificCircRules="contextSpecificCircRules"
-                        :allCircRules="this.allCircRules"
+                        :allCircRulesForTrigger="this.allCircRulesForTrigger"
                         :triggerNumber="number"
                         :categories="patronCategories"
                         :itemTypes="itemTypes"
@@ -386,8 +386,15 @@ export default {
                 this.splitCircRulesByTriggerNumber(
                     this.displayAllApplicableRules ? ruleList : rules
                 );
+            const {
+                numberOfTabsForAllRules,
+                rulesPerTrigger: allCircRulesForTrigger,
+            } = this.splitCircRulesByTriggerNumber(this.allCircRules);
             this.numberOfTabs = numberOfTabs;
+            // this is used to determine what rules do exist for a given context specifically
             this.contextSpecificCircRules = circRules;
+            // this is used to generate defaults across contexts when needed and no matter the specificity of the search
+            this.allCircRulesForTrigger = allCircRulesForTrigger;
         },
         // generate an exhaustive list of the rule sets that will apply to each possible context parameter combination
         // MUST BE TRIGGER SPECIFIC
@@ -522,6 +529,7 @@ export default {
                                 undefined)
                 )
             );
+
             if (matchingItemTypeAndPatronCategoryRuleSet) {
                 matchingItemTypeAndPatronCategoryRuleSet[
                     `overdue_${triggerNumber}_ruleset_exists_in_db`
@@ -598,6 +606,7 @@ export default {
                                 undefined)
                 )
             );
+
             if (ruleSetGeneratedFromDefault) {
                 ruleSetGeneratedFromDefault.context.patron_category_id =
                     categoryId;
@@ -623,10 +632,11 @@ export default {
                 key => regex.test(key)
             ).length;
 
-            for (let i = 1; i <= numberOfTriggers; i++) {
-                if (!params.patron_category_id && !params.item_type_id) {
-                    this.patronCategories.forEach(category => {
-                        this.itemTypes.forEach(itemType => {
+            // handle searches for any patron category and item type combinations
+            if (!params.patron_category_id && !params.item_type_id) {
+                this.patronCategories.forEach(category => {
+                    this.itemTypes.forEach(itemType => {
+                        for (let i = 1; i <= numberOfTriggers; i++) {
                             const currentCategory = cloneDeep(category);
                             const currentItemType = cloneDeep(itemType);
 
@@ -640,7 +650,7 @@ export default {
 
                             if (i === 1) {
                                 ruleSetList.push(ruleSubSet);
-                                return;
+                                continue;
                             }
 
                             const ruleSetIndex = ruleSetList.findIndex(
@@ -669,53 +679,145 @@ export default {
                                     ] ?? null,
                             };
                             ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
-                            return;
-                        });
+                        }
                     });
-                    continue;
-                }
+                });
+                return ruleSetList;
+            }
 
-                // handle searches where only the item type is specified
-                if (!params.patron_category_id) {
-                    this.patronCategories.forEach(category => {
+            // handle searches where only the item type is specified
+            if (!params.patron_category_id) {
+                this.patronCategories.forEach(category => {
+                    for (let i = 1; i <= numberOfTriggers; i++) {
                         const currentCategory = cloneDeep(category);
-                        ruleSetList.push(
+                        const ruleSubSet =
                             this.generateContextAndTriggerSpecificRuleSet(
                                 currentCategory.patron_category_id,
                                 params.item_type_id,
                                 params.library_id,
                                 i
-                            )
-                        );
-                    });
-                    continue;
-                }
+                            );
 
-                // handle searches where only the patron category is specified
-                if (!params.item_type_id) {
-                    this.itemTypes.forEach(itemType => {
+                        if (i === 1) {
+                            ruleSetList.push(ruleSubSet);
+                            continue;
+                        }
+
+                        const ruleSetIndex = ruleSetList.findIndex(
+                            ruleSet =>
+                                ruleSet.context.item_type_id ===
+                                    params.item_type_id &&
+                                ruleSet.context.patron_category_id ===
+                                    currentCategory.patron_category_id &&
+                                ruleSet.context.library_id === params.library_id
+                        );
+
+                        const updatedRuleSet = {
+                            ...ruleSetList[ruleSetIndex],
+                            [`overdue_${i}_delay`]:
+                                ruleSubSet[`overdue_${i}_delay`] ?? null,
+                            [`overdue_${i}_notice`]:
+                                ruleSubSet[`overdue_${i}_notice`] ?? null,
+                            [`overdue_${i}_mtt`]:
+                                ruleSubSet[`overdue_${i}_mtt`] ?? null,
+                            [`overdue_${i}_restrict`]:
+                                ruleSubSet[`overdue_${i}_restrict`] ?? null,
+                            [`overdue_${i}_ruleset_exists_in_db`]:
+                                ruleSubSet[
+                                    `overdue_${i}_ruleset_exists_in_db`
+                                ] ?? null,
+                        };
+                        ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
+                    }
+                });
+                return ruleSetList;
+            }
+
+            // handle searches where only the patron category is specified
+            if (!params.item_type_id) {
+                this.itemTypes.forEach(itemType => {
+                    for (let i = 1; i <= numberOfTriggers; i++) {
                         const currentItemType = cloneDeep(itemType);
-                        ruleSetList.push(
+                        const ruleSubSet =
                             this.generateContextAndTriggerSpecificRuleSet(
                                 params.patron_category_id,
                                 currentItemType.item_type_id,
                                 params.library_id,
                                 i
-                            )
-                        );
-                    });
-                    continue;
-                }
+                            );
 
-                // handle searches where both patron category and item type are specified
-                ruleSetList.push(
+                        if (i === 1) {
+                            ruleSetList.push(ruleSubSet);
+                            continue;
+                        }
+
+                        const ruleSetIndex = ruleSetList.findIndex(
+                            ruleSet =>
+                                ruleSet.context.item_type_id ===
+                                    currentItemType.item_type_id &&
+                                ruleSet.context.patron_category_id ===
+                                    params.patron_category_id &&
+                                ruleSet.context.library_id === params.library_id
+                        );
+
+                        const updatedRuleSet = {
+                            ...ruleSetList[ruleSetIndex],
+                            [`overdue_${i}_delay`]:
+                                ruleSubSet[`overdue_${i}_delay`] ?? null,
+                            [`overdue_${i}_notice`]:
+                                ruleSubSet[`overdue_${i}_notice`] ?? null,
+                            [`overdue_${i}_mtt`]:
+                                ruleSubSet[`overdue_${i}_mtt`] ?? null,
+                            [`overdue_${i}_restrict`]:
+                                ruleSubSet[`overdue_${i}_restrict`] ?? null,
+                            [`overdue_${i}_ruleset_exists_in_db`]:
+                                ruleSubSet[
+                                    `overdue_${i}_ruleset_exists_in_db`
+                                ] ?? null,
+                        };
+                        ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
+                    }
+                });
+                return ruleSetList;
+            }
+
+            // handle searches where both patron category and item type are specified and one specific rule is retrieved
+            for (let i = 1; i <= numberOfTriggers; i++) {
+                const ruleSubSet =
                     this.generateContextAndTriggerSpecificRuleSet(
                         params.patron_category_id,
                         params.item_type_id,
                         params.library_id,
                         i
-                    )
+                    );
+
+                if (i === 1) {
+                    ruleSetList.push(ruleSubSet);
+                    continue;
+                }
+
+                const ruleSetIndex = ruleSetList.findIndex(
+                    ruleSet =>
+                        ruleSet.context.item_type_id === params.item_type_id &&
+                        ruleSet.context.patron_category_id ===
+                            params.patron_category_id &&
+                        ruleSet.context.library_id === params.library_id
                 );
+
+                const updatedRuleSet = {
+                    ...ruleSetList[ruleSetIndex],
+                    [`overdue_${i}_delay`]:
+                        ruleSubSet[`overdue_${i}_delay`] ?? null,
+                    [`overdue_${i}_notice`]:
+                        ruleSubSet[`overdue_${i}_notice`] ?? null,
+                    [`overdue_${i}_mtt`]:
+                        ruleSubSet[`overdue_${i}_mtt`] ?? null,
+                    [`overdue_${i}_restrict`]:
+                        ruleSubSet[`overdue_${i}_restrict`] ?? null,
+                    [`overdue_${i}_ruleset_exists_in_db`]:
+                        ruleSubSet[`overdue_${i}_ruleset_exists_in_db`] ?? null,
+                };
+                ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
             }
             return ruleSetList;
         },
