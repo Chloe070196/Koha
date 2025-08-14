@@ -618,7 +618,7 @@ export default {
                 return ruleSetGeneratedFromDefault;
             }
             // no ruleSet exist for the specific trigger
-            return {};
+            return null;
         },
         // handles searches for rules by context using 'all patron categories and item types'
         // MUST CREATE OR UPDATE
@@ -648,8 +648,8 @@ export default {
                                     i
                                 );
 
-                            if (i === 1) {
-                                ruleSetList.push(ruleSubSet);
+                            // no rule subset exist for this context/trigger combination, abort
+                            if (ruleSubSet === null) {
                                 continue;
                             }
 
@@ -663,6 +663,13 @@ export default {
                                         params.library_id
                             );
 
+                            // there is not rule set for this context, create one
+                            if (ruleSetIndex === -1) {
+                                ruleSetList.push(ruleSubSet);
+                                continue;
+                            }
+
+                            // there is a rule set for this context, update it
                             const updatedRuleSet = {
                                 ...ruleSetList[ruleSetIndex],
                                 [`overdue_${i}_delay`]:
@@ -698,8 +705,8 @@ export default {
                                 i
                             );
 
-                        if (i === 1) {
-                            ruleSetList.push(ruleSubSet);
+                        // no rule subset exist for this context/trigger combination, abort
+                        if (ruleSubSet === null) {
                             continue;
                         }
 
@@ -712,6 +719,13 @@ export default {
                                 ruleSet.context.library_id === params.library_id
                         );
 
+                        // there is not rule set for this context, create one
+                        if (ruleSetIndex === -1) {
+                            ruleSetList.push(ruleSubSet);
+                            continue;
+                        }
+
+                        // there is a rule set for this context, update it
                         const updatedRuleSet = {
                             ...ruleSetList[ruleSetIndex],
                             [`overdue_${i}_delay`]:

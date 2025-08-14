@@ -341,6 +341,8 @@
 </template>
 
 <script>
+import { cloneDeep } from "lodash";
+
 export default {
     props: [
         "contextSpecificCircRules",
@@ -378,11 +380,13 @@ export default {
             const context = effectiveRule.context;
 
             // Filter rules that match the context
-            let contextRules = this.contextSpecificCircRules.filter(rule => {
-                return Object.keys(context).every(key => {
-                    return context[key] === rule.context[key];
-                });
-            });
+            const contextRules = this.contextSpecificCircRules.filter(
+                rule =>
+                    rule.context.item_type_id === context.item_type_id &&
+                    rule.context.patron_category_id ===
+                        context.patron_category_id &&
+                    rule.context.library_id === context.library_id
+            );
 
             // Calculate the number of 'overdue_X_' triggers in the effectiveRule
             const regex = /overdue_(\d+)_delay/g;
@@ -394,20 +398,15 @@ export default {
             if (this.numberOfTriggers === 0) {
                 return undefined;
             }
-
-            // Ensure there is one contextRule per 'X' from 1 to numberOfTriggers
+            // // Ensure there is one contextRule per 'X' from 1 to numberOfTriggers
             for (let i = 1; i <= this.numberOfTriggers; i++) {
                 // Check if there's already a rule for overdue_X_ in contextRules
                 const matchingRuleIndex = contextRules.findIndex(
                     rule =>
-                        (rule[`overdue_${i}_delay`] !== undefined &&
-                            rule[`overdue_${i}_delay`] !== null) ||
-                        (rule[`overdue_${i}_notice`] !== undefined &&
-                            rule[`overdue_${i}_notice`] !== null) ||
-                        (rule[`overdue_${i}_mtt`] !== undefined &&
-                            rule[`overdue_${i}_mtt`] !== null) ||
-                        (rule[`overdue_${i}_restrict`] !== undefined &&
-                            rule[`overdue_${i}_restrict`] !== null)
+                        rule[`overdue_${i}_delay`] !== undefined ||
+                        rule[`overdue_${i}_notice`] !== undefined ||
+                        rule[`overdue_${i}_mtt`] !== undefined ||
+                        rule[`overdue_${i}_restrict`] !== undefined
                 );
 
                 if (matchingRuleIndex === -1) {
@@ -420,16 +419,28 @@ export default {
                         [`overdue_${i}_restrict`]: null,
                         [`overdue_${i}_ruleset_exists_in_db`]: false,
                     };
-
                     // Add the new rule to contextRules
-                    contextRules.push(newRule);
-                } else {
-                    const updatedRuleSet = {
-                        ...contextRules[matchingRuleIndex],
-                        [`overdue_${i}_ruleset_exists_in_db`]: true,
-                    };
-                    contextRules.splice(matchingRuleIndex, 1, updatedRuleSet);
+                    contextRules.push(cloneDeep(newRule));
+                    continue;
                 }
+
+                const updatedRuleSet = {
+                    ...contextRules[matchingRuleIndex],
+                    [`overdue_${i}_ruleset_exists_in_db`]:
+                        contextRules[matchingRuleIndex][
+                            `overdue_${i}_delay`
+                        ] !== null ||
+                        contextRules[matchingRuleIndex][
+                            `overdue_${i}_notice`
+                        ] !== null ||
+                        contextRules[matchingRuleIndex][`overdue_${i}_mtt`] !==
+                            null ||
+                        contextRules[matchingRuleIndex][
+                            `overdue_${i}_restrict`
+                        ] !== null,
+                };
+                contextRules.splice(matchingRuleIndex, 1, updatedRuleSet);
+                // console.log('updated contextRules: ', contextRules)
             }
 
             // Sort contextRules by the 'X' value in 'overdue_X_delay'
