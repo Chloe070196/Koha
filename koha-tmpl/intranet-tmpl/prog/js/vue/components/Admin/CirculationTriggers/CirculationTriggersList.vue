@@ -413,13 +413,13 @@ export default {
                             ruleSet.context.patron_category_id === categoryId &&
                             ruleSet.context.library_id === libraryId &&
                             (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                                undefined ||
+                                null ||
                                 ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                    undefined ||
+                                    null ||
                                 ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                    undefined ||
+                                    null ||
                                 ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                    undefined)
+                                    null)
                     )
                 );
             if (matchingItemTypeAndPatronCategoryAndLibraryRuleSet) {
@@ -436,14 +436,12 @@ export default {
                         ruleSet.context.patron_category_id === categoryId &&
                         ruleSet.context.item_type_id === "*" &&
                         ruleSet.context.library_id === libraryId &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                            undefined ||
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                undefined ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                undefined ||
+                                null ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                undefined)
+                                null)
                 )
             );
             if (matchingPatronCategoryAndLibraryRuleSet) {
@@ -464,14 +462,12 @@ export default {
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === "*" &&
                         ruleSet.context.library_id === libraryId &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                            undefined ||
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                undefined ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                undefined ||
+                                null ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                undefined)
+                                null)
                 )
             );
             if (matchingItemTypeAndLibraryRuleSet) {
@@ -492,14 +488,12 @@ export default {
                         ruleSet.context.item_type_id === "*" &&
                         ruleSet.context.patron_category_id === "*" &&
                         ruleSet.context.library_id === libraryId &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                            undefined ||
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                undefined ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                undefined ||
+                                null ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                undefined)
+                                null)
                 )
             );
             if (matchingLibraryRuleSet) {
@@ -519,14 +513,12 @@ export default {
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === categoryId &&
                         ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                            undefined ||
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                undefined ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                undefined ||
+                                null ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                undefined)
+                                null)
                 )
             );
 
@@ -544,14 +536,12 @@ export default {
                         ruleSet.context.patron_category_id === categoryId &&
                         ruleSet.context.item_type_id === "*" &&
                         ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                            undefined ||
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                undefined ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                undefined ||
+                                null ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                undefined)
+                                null)
                 )
             );
             if (matchingPatronCategoryRuleSet) {
@@ -570,14 +560,12 @@ export default {
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === "*" &&
                         ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                            undefined ||
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                undefined ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                undefined ||
+                                null ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                undefined)
+                                null)
                 )
             );
             if (matchingItemTypeRuleSet) {
@@ -596,14 +584,12 @@ export default {
                         ruleSet.context.item_type_id == "*" &&
                         ruleSet.context.patron_category_id == "*" &&
                         ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                            undefined ||
+                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                undefined ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                undefined ||
+                                null ||
+                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
                             ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                undefined)
+                                null)
                 )
             );
 
