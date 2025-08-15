@@ -376,18 +376,17 @@ export default {
                 circRule[`overdue_${this.triggerNumber}_mtt`] = null;
             }
 
-            const client = APIClient.circRule;
-            client.circRules.update(circRule).then(
-                () => {
-                    this.$router
-                        .push({
-                            name: "CirculationTriggersList",
-                            query: { trigger: this.triggerNumber },
-                        })
-                        .then(() => this.$router.go(0));
-                },
-                error => {}
-            );
+            try {
+                const client = APIClient.circRule;
+                await client.circRules.update(circRule);
+                await this.$router.push({
+                    name: "CirculationTriggersList",
+                    query: { trigger: this.triggerNumber },
+                });
+                this.$router.go(0);
+            } catch (e) {
+                //TODO: handle e
+            }
         },
         async checkForChanges() {
             const oldCircRule = cloneDeep(this.ruleSetForReset);
@@ -398,6 +397,11 @@ export default {
             return !isEqual(oldCircRule, this.ruleSetForReset);
         },
         findEffectiveRule(ruleSet, key) {
+            // FIXME: quick and dirty fix necessary due to routing being used for modals. Leaving in for POC, expecting full refactor before submission.
+            if (!this.allCircRules || !Array.isArray(this.allCircRules)) {
+                return { value: null, isFallback: true };
+            }
+
             // Check if the current rule's value for the key is null
             if (ruleSet[key] === null) {
                 // Filter rules to only those with non-null values for the specified key
