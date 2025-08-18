@@ -279,7 +279,7 @@
                         <router-link
                             v-if="!rule.isGeneratedFromDefault"
                             :to="{
-                                name: 'CirculationTriggersFormConfirmDelete',
+                                name: 'CirculationTriggersFormConfirmReset',
                                 query: {
                                     library_id: rule.context.library_id,
                                     item_type_id: rule.context.item_type_id,
@@ -289,8 +289,8 @@
                                 },
                             }"
                             class="btn btn-default btn-xs"
-                            ><i class="fa-solid fa-pencil"></i>
-                            {{ $__("Delete") }}</router-link
+                            ><i class="fa-solid fa-eraser"></i>
+                            {{ $__("Reset") }}</router-link
                         >
                     </td>
                 </tr>

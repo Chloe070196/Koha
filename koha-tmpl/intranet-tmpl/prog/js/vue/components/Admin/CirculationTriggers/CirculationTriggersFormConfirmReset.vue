@@ -1,9 +1,9 @@
 <template>
     <div class="modal-content">
-        <form @submit="deleteCircRule($event)">
+        <form @submit="resetCircRule($event)">
             <div class="modal-header">
                 <h1 class="modal-title">
-                    {{ $__("Confirm circulation rule set deletion") }}
+                    {{ $__("Confirm circulation rule set reset") }}
                 </h1>
                 <router-link
                     class="btn-close"
@@ -15,6 +15,22 @@
             </div>
             <div class="modal-body">
                 <fieldset class="rows">
+                    <div class="page-section bg-info">
+                        <p>
+                            {{
+                                $__(
+                                    "Resetting this rule set for the chosen context will have an impact on all the contexts that used to fall back on this rule set."
+                                )
+                            }}
+                        </p>
+                        <p>
+                            {{
+                                $__(
+                                    "To better understand which contexts will be affected, use 'Display all patron categories and items types.' on the circulations triggers page."
+                                )
+                            }}
+                        </p>
+                    </div>
                     <legend>{{ $__("Trigger context") }}</legend>
                     <ol v-if="initialized">
                         <li>
@@ -44,7 +60,7 @@
                 </fieldset>
 
                 <fieldset class="rows">
-                    <legend>{{ $__("Rule set for deletion") }}</legend>
+                    <legend>{{ $__("Rule set for reset") }}</legend>
                     <table>
                         <thead>
                             <th>
@@ -73,14 +89,14 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${triggerNumber}_delay`
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${triggerNumber}_delay`
                                             ).value +
                                             " " +
@@ -93,7 +109,7 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
                                                 }_notice`
@@ -103,7 +119,7 @@
                                         {{
                                             handleNotice(
                                                 findEffectiveRule(
-                                                    ruleSetForDeletion,
+                                                    ruleSetForReset,
                                                     `overdue_${
                                                         triggerNumber
                                                     }_notice`
@@ -117,21 +133,21 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${triggerNumber}_mtt`
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
                                                 }_notice`
                                             ).value !== ""
                                                 ? handleTransport(
                                                       findEffectiveRule(
-                                                          ruleSetForDeletion,
+                                                          ruleSetForReset,
                                                           `overdue_${
                                                               triggerNumber
                                                           }_mtt`
@@ -147,21 +163,21 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${triggerNumber}_mtt`
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
                                                 }_notice`
                                             ).value !== ""
                                                 ? handleTransport(
                                                       findEffectiveRule(
-                                                          ruleSetForDeletion,
+                                                          ruleSetForReset,
                                                           `overdue_${
                                                               triggerNumber
                                                           }_mtt`
@@ -177,21 +193,21 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${triggerNumber}_mtt`
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
                                                 }_notice`
                                             ).value !== ""
                                                 ? handleTransport(
                                                       findEffectiveRule(
-                                                          ruleSetForDeletion,
+                                                          ruleSetForReset,
                                                           `overdue_${
                                                               triggerNumber
                                                           }_mtt`
@@ -207,7 +223,7 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
-                                                ruleSetForDeletion,
+                                                ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
                                                 }_restrict`
@@ -217,7 +233,7 @@
                                         {{
                                             handleRestrictions(
                                                 findEffectiveRule(
-                                                    ruleSetForDeletion,
+                                                    ruleSetForReset,
                                                     `overdue_${
                                                         triggerNumber
                                                     }_restrict`
@@ -261,6 +277,7 @@ import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
+import { isEqual, cloneDeep } from "lodash";
 
 export default {
     setup() {
@@ -279,7 +296,7 @@ export default {
             categoryName: null,
             itemTypeName: null,
             triggerNumber: null,
-            ruleSetForDeletion: {
+            ruleSetForReset: {
                 item_type_id: "*",
                 library_id: "*",
                 patron_category_id: "*",
@@ -293,7 +310,7 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(vm => {
             const { query } = to;
-            vm.getCircRuleSetForDeletion(query).then(() =>
+            vm.getCircRuleSetForReset(query).then(() =>
                 vm
                     .getLibraryName()
                     .then(() =>
@@ -310,56 +327,82 @@ export default {
     },
     // TODO: determine which methods will be needed, limit amount of code repetition, consider extracting to circRuleStore
     methods: {
-        async deleteCircRule(e) {
+        async resetCircRule(e) {
             //TODO: convert this draft into functional code
-            // e.preventDefault();
-            // // prevent race condition related edit conflicts
-            // // store the rule as loaded initially
-            // const oldCircRule = cloneDeep(this.ruleSetForDeletion);
-            // // refresh this.ruleSetForDeletion so it matches the database
-            // const routeParams = this.ruleSetForDeletion;
-            // routeParams.triggerNumber = this.triggerNumber;
-            // await this.setRulesForDeletion(routeParams);
-            // // if any changes are detected, inform the user, display the new values and go back to editing
-            // if (!isEqual(oldCircRule, this.ruleSetForDeletion)) {
-            //     const regex = /overdue_(\d+)_delay/g;
-            //     const numberOfTriggers = Object.keys(
-            //         this.ruleSetForDeletion
-            //     ).filter(
-            //         key => regex.test(key) && this.ruleSetForDeletion[key] !== null
-            //     ).length;
-            //     // update the rule value so it matches db state
-            //     // prepare the alert message
-            //     this.alertMessage =
-            //         "The ruleset for the selected trigger context could not be deleted as it was update elsewhere. Please see the updated trigger below.";
-            //     // reload the form components that have changed, remain in edit mode
-            //     this.$router.push({
-            //         path: "/cgi-bin/koha/admin/circulation_triggers/delete",
-            //         query: {
-            //             ...context,
-            //             triggerNumber: this.triggerNumber,
-            //         },
-            //     });
-            //     return;
-            // }
-            // const circRule = {
-            //     context,
-            //     triggerNumber: this.triggerNumber,
-            // };
-            // const client = APIClient.circRule;
-            // await client.circRules.delete(circRule).then(
-            //     () => {
-            //         this.$router
-            //             .push({
-            //                 name: "CirculationTriggersList",
-            //                 query: { trigger: this.triggerNumber },
-            //             })
-            //             .then(() => this.$router.go(0));
-            //     },
-            //     error => {}
-            // );
+            e.preventDefault();
+
+            // prevent race condition related edit conflicts
+            // if any changes are detected, inform the user, display the new values and go back to editing
+
+            if (await this.checkForChanges()) {
+                this.alertMessage =
+                    "The ruleset for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger below.";
+                // reload the form components that have changed, remain in edit mode
+                this.$router.push({
+                    path: "/cgi-bin/koha/admin/circulation_triggers/reset",
+                    query: {
+                        ...this.ruleSetForReset.context,
+                        triggerNumber: this.triggerNumber,
+                    },
+                });
+                return;
+            }
+
+            const circRule = { context: this.ruleSetForReset.context };
+
+            if (
+                this.ruleSetForReset[`overdue_${this.triggerNumber}_delay`] !==
+                null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_delay`] = null;
+            }
+            if (
+                this.ruleSetForReset[`overdue_${this.triggerNumber}_notice`] !==
+                null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_notice`] = null;
+            }
+            if (
+                this.ruleSetForReset[
+                    `overdue_${this.triggerNumber}_restrict`
+                ] !== null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_restrict`] = null;
+            }
+            if (
+                this.ruleSetForReset[`overdue_${this.triggerNumber}_mtt`] !==
+                null
+            ) {
+                circRule[`overdue_${this.triggerNumber}_mtt`] = null;
+            }
+            circRule[`overdue_${this.triggerNumber}_active`] =  false;
+
+            try {
+                const client = APIClient.circRule;
+                await client.circRules.update(circRule);
+                await this.$router.push({
+                    name: "CirculationTriggersList",
+                    query: { trigger: this.triggerNumber },
+                });
+                this.$router.go(0);
+            } catch (e) {
+                //TODO: handle e
+            }
+        },
+        async checkForChanges() {
+            const oldCircRule = cloneDeep(this.ruleSetForReset);
+            await this.getCircRuleSetForReset({
+                ...this.ruleSetForReset.context,
+                triggerNumber: this.triggerNumber,
+            });
+            return !isEqual(oldCircRule, this.ruleSetForReset);
         },
         findEffectiveRule(ruleSet, key) {
+            // FIXME: quick and dirty fix necessary due to routing being used for modals. Leaving in for POC, expecting full refactor before submission.
+            if (!this.allCircRules || !Array.isArray(this.allCircRules)) {
+                return { value: null, isFallback: true };
+            }
+
             // Check if the current rule's value for the key is null
             if (ruleSet[key] === null) {
                 // Filter rules to only those with non-null values for the specified key
@@ -439,7 +482,7 @@ export default {
             );
             this.categoryName = category.name;
         },
-        async getCircRuleSetForDeletion(query) {
+        async getCircRuleSetForReset(query) {
             const {
                 library_id,
                 patron_category_id,
@@ -455,12 +498,14 @@ export default {
             const result = await client.circRules.getAll(
                 {},
                 {
-                    library_id: library_id,
-                    patron_category_id: patron_category_id,
-                    item_type_id: item_type_id,
+                    library_id: this.library_id,
+                    patron_category_id: this.patron_category_id,
+                    item_type_id: this.item_type_id,
+                    effective: false,
                 }
             );
-            this.ruleSetForDeletion = result[0];
+            this.ruleSetForReset = result[0];
+            this.allCircRules = query.allCircRules;
         },
         async getItemTypeName() {
             if (this.item_type_id === "*") {
@@ -500,30 +545,6 @@ export default {
                     ? this.$__("Yes")
                     : this.$__("No")
                 : "";
-        },
-        async setRulesForDeletion(routeParams) {
-            const library_id =
-                routeParams && routeParams.library_id
-                    ? routeParams.library_id
-                    : this.ruleSetForDeletion.library_id || "*";
-            const item_type_id =
-                routeParams && routeParams.item_type_id
-                    ? routeParams.item_type_id
-                    : this.ruleSetForDeletion.item_type_id || "*";
-            const patron_category_id =
-                routeParams && routeParams.patron_category_id
-                    ? routeParams.patron_category_id
-                    : this.ruleSetForDeletion.patron_category_id || "*";
-            const params = {
-                library_id,
-                item_type_id,
-                patron_category_id,
-            };
-
-            const client = APIClient.circRule;
-            const promise = await client.circRules.getAll({}, params);
-            this.ruleSetForDeletion = promise[0];
-            this.ruleSetForDeletion.context = params;
         },
     },
     components: { ButtonSubmit, TriggerContext },
