@@ -545,11 +545,9 @@ export default {
         },
         async getCircRules() {
             const client = APIClient.circRule;
+            let rules;
             try {
-                const rules = await client.circRules.getAll(
-                    {},
-                    { effective: false }
-                );
+                rules = await client.circRules.getAll({}, { effective: false });
             } catch (e) {
                 // TODO: handle e
             }
