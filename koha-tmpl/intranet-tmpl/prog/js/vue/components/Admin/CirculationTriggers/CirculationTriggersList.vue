@@ -520,6 +520,8 @@ export default {
             );
 
             if (matchingItemTypeAndPatronCategoryRuleSet) {
+                matchingItemTypeAndPatronCategoryRuleSet.context.library_id =
+                    libraryId;
                 matchingItemTypeAndPatronCategoryRuleSet[
                     `overdue_${triggerNumber}_ruleset_exists_in_db`
                 ] = false;
