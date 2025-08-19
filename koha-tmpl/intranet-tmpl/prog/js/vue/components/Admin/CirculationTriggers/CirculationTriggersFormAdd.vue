@@ -487,6 +487,7 @@ export default {
                 ruleToSubmit.mtt && ruleToSubmit.mtt.length
                     ? ruleToSubmit.mtt.join(",")
                     : null;
+            circRule[`overdue_${this.newTriggerNumber}_ruleset_exists_in_db`] = true;
 
             const client = APIClient.circRule;
             await client.circRules.update(circRule).then(
@@ -653,10 +654,12 @@ export default {
                 // Check if there's already a rule for overdue_X_ in contextRules
                 const matchingRule = contextRules.find(
                     rule =>
-                        rule[`overdue_${i}_delay`] !== undefined ||
-                        rule[`overdue_${i}_notice`] !== undefined ||
-                        rule[`overdue_${i}_mtt`] !== undefined ||
-                        rule[`overdue_${i}_restrict`] !== undefined
+                        // rule[`overdue_${i}_delay`] !== undefined ||
+                        // rule[`overdue_${i}_notice`] !== undefined ||
+                        // rule[`overdue_${i}_mtt`] !== undefined ||
+                        // rule[`overdue_${i}_restrict`] !== undefined ||
+                        // rule[`overdue_${i}_active`] == "1" ||
+                        rule[`overdue_${this.newTriggerNumber}_ruleset_exists_in_db`] === "1"
                 );
 
                 if (!matchingRule) {
@@ -667,6 +670,7 @@ export default {
                         [`overdue_${i}_notice`]: null,
                         [`overdue_${i}_mtt`]: null,
                         [`overdue_${i}_restrict`]: null,
+                        [`overdue_${i}_ruleset_exists_in_db`]: true,
                     };
 
                     // Add the new rule to contextRules

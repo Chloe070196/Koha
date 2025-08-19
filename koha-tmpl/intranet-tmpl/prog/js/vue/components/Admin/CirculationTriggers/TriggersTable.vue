@@ -403,10 +403,7 @@ export default {
                 // Check if there's already a rule for overdue_X_ in contextRules
                 const matchingRuleIndex = contextRules.findIndex(
                     rule =>
-                        rule[`overdue_${i}_delay`] !== undefined ||
-                        rule[`overdue_${i}_notice`] !== undefined ||
-                        rule[`overdue_${i}_mtt`] !== undefined ||
-                        rule[`overdue_${i}_restrict`] !== undefined
+                        rule[`overdue_${i}_ruleset_exists_in_db`] === "1"
                 );
 
                 if (matchingRuleIndex === -1) {

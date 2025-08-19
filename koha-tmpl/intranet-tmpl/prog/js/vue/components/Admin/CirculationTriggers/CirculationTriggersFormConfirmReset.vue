@@ -375,6 +375,7 @@ export default {
             ) {
                 circRule[`overdue_${this.triggerNumber}_mtt`] = null;
             }
+            circRule[`overdue_${this.triggerNumber}_ruleset_exists_in_db`] = null;
 
             try {
                 const client = APIClient.circRule;

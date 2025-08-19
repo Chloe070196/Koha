@@ -423,9 +423,6 @@ export default {
                     )
                 );
             if (matchingItemTypeAndPatronCategoryAndLibraryRuleSet) {
-                matchingItemTypeAndPatronCategoryAndLibraryRuleSet[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = true;
                 return matchingItemTypeAndPatronCategoryAndLibraryRuleSet;
             }
 
