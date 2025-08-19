@@ -432,7 +432,7 @@ export default {
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (!isEqual(oldCircRule, this.ruleBeingEdited)) {
-                    const regex = /overdue_(\d+)_delay/g;
+                    const regex = /overdue_(\d+)_active/;
                     const numberOfTriggers = Object.keys(
                         this.ruleBeingEdited
                     ).filter(
@@ -545,16 +545,18 @@ export default {
         },
         async getCircRules() {
             const client = APIClient.circRule;
-            await client.circRules.getAll({}, { effective: false }).then(
-                rules => {
-                    const { rulesPerTrigger } =
-                        this.splitCircRulesByTriggerNumber(rules);
-                    this.circRules = rulesPerTrigger.length
-                        ? rulesPerTrigger
-                        : rules;
-                },
-                error => {}
-            );
+            try {
+                const rules = await client.circRules.getAll(
+                    {},
+                    { effective: false }
+                );
+            } catch (e) {
+                // TODO: handle e
+            }
+
+            const { rulesPerTrigger } =
+                this.splitCircRulesByTriggerNumber(rules);
+            this.circRules = rulesPerTrigger.length ? rulesPerTrigger : rules;
         },
         async handleContextChange() {
             await this.checkForExistingRules();
@@ -575,7 +577,7 @@ export default {
                 throw e;
             }
 
-            const regex = /overdue_(\d+)_delay/g;
+            const regex = /overdue_(\d+)_active/;
             const numberOfTriggers = Object.keys(this.ruleBeingEdited).filter(
                 key => regex.test(key) && this.ruleBeingEdited[key] !== null
             ).length;
@@ -644,7 +646,7 @@ export default {
             });
 
             // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            const regex = /overdue_(\d+)_delay/g;
+            const regex = /overdue_(\d+)_active/;
             const numberOfTriggers = Object.keys(effectiveRule).filter(
                 key => regex.test(key) && effectiveRule[key] !== null
             ).length;
@@ -659,7 +661,9 @@ export default {
                         // rule[`overdue_${i}_mtt`] !== undefined ||
                         // rule[`overdue_${i}_restrict`] !== undefined ||
                         // rule[`overdue_${i}_active`] == "1" ||
-                        rule[`overdue_${this.newTriggerNumber}_ruleset_exists_in_db`] === "1"
+                        rule[
+                            `overdue_${this.newTriggerNumber}_ruleset_exists_in_db`
+                        ] === "1"
                 );
 
                 if (!matchingRule) {

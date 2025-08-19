@@ -389,7 +389,7 @@ export default {
             );
 
             // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            const regex = /overdue_(\d+)_delay/g;
+            const regex = /overdue_(\d+)_active/;
             this.numberOfTriggers = Object.keys(effectiveRule).filter(
                 key => regex.test(key) && effectiveRule[key] !== null
             ).length;
@@ -402,8 +402,7 @@ export default {
             for (let i = 1; i <= this.numberOfTriggers; i++) {
                 // Check if there's already a rule for overdue_X_ in contextRules
                 const matchingRuleIndex = contextRules.findIndex(
-                    rule =>
-                        rule[`overdue_${i}_ruleset_exists_in_db`] === "1"
+                    rule => rule[`overdue_${i}_active`] !== undefined
                 );
 
                 if (matchingRuleIndex === -1) {
