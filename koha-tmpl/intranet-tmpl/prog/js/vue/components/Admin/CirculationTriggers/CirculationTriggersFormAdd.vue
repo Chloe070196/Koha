@@ -490,58 +490,62 @@ export default {
             circRule[`overdue_${this.newTriggerNumber}_ruleset_exists_in_db`] = true;
 
             const client = APIClient.circRule;
-            await client.circRules.update(circRule).then(
-                () => {
-                    this.$router
-                        .push({
-                            name: "CirculationTriggersList",
-                            query: { trigger: this.newTriggerNumber },
-                        })
-                        .then(() => this.$router.go(0));
-                },
-                error => {}
-            );
+            try {
+                await client.circRules.update(circRule)
+            } catch (e) {
+                // handle e
+            }
+
+            await this.$router
+                .replace({
+                    name: "CirculationTriggersList",
+                    query: { trigger: this.newTriggerNumber },
+                })
+            this.$router.go(0);
         },
         async getLibraries() {
             const client = APIClient.library;
-            await client.libraries.getAll().then(
-                libraries => {
-                    libraries.unshift({
-                        library_id: "*",
-                        name: this.$__("Default rule for all libraries"),
-                    });
-                    this.libraries = libraries;
-                },
-                error => {}
-            );
+            let libraries = [];
+            try {
+                libraries = await client.libraries.getAll()
+            } catch (e) {
+                // TODO: handle e
+            }
+            libraries.unshift({
+                library_id: "*",
+                name: this.$__("Default rule for all libraries"),
+            });
+            this.libraries = libraries;
         },
         async getCategories() {
             const client = APIClient.patron;
-            await client.patronCategories.getAll().then(
-                categories => {
-                    categories.unshift({
-                        patron_category_id: "*",
-                        name: this.$__("Default rule for all categories"),
-                    });
-                    this.categories = categories;
-                },
-                error => {}
-            );
+            let patronCategories = [];
+            try {
+                await client.patronCategories.getAll();
+            } catch (e) {
+                // TODO: handle e
+            }
+            patronCategories.unshift({
+                patron_category_id: "*",
+                name: this.$__("Default rule for all categories"),
+            });
+            this.categories = patronCategories;
         },
         async getItemTypes() {
             const client = APIClient.item;
-            await client.itemTypes.getAll().then(
-                types => {
-                    types.unshift({
-                        item_type_id: "*",
-                        description: this.$__(
-                            "Default rule for all item types"
-                        ),
-                    });
-                    this.itemTypes = types;
-                },
-                error => {}
-            );
+            let itemTypes = [];
+            try {
+                itemTypes = await client.itemTypes.getAll();
+            } catch (e) {
+                // TODO: handle e
+            }
+            types.unshift({
+                item_type_id: "*",
+                description: this.$__(
+                    "Default rule for all item types"
+                ),
+            });
+            this.itemTypes = types;
         },
         async getCircRules() {
             const client = APIClient.circRule;

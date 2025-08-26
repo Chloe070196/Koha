@@ -308,42 +308,45 @@ export default {
     methods: {
         async getLibraries() {
             const libClient = APIClient.library;
-            await libClient.libraries.getAll().then(
-                libraries => {
-                    libraries.unshift({
-                        library_id: "*",
-                        name: "Default rules for all libraries",
-                    });
-                    this.libraries = libraries;
-                },
-                error => {}
-            );
+            let libraries = [];
+            try {
+                libraries = await libClient.libraries.getAll()
+            } catch (e) {
+                //TODO: handle e
+            }
+            libraries.unshift({
+                library_id: "*",
+                name: "Default rules for all libraries",
+            });
+            this.libraries = libraries;
         },
         async getCategories() {
             const client = APIClient.patron;
-            await client.patronCategories.getAll().then(
-                patronCategories => {
-                    patronCategories.unshift({
-                        patron_category_id: "*",
-                        name: "Default rule",
-                    });
-                    this.patronCategories = patronCategories;
-                },
-                error => {}
-            );
+            let patronCategories = [];
+            try {
+                patronCategories = await client.patronCategories.getAll()
+            } catch (e) {
+                // handle e
+            }
+            patronCategories.unshift({
+                patron_category_id: "*",
+                name: "Default rule",
+            });
+            this.patronCategories = patronCategories;
         },
         async getItemTypes() {
             const client = APIClient.item;
-            await client.itemTypes.getAll().then(
-                types => {
-                    types.unshift({
-                        item_type_id: "*",
-                        description: "Default rule",
-                    });
-                    this.itemTypes = types;
-                },
-                error => {}
-            );
+            let itemTypes = [];
+            try {
+                itemTypes = await client.itemTypes.getAll()
+            } catch (e) {
+                // handle e
+            }
+            itemTypes.unshift({
+                item_type_id: "*",
+                description: "Default rule",
+            });
+            this.itemTypes = itemTypes;
         },
         async getCircRules() {
             const client = APIClient.circRule;
