@@ -5,7 +5,7 @@ export const useCircRulesStore = defineStore("circRules", {
         letters: [],
     }),
     actions: {
-        splitCircRulesByTriggerNumber(rules) {
+        splitCircRulesByTriggerNumber(ruleSets) {
             const ruleSuffixes = [
                 "delay",
                 "notice",
@@ -14,10 +14,10 @@ export const useCircRulesStore = defineStore("circRules", {
                 "_ruleset_exists_in_db",
             ];
             let numberOfTabs = [1];
-            const rulesPerTrigger = rules.reduce((acc, rule) => {
+            const ruleSetsPerTrigger = ruleSets.reduce((acc, ruleSet) => {
                 const regex = /overdue_(\d+)_ruleset_exists_in_db/;
-                const numberOfTriggers = Object.keys(rule).filter(key =>
-                    regex.test(key)
+                const numberOfTriggers = Object.keys(ruleSet).filter(ruleName =>
+                    regex.test(ruleName)
                 ).length;
                 numberOfTabs = this.setNumberOfTabs(
                     numberOfTriggers,
@@ -28,22 +28,22 @@ export const useCircRulesStore = defineStore("circRules", {
                     (_, i) => i + 1
                 );
                 triggerNumbers.forEach(i => {
-                    const ruleCopy = JSON.parse(JSON.stringify(rule));
+                    const ruleSetCopy = JSON.parse(JSON.stringify(ruleSet));
                     const rulesToDelete = triggerNumbers.filter(
                         num => num !== i
                     );
                     ruleSuffixes.forEach(suffix => {
                         rulesToDelete.forEach(number => {
-                            delete ruleCopy[`overdue_${number}_${suffix}`];
+                            delete ruleSetCopy[`overdue_${number}_${suffix}`];
                         });
                     });
-                    ruleCopy.triggerNumber = i;
-                    acc.push(ruleCopy);
+                    ruleSetCopy.triggerNumber = i;
+                    acc.push(ruleSetCopy);
                 });
                 return acc;
             }, []);
 
-            return { numberOfTabs, rulesPerTrigger };
+            return { numberOfTabs, ruleSetsPerTrigger };
         },
         setNumberOfTabs(triggerCount, tabCount) {
             if (triggerCount > tabCount) {

@@ -231,8 +231,10 @@
                     :key="`noticeTabContent${i}`"
                 >
                     <TriggersTable
-                        :contextSpecificCircRules="contextSpecificCircRules"
-                        :allCircRulesForTrigger="this.allCircRulesForTrigger"
+                        :contextSpecificCircRuleSets="
+                            contextSpecificCircRuleSets
+                        "
+                        :allCircRuleSetsForTrigger="allCircRuleSetsForTrigger"
                         :triggerNumber="number"
                         :categories="patronCategories"
                         :itemTypes="itemTypes"
@@ -278,15 +280,17 @@ export default {
         return {
             initialized: false,
             libraries: null,
+            itemTypes: null,
+            patronCategories: null,
             selectedLibrary: default_view,
             selectedCategory: null,
             selectedItemType: null,
-            circRules: null,
+            circRuleSets: null,
             numberOfTabs: [1],
             tabSelected: "Notice 1",
             showModal: false,
             displayAllApplicableRules: 1,
-            allCircRules: [],
+            allCircRuleSets: [],
         };
     },
     beforeRouteEnter(to, from, next) {
@@ -310,7 +314,7 @@ export default {
             const libClient = APIClient.library;
             let libraries = [];
             try {
-                libraries = await libClient.libraries.getAll()
+                libraries = await libClient.libraries.getAll();
             } catch (e) {
                 //TODO: handle e
             }
@@ -324,7 +328,7 @@ export default {
             const client = APIClient.patron;
             let patronCategories = [];
             try {
-                patronCategories = await client.patronCategories.getAll()
+                patronCategories = await client.patronCategories.getAll();
             } catch (e) {
                 // handle e
             }
@@ -338,7 +342,7 @@ export default {
             const client = APIClient.item;
             let itemTypes = [];
             try {
-                itemTypes = await client.itemTypes.getAll()
+                itemTypes = await client.itemTypes.getAll();
             } catch (e) {
                 // handle e
             }
@@ -366,38 +370,37 @@ export default {
                 selectedParams.item_type_id = this.selectedItemType;
             }
 
-            let rules;
+            let ruleSets;
             try {
-                rules = await client.circRules.getAll({}, selectedParams);
-                this.allCircRules = await client.circRules.getAll(
+                ruleSets = await client.circRules.getAll({}, selectedParams);
+                this.allCircRuleSets = await client.circRules.getAll(
                     {},
                     { effective: false }
                 );
             } catch (e) {
                 throw e;
             }
+            let ruleSetList = [];
 
-            let ruleList = [];
-
-            if (this.displayAllApplicableRules && this.allCircRules) {
-                ruleList =
+            if (this.displayAllApplicableRules && this.allCircRuleSets) {
+                ruleSetList =
                     this.generateExhaustiveRuleListForSearchParams(
                         selectedParams
                     );
             }
-            const { numberOfTabs, rulesPerTrigger: circRules } =
+            const { numberOfTabs, ruleSetsPerTrigger: circRuleSets } =
                 this.splitCircRulesByTriggerNumber(
-                    this.displayAllApplicableRules ? ruleList : rules
+                    this.displayAllApplicableRules ? ruleSetList : ruleSets
                 );
             const {
                 numberOfTabsForAllRules,
-                rulesPerTrigger: allCircRulesForTrigger,
-            } = this.splitCircRulesByTriggerNumber(this.allCircRules);
+                ruleSetsPerTrigger: allCircRuleSetsForTrigger,
+            } = this.splitCircRulesByTriggerNumber(this.allCircRuleSets);
             this.numberOfTabs = numberOfTabs;
             // this is used to determine what rules do exist for a given context specifically
-            this.contextSpecificCircRules = circRules;
+            this.contextSpecificCircRuleSets = circRuleSets;
             // this is used to generate defaults across contexts when needed and no matter the specificity of the search
-            this.allCircRulesForTrigger = allCircRulesForTrigger;
+            this.allCircRuleSetsForTrigger = allCircRuleSetsForTrigger;
         },
         // generate an exhaustive list of the rule sets that will apply to each possible context parameter combination
         // MUST BE TRIGGER SPECIFIC
@@ -410,7 +413,7 @@ export default {
             // find context specific rule set OR
             const matchingItemTypeAndPatronCategoryAndLibraryRuleSet =
                 cloneDeep(
-                    this.allCircRules.find(
+                    this.allCircRuleSets.find(
                         ruleSet =>
                             ruleSet.context.item_type_id === itemTypeId &&
                             ruleSet.context.patron_category_id === categoryId &&
@@ -431,7 +434,7 @@ export default {
 
             // find patron category specific rule set (default for all item types) OR
             const matchingPatronCategoryAndLibraryRuleSet = cloneDeep(
-                this.allCircRules.find(
+                this.allCircRuleSets.find(
                     ruleSet =>
                         ruleSet.context.patron_category_id === categoryId &&
                         ruleSet.context.item_type_id === "*" &&
@@ -457,7 +460,7 @@ export default {
 
             // find item type specific rule set (default for all patron categories) OR
             const matchingItemTypeAndLibraryRuleSet = cloneDeep(
-                this.allCircRules.find(
+                this.allCircRuleSets.find(
                     ruleSet =>
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === "*" &&
@@ -483,7 +486,7 @@ export default {
 
             // find library specific rule set (default for all patron categories and item types) OR
             const matchingLibraryRuleSet = cloneDeep(
-                this.allCircRules.find(
+                this.allCircRuleSets.find(
                     ruleSet =>
                         ruleSet.context.item_type_id === "*" &&
                         ruleSet.context.patron_category_id === "*" &&
@@ -508,7 +511,7 @@ export default {
 
             // find context specific rule set default for all libraries OR
             const matchingItemTypeAndPatronCategoryRuleSet = cloneDeep(
-                this.allCircRules.find(
+                this.allCircRuleSets.find(
                     ruleSet =>
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === categoryId &&
@@ -533,7 +536,7 @@ export default {
 
             // find patron category specific rule set (default for all item types) OR
             const matchingPatronCategoryRuleSet = cloneDeep(
-                this.allCircRules.find(
+                this.allCircRuleSets.find(
                     ruleSet =>
                         ruleSet.context.patron_category_id === categoryId &&
                         ruleSet.context.item_type_id === "*" &&
@@ -557,7 +560,7 @@ export default {
 
             // find item type specific rule set (default for all patron categories) OR
             const matchingItemTypeRuleSet = cloneDeep(
-                this.allCircRules.find(
+                this.allCircRuleSets.find(
                     ruleSet =>
                         ruleSet.context.item_type_id === itemTypeId &&
                         ruleSet.context.patron_category_id === "*" &&
@@ -581,7 +584,7 @@ export default {
 
             // no context specific rule set found, find the default
             const ruleSetGeneratedFromDefault = cloneDeep(
-                this.allCircRules.find(
+                this.allCircRuleSets.find(
                     ruleSet =>
                         ruleSet.context.item_type_id == "*" &&
                         ruleSet.context.patron_category_id == "*" &&
@@ -616,9 +619,9 @@ export default {
 
             // get the number of triggers
             const regex = /overdue_(\d+)_delay/g;
-            const numberOfTriggers = Object.keys(this.allCircRules[0]).filter(
-                key => regex.test(key)
-            ).length;
+            const numberOfTriggers = Object.keys(
+                this.allCircRuleSets[0]
+            ).filter(ruleName => regex.test(ruleName)).length;
 
             // handle searches for any patron category and item type combinations
             if (!params.patron_category_id && !params.item_type_id) {

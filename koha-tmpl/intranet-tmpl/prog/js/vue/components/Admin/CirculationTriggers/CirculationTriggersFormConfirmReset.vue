@@ -336,7 +336,7 @@ export default {
 
             if (await this.checkForChanges()) {
                 this.alertMessage =
-                    "The ruleset for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger below.";
+                    "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger below.";
                 // reload the form components that have changed, remain in edit mode
                 this.$router.push({
                     path: "/cgi-bin/koha/admin/circulation_triggers/reset",
@@ -375,7 +375,8 @@ export default {
             ) {
                 circRule[`overdue_${this.triggerNumber}_mtt`] = null;
             }
-            circRule[`overdue_${this.triggerNumber}_ruleset_exists_in_db`] = null;
+            circRule[`overdue_${this.triggerNumber}_ruleset_exists_in_db`] =
+                null;
 
             try {
                 const client = APIClient.circRule;
@@ -403,49 +404,49 @@ export default {
                 return { value: null, isFallback: true };
             }
 
-            // Check if the current rule's value for the key is null
+            // Check if the current ruleSet's value for the key is null
             if (ruleSet[key] === null) {
-                // Filter rules to only those with non-null values for the specified key
+                // Filter ruleSets to only those with non-null values for the specified key
                 // and that are no excluded from the selected context
                 const relevantRules = this.allCircRules.filter(
-                    rule =>
-                        rule[key] !== null &&
-                        rule[key] !== undefined &&
-                        (rule.context.library_id ===
+                    ruleSet =>
+                        ruleSet[key] !== null &&
+                        ruleSet[key] !== undefined &&
+                        (ruleSet.context.library_id ===
                             ruleSet.context.library_id ||
-                            rule.context.library_id === "*") &&
-                        (rule.context.patron_category_id ===
+                            ruleSet.context.library_id === "*") &&
+                        (ruleSet.context.patron_category_id ===
                             ruleSet.context.patron_category_id ||
-                            rule.context.patron_category_id === "*") &&
-                        (rule.context.item_type_id ===
+                            ruleSet.context.patron_category_id === "*") &&
+                        (ruleSet.context.item_type_id ===
                             ruleSet.context.item_type_id ||
-                            rule.context.item_type_id === "*")
+                            ruleSet.context.item_type_id === "*")
                 );
 
                 // Function to calculate specificity score
-                const getSpecificityScore = ruleContext => {
+                const getSpecificityScore = ruleSetContext => {
                     let score = 0;
                     if (
-                        ruleContext.library_id !== "*" &&
-                        ruleContext.library_id === ruleSet.context.library_id
+                        ruleSetContext.library_id !== "*" &&
+                        ruleSetContext.library_id === ruleSet.context.library_id
                     )
                         score += 4;
                     if (
-                        ruleContext.patron_category_id !== "*" &&
-                        ruleContext.patron_category_id ===
+                        ruleSetContext.patron_category_id !== "*" &&
+                        ruleSetContext.patron_category_id ===
                             ruleSet.context.patron_category_id
                     )
                         score += 2;
                     if (
-                        ruleContext.item_type_id !== "*" &&
-                        ruleContext.item_type_id ===
+                        ruleSetContext.item_type_id !== "*" &&
+                        ruleSetContext.item_type_id ===
                             ruleSet.context.item_type_id
                     )
                         score += 1;
                     return score;
                 };
 
-                // Sort the rules based on specificity score, descending
+                // Sort the ruleSets based on specificity score, descending
                 const sortedRules = relevantRules.sort((a, b) => {
                     return (
                         getSpecificityScore(b.context) -
@@ -453,16 +454,16 @@ export default {
                     );
                 });
 
-                // If no rule found, return null
+                // If no ruleSet found, return null
                 if (sortedRules.length === 0) {
                     return { value: null, isFallback: true };
                 }
 
-                // Get the value from the most specific rule
+                // Get the value from the most specific ruleSet
                 const bestRule = sortedRules[0];
                 return { value: bestRule[key], isFallback: true };
             } else {
-                // If the current rule's value is not null, use it directly
+                // If the current ruleSet's value is not null, use it directly
                 return {
                     value: ruleSet[key],
                     isFallback: ruleSet.isGeneratedFromDefault,
@@ -471,7 +472,8 @@ export default {
         },
         async getCategoryName() {
             if (this.patron_category_id === "*") {
-                this.categoryName = "Default rule for all patron categories";
+                this.categoryName =
+                    "Default rule set for all patron categories";
                 return;
             }
             const client = APIClient.patron;
@@ -509,7 +511,7 @@ export default {
         },
         async getItemTypeName() {
             if (this.item_type_id === "*") {
-                this.itemTypeName = "Default rule for all item types";
+                this.itemTypeName = "Default rule set for all item types";
                 return;
             }
             const client = APIClient.item;
@@ -521,7 +523,7 @@ export default {
         },
         async getLibraryName() {
             if (this.library_id === "*") {
-                this.libraryName = "Default rule for all libraries";
+                this.libraryName = "Default rule set for all libraries";
                 return;
             }
             const client = APIClient.library;

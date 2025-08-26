@@ -45,19 +45,19 @@
             </thead>
             <tbody>
                 <tr
-                    v-for="(rule, i) in modal
-                        ? filterCircRulesByContext(ruleBeingEdited)
+                    v-for="(ruleSet, i) in modal
+                        ? filterCircRulesByContext(ruleSetBeingEdited)
                         : filterCircRulesByTabNumber(triggerNumber)"
-                    :key="'rule' + i"
+                    :key="'ruleSet' + i"
                     :class="{
-                        selected_rule:
+                        selected_rule_set:
                             modal && i + 1 === parseInt(triggerBeingEdited),
                     }"
                 >
                     <td v-if="!modal" class="trigger_context">
                         {{
                             handleContext(
-                                rule.context.library_id,
+                                ruleSet.context.library_id,
                                 libraries,
                                 "library_id"
                             )
@@ -66,7 +66,7 @@
                     <td v-if="!modal" class="trigger_context">
                         {{
                             handleContext(
-                                rule.context.patron_category_id,
+                                ruleSet.context.patron_category_id,
                                 categories,
                                 "patron_category_id"
                             )
@@ -75,7 +75,7 @@
                     <td v-if="!modal" class="trigger_context border_right">
                         {{
                             handleContext(
-                                rule.context.item_type_id,
+                                ruleSet.context.item_type_id,
                                 itemTypes,
                                 "item_type_id",
                                 "description"
@@ -89,7 +89,7 @@
                         <span
                             :class="{
                                 fallback: findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_delay`,
@@ -99,7 +99,7 @@
                         >
                             {{
                                 findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_delay`,
@@ -116,7 +116,7 @@
                         <span
                             :class="{
                                 fallback: findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_notice`,
@@ -127,7 +127,7 @@
                             {{
                                 handleNotice(
                                     findEffectiveRule(
-                                        rule,
+                                        ruleSet,
                                         `overdue_${
                                             modal ? i + 1 : triggerNumber
                                         }_notice`,
@@ -143,7 +143,7 @@
                         <span
                             :class="{
                                 fallback: findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_mtt`,
@@ -153,7 +153,7 @@
                         >
                             {{
                                 findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_notice`,
@@ -161,7 +161,7 @@
                                 ).value !== ""
                                     ? handleTransport(
                                           findEffectiveRule(
-                                              rule,
+                                              ruleSet,
                                               `overdue_${
                                                   modal ? i + 1 : triggerNumber
                                               }_mtt`,
@@ -179,7 +179,7 @@
                         <span
                             :class="{
                                 fallback: findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_mtt`,
@@ -189,14 +189,14 @@
                         >
                             {{
                                 findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_notice`
                                 ).value !== ""
                                     ? handleTransport(
                                           findEffectiveRule(
-                                              rule,
+                                              ruleSet,
                                               `overdue_${
                                                   modal ? i + 1 : triggerNumber
                                               }_mtt`,
@@ -214,7 +214,7 @@
                         <span
                             :class="{
                                 fallback: findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_mtt`,
@@ -224,14 +224,14 @@
                         >
                             {{
                                 findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_notice`
                                 ).value !== ""
                                     ? handleTransport(
                                           findEffectiveRule(
-                                              rule,
+                                              ruleSet,
                                               `overdue_${
                                                   modal ? i + 1 : triggerNumber
                                               }_mtt`,
@@ -249,7 +249,7 @@
                         <span
                             :class="{
                                 fallback: findEffectiveRule(
-                                    rule,
+                                    ruleSet,
                                     `overdue_${
                                         modal ? i + 1 : triggerNumber
                                     }_restrict`,
@@ -260,7 +260,7 @@
                             {{
                                 handleRestrictions(
                                     findEffectiveRule(
-                                        rule,
+                                        ruleSet,
                                         `overdue_${
                                             modal ? i + 1 : triggerNumber
                                         }_restrict`,
@@ -276,10 +276,10 @@
                             :to="{
                                 name: 'CirculationTriggersFormEdit',
                                 query: {
-                                    library_id: rule.context.library_id,
-                                    item_type_id: rule.context.item_type_id,
+                                    library_id: ruleSet.context.library_id,
+                                    item_type_id: ruleSet.context.item_type_id,
                                     patron_category_id:
-                                        rule.context.patron_category_id,
+                                        ruleSet.context.patron_category_id,
                                     triggerNumber: modal
                                         ? i + 1
                                         : triggerNumber,
@@ -291,17 +291,17 @@
                         >
                         <router-link
                             v-if="
-                                rule[
+                                ruleSet[
                                     `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
                                 ]
                             "
                             :to="{
                                 name: 'CirculationTriggersFormConfirmReset',
                                 query: {
-                                    library_id: rule.context.library_id,
-                                    item_type_id: rule.context.item_type_id,
+                                    library_id: ruleSet.context.library_id,
+                                    item_type_id: ruleSet.context.item_type_id,
                                     patron_category_id:
-                                        rule.context.patron_category_id,
+                                        ruleSet.context.patron_category_id,
                                     triggerNumber: triggerNumber,
                                     allCircRules: allCircRulesForTrigger,
                                 },
@@ -320,11 +320,11 @@
                                 name: 'CirculationTriggersFormAdd',
                                 query: {
                                     library_id:
-                                        ruleBeingEdited.context.library_id,
+                                        ruleSetBeingEdited.context.library_id,
                                     item_type_id:
-                                        ruleBeingEdited.context.item_type_id,
+                                        ruleSetBeingEdited.context.item_type_id,
                                     patron_category_id:
-                                        ruleBeingEdited.context
+                                        ruleSetBeingEdited.context
                                             .patron_category_id,
                                     triggerNumber: numberOfTriggers + 1,
                                 },
@@ -345,11 +345,11 @@ import { cloneDeep } from "lodash";
 
 export default {
     props: [
-        "contextSpecificCircRules",
-        "allCircRulesForTrigger",
+        "contextSpecificCircRuleSets",
+        "allCircRuleSetsForTrigger",
         "triggerNumber",
         "modal",
-        "ruleBeingEdited",
+        "ruleSetBeingEdited",
         "triggerBeingEdited",
         "categories",
         "itemTypes",
@@ -379,13 +379,13 @@ export default {
         filterCircRulesByContext(effectiveRule) {
             const context = effectiveRule.context;
 
-            // Filter rules that match the context
-            const contextRules = this.contextSpecificCircRules.filter(
-                rule =>
-                    rule.context.item_type_id === context.item_type_id &&
-                    rule.context.patron_category_id ===
+            // Filter ruleSets that match the context
+            const contextRuleSets = this.contextSpecificCircRuleSets.filter(
+                ruleSet =>
+                    ruleSet.context.item_type_id === context.item_type_id &&
+                    ruleSet.context.patron_category_id ===
                         context.patron_category_id &&
-                    rule.context.library_id === context.library_id
+                    ruleSet.context.library_id === context.library_id
             );
 
             // Calculate the number of 'overdue_X_' triggers in the effectiveRule
@@ -400,13 +400,13 @@ export default {
             }
             // // Ensure there is one contextRule per 'X' from 1 to numberOfTriggers
             for (let i = 1; i <= this.numberOfTriggers; i++) {
-                // Check if there's already a rule for overdue_X_ in contextRules
-                const matchingRuleIndex = contextRules.findIndex(
-                    rule => rule[`overdue_${i}_active`] !== undefined
+                // Check if there's already a ruleSet for overdue_X_ in contextRuleSets
+                const matchingRuleIndex = contextRuleSets.findIndex(
+                    ruleSet => ruleSet[`overdue_${i}_active`] !== undefined
                 );
 
                 if (matchingRuleIndex === -1) {
-                    // Create a new rule with the same context and null overdue_X_* keys
+                    // Create a new ruleSet with the same context and null overdue_X_* keys
                     const newRule = {
                         context: { ...context }, // Clone the context
                         [`overdue_${i}_delay`]: null,
@@ -415,34 +415,35 @@ export default {
                         [`overdue_${i}_restrict`]: null,
                         [`overdue_${i}_ruleset_exists_in_db`]: false,
                     };
-                    // Add the new rule to contextRules
-                    contextRules.push(cloneDeep(newRule));
+                    // Add the new ruleSet to contextRuleSets
+                    contextRuleSets.push(cloneDeep(newRule));
                     continue;
                 }
 
                 const updatedRuleSet = {
-                    ...contextRules[matchingRuleIndex],
+                    ...contextRuleSets[matchingRuleIndex],
                     [`overdue_${i}_ruleset_exists_in_db`]:
-                        contextRules[matchingRuleIndex][
+                        contextRuleSets[matchingRuleIndex][
                             `overdue_${i}_delay`
                         ] !== null ||
-                        contextRules[matchingRuleIndex][
+                        contextRuleSets[matchingRuleIndex][
                             `overdue_${i}_notice`
                         ] !== null ||
-                        contextRules[matchingRuleIndex][`overdue_${i}_mtt`] !==
-                            null ||
-                        contextRules[matchingRuleIndex][
+                        contextRuleSets[matchingRuleIndex][
+                            `overdue_${i}_mtt`
+                        ] !== null ||
+                        contextRuleSets[matchingRuleIndex][
                             `overdue_${i}_restrict`
                         ] !== null,
                 };
-                contextRules.splice(matchingRuleIndex, 1, updatedRuleSet);
-                // console.log('updated contextRules: ', contextRules)
+                contextRuleSets.splice(matchingRuleIndex, 1, updatedRuleSet);
+                // console.log('updated contextRuleSets: ', contextRuleSets)
             }
 
-            // Sort contextRules by the 'X' value in 'overdue_X_delay'
-            contextRules.sort((a, b) => {
-                const getX = rule => {
-                    const match = Object.keys(rule).find(key =>
+            // Sort contextRuleSets by the 'X' value in 'overdue_X_delay'
+            contextRuleSets.sort((a, b) => {
+                const getX = ruleSet => {
+                    const match = Object.keys(ruleSet).find(key =>
                         regex.test(key)
                     );
                     return match ? parseInt(match.match(/\d+/)[0], 10) : 0;
@@ -451,16 +452,16 @@ export default {
                 return getX(a) - getX(b);
             });
 
-            return contextRules;
+            return contextRuleSets;
         },
         filterCircRulesByTabNumber(number) {
-            return this.contextSpecificCircRules.filter(
-                rule =>
-                    rule.triggerNumber === number &&
-                    (rule[`overdue_${number}_delay`] ||
-                        rule[`overdue_${number}_notice`] ||
-                        rule[`overdue_${number}_mtt`] ||
-                        rule[`overdue_${number}_restrict`])
+            return this.contextSpecificCircRuleSets.filter(
+                ruleSet =>
+                    ruleSet.triggerNumber === number &&
+                    (ruleSet[`overdue_${number}_delay`] ||
+                        ruleSet[`overdue_${number}_notice`] ||
+                        ruleSet[`overdue_${number}_mtt`] ||
+                        ruleSet[`overdue_${number}_restrict`])
             );
         },
         handleNotice(notice) {
@@ -468,49 +469,49 @@ export default {
             return letter ? letter.name : notice;
         },
         findEffectiveRule(ruleSet, key, triggerNumber) {
-            // Check if the current rule's value for the key is null
+            // Check if the current ruleSet's value for the key is null
             if (ruleSet[key] === null) {
-                // Filter rules to only those with non-null values for the specified key
+                // Filter ruleSets to only those with non-null values for the specified key
                 // and that are no excluded from the selected context
                 const relevantRules = this.allCircRulesForTrigger.filter(
-                    rule =>
-                        rule[key] !== null &&
-                        rule[key] !== undefined &&
-                        (rule.context.library_id ===
+                    ruleSet =>
+                        ruleSet[key] !== null &&
+                        ruleSet[key] !== undefined &&
+                        (ruleSet.context.library_id ===
                             ruleSet.context.library_id ||
-                            rule.context.library_id === "*") &&
-                        (rule.context.patron_category_id ===
+                            ruleSet.context.library_id === "*") &&
+                        (ruleSet.context.patron_category_id ===
                             ruleSet.context.patron_category_id ||
-                            rule.context.patron_category_id === "*") &&
-                        (rule.context.item_type_id ===
+                            ruleSet.context.patron_category_id === "*") &&
+                        (ruleSet.context.item_type_id ===
                             ruleSet.context.item_type_id ||
-                            rule.context.item_type_id === "*")
+                            ruleSet.context.item_type_id === "*")
                 );
 
                 // Function to calculate specificity score
-                const getSpecificityScore = ruleContext => {
+                const getSpecificityScore = ruleSetContext => {
                     let score = 0;
                     if (
-                        ruleContext.library_id !== "*" &&
-                        ruleContext.library_id === ruleSet.context.library_id
+                        ruleSetContext.library_id !== "*" &&
+                        ruleSetContext.library_id === ruleSet.context.library_id
                     )
                         score += 4;
                     if (
-                        ruleContext.patron_category_id !== "*" &&
-                        ruleContext.patron_category_id ===
+                        ruleSetContext.patron_category_id !== "*" &&
+                        ruleSetContext.patron_category_id ===
                             ruleSet.context.patron_category_id
                     )
                         score += 2;
                     if (
-                        ruleContext.item_type_id !== "*" &&
-                        ruleContext.item_type_id ===
+                        ruleSetContext.item_type_id !== "*" &&
+                        ruleSetContext.item_type_id ===
                             ruleSet.context.item_type_id
                     )
                         score += 1;
                     return score;
                 };
 
-                // Sort the rules based on specificity score, descending
+                // Sort the ruleSets based on specificity score, descending
                 const sortedRules = relevantRules.sort((a, b) => {
                     return (
                         getSpecificityScore(b.context) -
@@ -518,16 +519,16 @@ export default {
                     );
                 });
 
-                // If no rule found, return null
+                // If no ruleSet found, return null
                 if (sortedRules.length === 0) {
                     return { value: null, isFallback: true };
                 }
 
-                // Get the value from the most specific rule
+                // Get the value from the most specific ruleSet
                 const bestRule = sortedRules[0];
                 return { value: bestRule[key], isFallback: true };
             } else {
-                // If the current rule's value is not null, use it directly
+                // If the current ruleSet's value is not null, use it directly
                 return {
                     value: ruleSet[key],
                     isFallback:
@@ -558,7 +559,7 @@ export default {
 </script>
 
 <style scoped>
-.selected_rule > td {
+.selected_rule_set > td {
     background-color: yellow !important;
 }
 
