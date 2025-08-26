@@ -15,7 +15,7 @@ export const useCircRulesStore = defineStore("circRules", {
             ];
             let numberOfTabs = [1];
             const rulesPerTrigger = rules.reduce((acc, rule) => {
-                const regex = /overdue_(\d+)_active/;
+                const regex = /overdue_(\d+)_ruleset_exists_in_db/;
                 const numberOfTriggers = Object.keys(rule).filter(key =>
                     regex.test(key)
                 ).length;

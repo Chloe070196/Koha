@@ -432,7 +432,7 @@ export default {
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (!isEqual(oldCircRule, this.ruleBeingEdited)) {
-                    const regex = /overdue_(\d+)_active/;
+                    const regex = /overdue_(\d+)_ruleset_exists_in_db/;
                     const numberOfTriggers = Object.keys(
                         this.ruleBeingEdited
                     ).filter(
@@ -487,27 +487,27 @@ export default {
                 ruleToSubmit.mtt && ruleToSubmit.mtt.length
                     ? ruleToSubmit.mtt.join(",")
                     : null;
-            circRule[`overdue_${this.newTriggerNumber}_ruleset_exists_in_db`] = true;
+            circRule[`overdue_${this.newTriggerNumber}_ruleset_exists_in_db`] =
+                true;
 
             const client = APIClient.circRule;
             try {
-                await client.circRules.update(circRule)
+                await client.circRules.update(circRule);
             } catch (e) {
                 // handle e
             }
 
-            await this.$router
-                .replace({
-                    name: "CirculationTriggersList",
-                    query: { trigger: this.newTriggerNumber },
-                })
+            await this.$router.replace({
+                name: "CirculationTriggersList",
+                query: { trigger: this.newTriggerNumber },
+            });
             this.$router.go(0);
         },
         async getLibraries() {
             const client = APIClient.library;
             let libraries = [];
             try {
-                libraries = await client.libraries.getAll()
+                libraries = await client.libraries.getAll();
             } catch (e) {
                 // TODO: handle e
             }
@@ -541,9 +541,7 @@ export default {
             }
             types.unshift({
                 item_type_id: "*",
-                description: this.$__(
-                    "Default rule for all item types"
-                ),
+                description: this.$__("Default rule for all item types"),
             });
             this.itemTypes = types;
         },
@@ -579,7 +577,7 @@ export default {
                 throw e;
             }
 
-            const regex = /overdue_(\d+)_active/;
+            const regex = /overdue_(\d+)_ruleset_exists_in_db/;
             const numberOfTriggers = Object.keys(this.ruleBeingEdited).filter(
                 key => regex.test(key) && this.ruleBeingEdited[key] !== null
             ).length;
@@ -648,7 +646,7 @@ export default {
             });
 
             // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            const regex = /overdue_(\d+)_active/;
+            const regex = /overdue_(\d+)_ruleset_exists_in_db/;
             const numberOfTriggers = Object.keys(effectiveRule).filter(
                 key => regex.test(key) && effectiveRule[key] !== null
             ).length;

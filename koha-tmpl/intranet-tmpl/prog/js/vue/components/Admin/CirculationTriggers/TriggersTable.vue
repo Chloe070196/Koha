@@ -389,7 +389,7 @@ export default {
             );
 
             // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            const regex = /overdue_(\d+)_active/;
+            const regex = /overdue_(\d+)_ruleset_exists_in_db/;
             this.numberOfTriggers = Object.keys(effectiveRule).filter(
                 key => regex.test(key) && effectiveRule[key] !== null
             ).length;
