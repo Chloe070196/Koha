@@ -67,7 +67,7 @@
                         {{
                             handleContext(
                                 ruleSet.context.patron_category_id,
-                                categories,
+                                patronCategories,
                                 "patron_category_id"
                             )
                         }}
@@ -351,7 +351,7 @@ export default {
         "modal",
         "ruleSetBeingEdited",
         "triggerBeingEdited",
-        "categories",
+        "patronCategories",
         "itemTypes",
         "libraries",
         "letters",

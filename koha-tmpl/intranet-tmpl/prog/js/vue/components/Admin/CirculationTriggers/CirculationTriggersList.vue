@@ -236,7 +236,7 @@
                         "
                         :allCircRuleSetsForTrigger="allCircRuleSetsForTrigger"
                         :triggerNumber="number"
-                        :categories="patronCategories"
+                        :patronCategories="patronCategories"
                         :itemTypes="itemTypes"
                         :libraries="libraries"
                         :letters="letters"
@@ -267,21 +267,30 @@ import { cloneDeep } from "lodash";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
-        const { splitCircRulesByTriggerNumber } = circRulesStore;
-        const { letters } = storeToRefs(circRulesStore);
+        const {
+            splitCircRulesByTriggerNumber,
+            getLibraries,
+            getPatronCategories,
+            getItemTypes,
+        } = circRulesStore;
+        const { itemTypes, letters, libraries, patronCategories } =
+            storeToRefs(circRulesStore);
 
         return {
             splitCircRulesByTriggerNumber,
             letters,
+            itemTypes,
+            libraries,
+            patronCategories,
+            getLibraries,
+            getPatronCategories,
+            getItemTypes,
             from_branch,
         };
     },
     data() {
         return {
             initialized: false,
-            libraries: null,
-            itemTypes: null,
-            patronCategories: null,
             selectedLibrary: default_view,
             selectedCategory: null,
             selectedItemType: null,
@@ -296,7 +305,7 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(vm => {
             vm.getLibraries().then(() =>
-                vm.getCategories().then(() =>
+                vm.getPatronCategories().then(() =>
                     vm.getItemTypes().then(() =>
                         vm.getCircRules({}, true).then(() => {
                             vm.tabSelected = to.query.trigger
@@ -310,48 +319,6 @@ export default {
         });
     },
     methods: {
-        async getLibraries() {
-            const libClient = APIClient.library;
-            let libraries = [];
-            try {
-                libraries = await libClient.libraries.getAll();
-            } catch (e) {
-                //TODO: handle e
-            }
-            libraries.unshift({
-                library_id: "*",
-                name: "Default rules for all libraries",
-            });
-            this.libraries = libraries;
-        },
-        async getCategories() {
-            const client = APIClient.patron;
-            let patronCategories = [];
-            try {
-                patronCategories = await client.patronCategories.getAll();
-            } catch (e) {
-                // handle e
-            }
-            patronCategories.unshift({
-                patron_category_id: "*",
-                name: "Default rule",
-            });
-            this.patronCategories = patronCategories;
-        },
-        async getItemTypes() {
-            const client = APIClient.item;
-            let itemTypes = [];
-            try {
-                itemTypes = await client.itemTypes.getAll();
-            } catch (e) {
-                // handle e
-            }
-            itemTypes.unshift({
-                item_type_id: "*",
-                description: "Default rule",
-            });
-            this.itemTypes = itemTypes;
-        },
         async getCircRules() {
             const client = APIClient.circRule;
 

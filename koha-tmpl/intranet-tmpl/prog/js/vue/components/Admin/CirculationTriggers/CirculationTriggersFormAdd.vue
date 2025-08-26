@@ -58,7 +58,7 @@
                             v-model="newRule.patron_category_id"
                             label="name"
                             :reduce="cat => cat.patron_category_id"
-                            :options="categories"
+                            :options="patronCategories"
                             @update:modelValue="handleContextChange($event)"
                             :disabled="editMode !== 'confirmContext'"
                         >
@@ -335,20 +335,29 @@ import { isEqual, cloneDeep } from "lodash";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
-        const { splitCircRulesByTriggerNumber } = circRulesStore;
-        const { letters } = storeToRefs(circRulesStore);
+        const {
+            splitCircRulesByTriggerNumber,
+            getLibraries,
+            getPatronCategories,
+            getItemTypes,
+        } = circRulesStore;
+        const { letters, libraries, itemTypes, patronCategories } =
+            storeToRefs(circRulesStore);
 
         return {
             splitCircRulesByTriggerNumber,
             letters,
+            itemTypes,
+            libraries,
+            patronCategories,
+            getLibraries,
+            getPatronCategories,
+            getItemTypes,
         };
     },
     data() {
         return {
             initialized: false,
-            libraries: null,
-            categories: null,
-            itemTypes: null,
             circRules: [],
             newRule: {
                 item_type_id: "*",
@@ -394,7 +403,7 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(vm => {
             vm.getLibraries().then(() =>
-                vm.getCategories().then(() =>
+                vm.getPatronCategories().then(() =>
                     vm.getItemTypes().then(() =>
                         vm.getCircRules().then(() => {
                             const { query } = to;
@@ -504,48 +513,6 @@ export default {
                 query: { trigger: this.newTriggerNumber },
             });
             this.$router.go(0);
-        },
-        async getLibraries() {
-            const client = APIClient.library;
-            let libraries = [];
-            try {
-                libraries = await client.libraries.getAll();
-            } catch (e) {
-                // TODO: handle e
-            }
-            libraries.unshift({
-                library_id: "*",
-                name: this.$__("Default rule for all libraries"),
-            });
-            this.libraries = libraries;
-        },
-        async getCategories() {
-            const client = APIClient.patron;
-            let patronCategories = [];
-            try {
-                await client.patronCategories.getAll();
-            } catch (e) {
-                // TODO: handle e
-            }
-            patronCategories.unshift({
-                patron_category_id: "*",
-                name: this.$__("Default rule for all categories"),
-            });
-            this.categories = patronCategories;
-        },
-        async getItemTypes() {
-            const client = APIClient.item;
-            let itemTypes = [];
-            try {
-                itemTypes = await client.itemTypes.getAll();
-            } catch (e) {
-                // TODO: handle e
-            }
-            types.unshift({
-                item_type_id: "*",
-                description: this.$__("Default rule for all item types"),
-            });
-            this.itemTypes = types;
         },
         async getCircRules() {
             const client = APIClient.circRule;

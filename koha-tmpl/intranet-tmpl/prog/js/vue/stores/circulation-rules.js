@@ -1,17 +1,64 @@
 import { defineStore } from "pinia";
+import { $__ } from "../i18n";
+import { APIClient } from "/koha-tmpl/intranet-tmpl/prog/js/fetch/api-client.js";
 
 export const useCircRulesStore = defineStore("circRules", {
     state: () => ({
+        itemTypes: [],
         letters: [],
+        libraries: [],
+        patronCategories: [],
     }),
     actions: {
+        async getItemTypes() {
+            const client = APIClient.item;
+            let itemTypes = [];
+            try {
+                itemTypes = await client.itemTypes.getAll();
+            } catch (e) {
+                // TODO: handle e
+            }
+            itemTypes.unshift({
+                item_type_id: "*",
+                description: $__("Default rule for all item types"),
+            });
+            this.itemTypes = itemTypes;
+        },
+        async getLibraries() {
+            const client = APIClient.library;
+            let libraries = [];
+            try {
+                libraries = await client.libraries.getAll();
+            } catch (e) {
+                // TODO: handle e
+            }
+            libraries.unshift({
+                library_id: "*",
+                name: $__("Default rule for all libraries"),
+            });
+            this.libraries = libraries;
+        },
+        async getPatronCategories() {
+            const client = APIClient.patron;
+            let patronCategories = [];
+            try {
+                patronCategories = await client.patronCategories.getAll();
+            } catch (e) {
+                // TODO: handle e
+            }
+            patronCategories.unshift({
+                patron_category_id: "*",
+                name: $__("Default rule for all categories"),
+            });
+            this.categories = patronCategories;
+        },
         splitCircRulesByTriggerNumber(ruleSets) {
             const ruleSuffixes = [
                 "delay",
                 "notice",
                 "mtt",
                 "restrict",
-                "_ruleset_exists_in_db",
+                "ruleset_exists_in_db",
             ];
             let numberOfTabs = [1];
             const ruleSetsPerTrigger = ruleSets.reduce((acc, ruleSet) => {
