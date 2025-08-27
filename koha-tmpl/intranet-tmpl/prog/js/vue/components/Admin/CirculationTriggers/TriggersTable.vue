@@ -402,7 +402,8 @@ export default {
             for (let i = 1; i <= this.numberOfTriggers; i++) {
                 // Check if there's already a ruleSet for overdue_X_ in contextRuleSets
                 const matchingRuleIndex = contextRuleSets.findIndex(
-                    ruleSet => ruleSet[`overdue_${i}_active`] !== undefined
+                    ruleSet =>
+                        ruleSet[`overdue_${i}_ruleset_exists_in_db`] !== "0"
                 );
 
                 if (matchingRuleIndex === -1) {
