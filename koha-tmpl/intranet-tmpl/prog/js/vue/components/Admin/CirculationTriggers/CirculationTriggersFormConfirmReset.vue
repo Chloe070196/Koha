@@ -310,9 +310,22 @@ import { isEqual, cloneDeep } from "lodash";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
-        const { handleContext, findEffectiveRule } = circRulesStore;
+        const {
+            handleContext,
+            handleNotice,
+            handleRestrictions,
+            handleTransport,
+            findEffectiveRule,
+        } = circRulesStore;
         const { letters } = storeToRefs(circRulesStore);
-        return { letters, handleContext, findEffectiveRule };
+        return {
+            letters,
+            handleContext,
+            findEffectiveRule,
+            handleNotice,
+            handleRestrictions,
+            handleTransport,
+        };
     },
     data() {
         return {
@@ -486,20 +499,6 @@ export default {
             const client = APIClient.library;
             let libraries = await client.libraries.get(this.library_id);
             this.libraryName = libraries.name;
-        },
-        handleNotice(notice) {
-            const letter = letters.find(letter => letter.code === notice);
-            return letter ? letter.name : notice;
-        },
-        handleRestrictions(value) {
-            return value === "1" ? this.$__("Yes") : this.$__("No");
-        },
-        handleTransport(value, type) {
-            return value
-                ? value.includes(type)
-                    ? this.$__("Yes")
-                    : this.$__("No")
-                : "";
         },
     },
     components: { ButtonSubmit, TriggerContext },

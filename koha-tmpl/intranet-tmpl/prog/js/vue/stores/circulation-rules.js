@@ -129,6 +129,20 @@ export const useCircRulesStore = defineStore("circRules", {
             const item = data.find(item => item[type] === value);
             return item[displayProperty];
         },
+        handleNotice(notice) {
+            const letter = this.letters.find(letter => letter.code === notice);
+            return letter ? letter.name : notice;
+        },
+        handleRestrictions(value) {
+            return value === "1" ? $__("Yes") : $__("No");
+        },
+        handleTransport(value, type) {
+            return value
+                ? value.includes(type)
+                    ? this.$__("Yes")
+                    : this.$__("No")
+                : "";
+        },
         splitCircRulesByTriggerNumber(ruleSets) {
             const ruleSuffixes = [
                 "delay",

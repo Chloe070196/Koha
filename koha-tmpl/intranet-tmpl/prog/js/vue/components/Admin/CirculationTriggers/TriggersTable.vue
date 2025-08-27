@@ -374,8 +374,20 @@ export default {
     ],
     setup() {
         const circRulesStore = inject("circRulesStore");
-        const { handleContext, findEffectiveRule } = circRulesStore;
-        return { handleContext, findEffectiveRule };
+        const {
+            handleContext,
+            findEffectiveRule,
+            handleNotice,
+            handleRestrictions,
+            handleTransport,
+        } = circRulesStore;
+        return {
+            handleContext,
+            findEffectiveRule,
+            handleNotice,
+            handleRestrictions,
+            handleTransport,
+        };
     },
     data() {
         return {
@@ -383,16 +395,6 @@ export default {
         };
     },
     methods: {
-        handleTransport(value, type) {
-            return value
-                ? value.includes(type)
-                    ? this.$__("Yes")
-                    : this.$__("No")
-                : "";
-        },
-        handleRestrictions(value) {
-            return value === "1" ? this.$__("Yes") : this.$__("No");
-        },
         filterCircRulesByContext(effectiveRule) {
             const context = effectiveRule.context;
 
@@ -481,10 +483,6 @@ export default {
                         ruleSet[`overdue_${number}_mtt`] ||
                         ruleSet[`overdue_${number}_restrict`])
             );
-        },
-        handleNotice(notice) {
-            const letter = this.letters.find(letter => letter.code === notice);
-            return letter ? letter.name : notice;
         },
     },
 };
