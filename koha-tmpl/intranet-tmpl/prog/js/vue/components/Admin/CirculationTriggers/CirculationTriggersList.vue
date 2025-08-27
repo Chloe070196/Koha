@@ -291,7 +291,7 @@ export default {
     data() {
         return {
             initialized: false,
-            selectedLibrary: default_view,
+            selectedLibrary: null,
             selectedCategory: null,
             selectedItemType: null,
             circRuleSets: null,
