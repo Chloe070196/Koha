@@ -89,15 +89,19 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
-                                                `overdue_${triggerNumber}_delay`
+                                                `overdue_${triggerNumber}_delay`,
+                                                triggerNumber
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
-                                                `overdue_${triggerNumber}_delay`
+                                                `overdue_${triggerNumber}_delay`,
+                                                triggerNumber
                                             ).value +
                                             " " +
                                             $__("days")
@@ -109,20 +113,24 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
-                                                }_notice`
+                                                }_notice`,
+                                                triggerNumber
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             handleNotice(
                                                 findEffectiveRule(
+                                                    allCircRules,
                                                     ruleSetForReset,
                                                     `overdue_${
                                                         triggerNumber
-                                                    }_notice`
+                                                    }_notice`,
+                                                    triggerNumber
                                                 ).value
                                             )
                                         }}
@@ -133,24 +141,28 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
-                                                `overdue_${triggerNumber}_mtt`
+                                                `overdue_${triggerNumber}_mtt`,
+                                                triggerNumber
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
-                                                }_notice`
+                                                }_notice`,
+                                                triggerNumber
                                             ).value !== ""
                                                 ? handleTransport(
                                                       findEffectiveRule(
+                                                          allCircRules,
                                                           ruleSetForReset,
-                                                          `overdue_${
-                                                              triggerNumber
-                                                          }_mtt`
+                                                          `overdue_${triggerNumber}_mtt`,
+                                                          triggerNumber
                                                       ).value,
                                                       "email"
                                                   )
@@ -163,24 +175,30 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
-                                                `overdue_${triggerNumber}_mtt`
+                                                `overdue_${triggerNumber}_mtt`,
+                                                triggerNumber
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
-                                                }_notice`
+                                                }_notice`,
+                                                triggerNumber
                                             ).value !== ""
                                                 ? handleTransport(
                                                       findEffectiveRule(
+                                                          allCircRules,
                                                           ruleSetForReset,
                                                           `overdue_${
                                                               triggerNumber
-                                                          }_mtt`
+                                                          }_mtt`,
+                                                          triggerNumber
                                                       ).value,
                                                       "print"
                                                   )
@@ -193,24 +211,30 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
-                                                `overdue_${triggerNumber}_mtt`
+                                                `overdue_${triggerNumber}_mtt`,
+                                                triggerNumber
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
-                                                }_notice`
+                                                }_notice`,
+                                                triggerNumber
                                             ).value !== ""
                                                 ? handleTransport(
                                                       findEffectiveRule(
+                                                          allCircRules,
                                                           ruleSetForReset,
                                                           `overdue_${
                                                               triggerNumber
-                                                          }_mtt`
+                                                          }_mtt`,
+                                                          triggerNumber
                                                       ).value,
                                                       "sms"
                                                   )
@@ -223,20 +247,24 @@
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
+                                                allCircRules,
                                                 ruleSetForReset,
                                                 `overdue_${
                                                     triggerNumber
-                                                }_restrict`
+                                                }_restrict`,
+                                                triggerNumber
                                             ).isFallback,
                                         }"
                                     >
                                         {{
                                             handleRestrictions(
                                                 findEffectiveRule(
+                                                    allCircRules,
                                                     ruleSetForReset,
                                                     `overdue_${
                                                         triggerNumber
-                                                    }_restrict`
+                                                    }_restrict`,
+                                                    triggerNumber
                                                 ).value
                                             )
                                         }}
@@ -282,9 +310,9 @@ import { isEqual, cloneDeep } from "lodash";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
-        const { handleContext } = circRulesStore;
+        const { handleContext, findEffectiveRule } = circRulesStore;
         const { letters } = storeToRefs(circRulesStore);
-        return { letters, handleContext };
+        return { letters, handleContext, findEffectiveRule };
     },
     data() {
         return {
@@ -398,78 +426,6 @@ export default {
                 triggerNumber: this.triggerNumber,
             });
             return !isEqual(oldCircRule, this.ruleSetForReset);
-        },
-        findEffectiveRule(ruleSet, key) {
-            // FIXME: quick and dirty fix necessary due to routing being used for modals. Leaving in for POC, expecting full refactor before submission.
-            if (!this.allCircRules || !Array.isArray(this.allCircRules)) {
-                return { value: null, isFallback: true };
-            }
-
-            // Check if the current ruleSet's value for the key is null
-            if (ruleSet[key] === null) {
-                // Filter ruleSets to only those with non-null values for the specified key
-                // and that are no excluded from the selected context
-                const relevantRules = this.allCircRules.filter(
-                    ruleSet =>
-                        ruleSet[key] !== null &&
-                        ruleSet[key] !== undefined &&
-                        (ruleSet.context.library_id ===
-                            ruleSet.context.library_id ||
-                            ruleSet.context.library_id === "*") &&
-                        (ruleSet.context.patron_category_id ===
-                            ruleSet.context.patron_category_id ||
-                            ruleSet.context.patron_category_id === "*") &&
-                        (ruleSet.context.item_type_id ===
-                            ruleSet.context.item_type_id ||
-                            ruleSet.context.item_type_id === "*")
-                );
-
-                // Function to calculate specificity score
-                const getSpecificityScore = ruleSetContext => {
-                    let score = 0;
-                    if (
-                        ruleSetContext.library_id !== "*" &&
-                        ruleSetContext.library_id === ruleSet.context.library_id
-                    )
-                        score += 4;
-                    if (
-                        ruleSetContext.patron_category_id !== "*" &&
-                        ruleSetContext.patron_category_id ===
-                            ruleSet.context.patron_category_id
-                    )
-                        score += 2;
-                    if (
-                        ruleSetContext.item_type_id !== "*" &&
-                        ruleSetContext.item_type_id ===
-                            ruleSet.context.item_type_id
-                    )
-                        score += 1;
-                    return score;
-                };
-
-                // Sort the ruleSets based on specificity score, descending
-                const sortedRules = relevantRules.sort((a, b) => {
-                    return (
-                        getSpecificityScore(b.context) -
-                        getSpecificityScore(a.context)
-                    );
-                });
-
-                // If no ruleSet found, return null
-                if (sortedRules.length === 0) {
-                    return { value: null, isFallback: true };
-                }
-
-                // Get the value from the most specific ruleSet
-                const bestRule = sortedRules[0];
-                return { value: bestRule[key], isFallback: true };
-            } else {
-                // If the current ruleSet's value is not null, use it directly
-                return {
-                    value: ruleSet[key],
-                    isFallback: ruleSet.isGeneratedFromDefault,
-                };
-            }
         },
         async getCategoryName() {
             if (this.patron_category_id === "*") {
