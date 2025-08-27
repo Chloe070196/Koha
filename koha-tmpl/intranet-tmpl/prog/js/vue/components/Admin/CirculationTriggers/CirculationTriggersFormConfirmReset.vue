@@ -282,8 +282,9 @@ import { isEqual, cloneDeep } from "lodash";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
+        const { handleContext } = circRulesStore;
         const { letters } = storeToRefs(circRulesStore);
-        return { letters };
+        return { letters, handleContext };
     },
     data() {
         return {
@@ -529,10 +530,6 @@ export default {
             const client = APIClient.library;
             let libraries = await client.libraries.get(this.library_id);
             this.libraryName = libraries.name;
-        },
-        handleContext(value, data, type, displayProperty = "name") {
-            const item = data.find(item => item[type] === value);
-            return item[displayProperty];
         },
         handleNotice(notice) {
             const letter = letters.find(letter => letter.code === notice);

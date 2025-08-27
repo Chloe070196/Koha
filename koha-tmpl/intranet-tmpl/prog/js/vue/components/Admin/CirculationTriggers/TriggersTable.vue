@@ -342,6 +342,7 @@
 
 <script>
 import { cloneDeep } from "lodash";
+import { inject } from "vue";
 
 export default {
     props: [
@@ -356,16 +357,19 @@ export default {
         "libraries",
         "letters",
     ],
+    setup() {
+        const circRulesStore = inject("circRulesStore");
+        const { handleContext } = circRulesStore;
+        return {
+            handleContext,
+        };
+    },
     data() {
         return {
             numberOfTriggers: 0,
         };
     },
     methods: {
-        handleContext(value, data, type, displayProperty = "name") {
-            const item = data.find(item => item[type] === value);
-            return item[displayProperty];
-        },
         handleTransport(value, type) {
             return value
                 ? value.includes(type)

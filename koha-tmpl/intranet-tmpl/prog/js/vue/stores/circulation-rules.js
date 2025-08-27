@@ -52,6 +52,10 @@ export const useCircRulesStore = defineStore("circRules", {
             });
             this.patronCategories = patronCategories;
         },
+        handleContext(value, data, type, displayProperty = "name") {
+            const item = data.find(item => item[type] === value);
+            return item[displayProperty];
+        },
         splitCircRulesByTriggerNumber(ruleSets) {
             const ruleSuffixes = [
                 "delay",
