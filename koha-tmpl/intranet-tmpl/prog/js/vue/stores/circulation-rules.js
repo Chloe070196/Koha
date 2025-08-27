@@ -50,7 +50,7 @@ export const useCircRulesStore = defineStore("circRules", {
                 patron_category_id: "*",
                 name: $__("Default rule for all categories"),
             });
-            this.categories = patronCategories;
+            this.patronCategories = patronCategories;
         },
         splitCircRulesByTriggerNumber(ruleSets) {
             const ruleSuffixes = [
