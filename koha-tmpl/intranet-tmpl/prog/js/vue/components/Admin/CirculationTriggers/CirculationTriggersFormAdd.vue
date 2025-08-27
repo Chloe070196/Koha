@@ -222,7 +222,7 @@
                             {{ $__("Fallback to default") }}
                             <span v-if="fallbackRule.restrict !== null">
                                 ({{
-                                    fallbackRule.restrict === 1
+                                    fallbackRule.restrict === "1"
                                         ? $__("Yes")
                                         : $__("No")
                                 }})
