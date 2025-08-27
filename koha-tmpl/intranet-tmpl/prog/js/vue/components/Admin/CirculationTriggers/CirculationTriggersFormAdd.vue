@@ -440,7 +440,7 @@ export default {
                 await this.setRulesBeingEdited(routeParams);
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
-                if (!isEqual(oldCircRule, this.ruleBeingEdited)) {
+                if (!isEqual(oldCircRule, this.ruleSetBeingEdited)) {
                     const regex = /overdue_(\d+)_ruleset_exists_in_db/;
                     const numberOfTriggers = Object.keys(
                         this.ruleSetBeingEdited
@@ -551,8 +551,10 @@ export default {
             }
 
             const regex = /overdue_(\d+)_ruleset_exists_in_db/;
-            const numberOfTriggers = Object.keys(this.ruleBeingEdited).filter(
-                key => regex.test(key) && this.ruleBeingEdited[key] !== null
+            const numberOfTriggers = Object.keys(
+                this.ruleSetBeingEdited
+            ).filter(
+                key => regex.test(key) && this.ruleSetBeingEdited[key] !== null
             ).length;
             const splitRules = this.filterCircRulesByContext(
                 this.ruleSetBeingEdited
