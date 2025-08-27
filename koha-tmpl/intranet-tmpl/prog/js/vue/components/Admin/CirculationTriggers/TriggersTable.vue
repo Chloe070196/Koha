@@ -539,22 +539,6 @@ export default {
                 };
             }
         },
-        isDefaultRuleSet(ruleSet) {
-            const overdueRulePattern = /^overdue_\d+_.+$/;
-
-            // Collect all values of keys matching the pattern
-            const overdueValues = Object.entries(ruleSet)
-                .filter(([key]) => overdueRulePattern.test(key))
-                .map(([, value]) => value);
-
-            // Check if all matched values are null
-            const allOverdueRulesNull =
-                overdueValues.length > 0 &&
-                overdueValues.every(value => value === null);
-
-            // Return boolean
-            return allOverdueRulesNull;
-        },
     },
 };
 </script>
