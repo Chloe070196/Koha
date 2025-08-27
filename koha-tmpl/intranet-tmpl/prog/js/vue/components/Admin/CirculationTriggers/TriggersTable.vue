@@ -303,7 +303,7 @@
                                     patron_category_id:
                                         ruleSet.context.patron_category_id,
                                     triggerNumber: triggerNumber,
-                                    allCircRules: allCircRulesForTrigger,
+                                    allCircRules: allCircRuleSetsForTrigger,
                                 },
                             }"
                             class="btn btn-default btn-xs"
@@ -474,7 +474,7 @@ export default {
             if (ruleSet[key] === null) {
                 // Filter ruleSets to only those with non-null values for the specified key
                 // and that are no excluded from the selected context
-                const relevantRules = this.allCircRulesForTrigger.filter(
+                const relevantRules = this.allCircRuleSetsForTrigger.filter(
                     ruleSet =>
                         ruleSet[key] !== null &&
                         ruleSet[key] !== undefined &&
