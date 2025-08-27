@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { $__ } from "../i18n";
-import { APIClient } from "/koha-tmpl/intranet-tmpl/prog/js/fetch/api-client.js";
+import { APIClient } from "../fetch/api-client.js";
 
 export const useCircRulesStore = defineStore("circRules", {
     state: () => ({
