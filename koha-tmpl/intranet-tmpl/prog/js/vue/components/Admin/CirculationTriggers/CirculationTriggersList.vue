@@ -118,7 +118,9 @@
                                 label="name"
                                 :reduce="lib => lib.library_id"
                                 :options="libraries"
-                                @update:modelValue="getCircRules()"
+                                @update:modelValue="
+                                    filterRuleSetsbySearchParam(params)
+                                "
                                 placeholder="Default rules for all libraries"
                             >
                                 <template #search="{ attributes, events }">
@@ -138,7 +140,9 @@
                                 label="name"
                                 :reduce="cat => cat.patron_category_id"
                                 :options="patronCategories"
-                                @update:modelValue="getCircRules()"
+                                @update:modelValue="
+                                    filterRuleSetsbySearchParam(params)
+                                "
                                 placeholder="any"
                             >
                                 <template #search="{ attributes, events }">
@@ -158,7 +162,9 @@
                                 label="description"
                                 :reduce="itype => itype.item_type_id"
                                 :options="itemTypes"
-                                @update:modelValue="getCircRules()"
+                                @update:modelValue="
+                                    filterRuleSetsbySearchParam(params)
+                                "
                                 placeholder="any"
                             >
                                 <template #search="{ attributes, events }">
@@ -190,7 +196,7 @@
                             label: 'all applied rules.',
                         },
                     ]"
-                    @update:modelValue="getCircRules()"
+                    @update:modelValue="filterRuleSetsbySearchParam(params)"
                 >
                 </v-select>
             </div>
@@ -231,15 +237,9 @@
                     :key="`noticeTabContent${i}`"
                 >
                     <TriggersTable
-                        :contextSpecificCircRuleSets="
-                            contextSpecificCircRuleSets
-                        "
-                        :allCircRuleSetsForTrigger="allCircRuleSetsForTrigger"
+                        :modal="false"
+                        :ruleSets="ruleSets"
                         :triggerNumber="number"
-                        :patronCategories="patronCategories"
-                        :itemTypes="itemTypes"
-                        :libraries="libraries"
-                        :letters="letters"
                     />
                 </div>
             </template>
@@ -258,11 +258,9 @@
 <script>
 import Toolbar from "../../Toolbar.vue";
 import ToolbarButton from "../../ToolbarButton.vue";
-import { APIClient } from "../../../fetch/api-client.js";
 import TriggersTable from "./TriggersTable.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
-import { cloneDeep } from "lodash";
 
 export default {
     setup() {
@@ -272,19 +270,35 @@ export default {
             getLibraries,
             getPatronCategories,
             getItemTypes,
+            updateTriggerCount,
+            setAllRawRuleSets,
+            setAllExhaustiveEffectiveRuleSets,
         } = circRulesStore;
-        const { itemTypes, letters, libraries, patronCategories } =
-            storeToRefs(circRulesStore);
+        const {
+            itemTypes,
+            letters,
+            libraries,
+            patronCategories,
+            regex,
+            triggerCount,
+            allExhaustiveEffectiveRuleSets,
+        } = storeToRefs(circRulesStore);
 
         return {
             splitCircRulesByTriggerNumber,
             letters,
             itemTypes,
             libraries,
+            regex,
+            triggerCount,
             patronCategories,
             getLibraries,
             getPatronCategories,
             getItemTypes,
+            updateTriggerCount,
+            allExhaustiveEffectiveRuleSets,
+            setAllRawRuleSets,
+            setAllExhaustiveEffectiveRuleSets,
             from_branch,
         };
     },
@@ -307,10 +321,10 @@ export default {
             vm.getLibraries().then(() =>
                 vm.getPatronCategories().then(() =>
                     vm.getItemTypes().then(() =>
-                        vm.getCircRules({}, true).then(() => {
-                            vm.tabSelected = to.query.trigger
-                                ? `Notice ${to.query.trigger}`
-                                : "Notice 1";
+                        vm.setAllRawRuleSets().then(() => {
+                            vm.updateTriggerCount();
+                            vm.setAllExhaustiveEffectiveRuleSets();
+                            vm.filterRuleSetsbySearchParam();
                             vm.initialized = true;
                         })
                     )
@@ -319,9 +333,7 @@ export default {
         });
     },
     methods: {
-        async getCircRules() {
-            const client = APIClient.circRule;
-
+        filterRuleSetsbySearchParam() {
             const selectedParams = {};
             selectedParams.effective = true;
             if (this.selectedLibrary) {
@@ -337,461 +349,47 @@ export default {
                 selectedParams.item_type_id = this.selectedItemType;
             }
 
-            let ruleSets;
-            try {
-                ruleSets = await client.circRules.getAll({}, selectedParams);
-                this.allCircRuleSets = await client.circRules.getAll(
-                    {},
-                    { effective: false }
-                );
-            } catch (e) {
-                throw e;
-            }
-            let ruleSetList = [];
-
-            if (this.displayAllApplicableRules && this.allCircRuleSets) {
-                ruleSetList =
-                    this.generateExhaustiveRuleListForSearchParams(
-                        selectedParams
-                    );
-            }
-            const { numberOfTabs, ruleSetsPerTrigger: circRuleSets } =
-                this.splitCircRulesByTriggerNumber(
-                    this.displayAllApplicableRules ? ruleSetList : ruleSets
-                );
-            const {
-                numberOfTabsForAllRules,
-                ruleSetsPerTrigger: allCircRuleSetsForTrigger,
-            } = this.splitCircRulesByTriggerNumber(this.allCircRuleSets);
-            this.numberOfTabs = numberOfTabs;
-            // this is used to determine what rules do exist for a given context specifically
-            this.contextSpecificCircRuleSets = circRuleSets;
-            // this is used to generate defaults across contexts when needed and no matter the specificity of the search
-            this.allCircRuleSetsForTrigger = allCircRuleSetsForTrigger;
-        },
-        // generate an exhaustive list of the rule sets that will apply to each possible context parameter combination
-        // MUST BE TRIGGER SPECIFIC
-        generateContextAndTriggerSpecificRuleSet(
-            categoryId,
-            itemTypeId,
-            libraryId = "*",
-            triggerNumber
-        ) {
-            // find context specific rule set OR
-            const matchingItemTypeAndPatronCategoryAndLibraryRuleSet =
-                cloneDeep(
-                    this.allCircRuleSets.find(
-                        ruleSet =>
-                            ruleSet.context.item_type_id === itemTypeId &&
-                            ruleSet.context.patron_category_id === categoryId &&
-                            ruleSet.context.library_id === libraryId &&
-                            (ruleSet[`overdue_${triggerNumber}_delay`] !==
-                                null ||
-                                ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                    null ||
-                                ruleSet[`overdue_${triggerNumber}_mtt`] !==
-                                    null ||
-                                ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                    null)
-                    )
-                );
-            if (matchingItemTypeAndPatronCategoryAndLibraryRuleSet) {
-                return matchingItemTypeAndPatronCategoryAndLibraryRuleSet;
-            }
-
-            // find patron category specific rule set (default for all item types) OR
-            const matchingPatronCategoryAndLibraryRuleSet = cloneDeep(
-                this.allCircRuleSets.find(
-                    ruleSet =>
-                        ruleSet.context.patron_category_id === categoryId &&
-                        ruleSet.context.item_type_id === "*" &&
-                        ruleSet.context.library_id === libraryId &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                null ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                null)
-                )
-            );
-            if (matchingPatronCategoryAndLibraryRuleSet) {
-                matchingPatronCategoryAndLibraryRuleSet.context.item_type_id =
-                    itemTypeId;
-                matchingPatronCategoryAndLibraryRuleSet.context.library_id =
-                    libraryId;
-                matchingPatronCategoryAndLibraryRuleSet[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = false;
-                return matchingPatronCategoryAndLibraryRuleSet;
-            }
-
-            // find item type specific rule set (default for all patron categories) OR
-            const matchingItemTypeAndLibraryRuleSet = cloneDeep(
-                this.allCircRuleSets.find(
-                    ruleSet =>
-                        ruleSet.context.item_type_id === itemTypeId &&
-                        ruleSet.context.patron_category_id === "*" &&
-                        ruleSet.context.library_id === libraryId &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                null ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                null)
-                )
-            );
-            if (matchingItemTypeAndLibraryRuleSet) {
-                matchingItemTypeAndLibraryRuleSet.context.patron_category_id =
-                    categoryId;
-                matchingItemTypeAndLibraryRuleSet.context.library_id =
-                    libraryId;
-                matchingItemTypeAndLibraryRuleSet[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = false;
-                return matchingItemTypeAndLibraryRuleSet;
-            }
-
-            // find library specific rule set (default for all patron categories and item types) OR
-            const matchingLibraryRuleSet = cloneDeep(
-                this.allCircRuleSets.find(
-                    ruleSet =>
-                        ruleSet.context.item_type_id === "*" &&
-                        ruleSet.context.patron_category_id === "*" &&
-                        ruleSet.context.library_id === libraryId &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                null ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                null)
-                )
-            );
-            if (matchingLibraryRuleSet) {
-                matchingLibraryRuleSet.context.patron_category_id = categoryId;
-                matchingLibraryRuleSet.context.item_type_id = itemTypeId;
-                matchingLibraryRuleSet.context.library_id = libraryId;
-                matchingLibraryRuleSet[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = false;
-                return matchingLibraryRuleSet;
-            }
-
-            // find context specific rule set default for all libraries OR
-            const matchingItemTypeAndPatronCategoryRuleSet = cloneDeep(
-                this.allCircRuleSets.find(
-                    ruleSet =>
-                        ruleSet.context.item_type_id === itemTypeId &&
-                        ruleSet.context.patron_category_id === categoryId &&
-                        ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                null ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                null)
-                )
-            );
-
-            if (matchingItemTypeAndPatronCategoryRuleSet) {
-                matchingItemTypeAndPatronCategoryRuleSet.context.library_id =
-                    libraryId;
-                matchingItemTypeAndPatronCategoryRuleSet[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = false;
-                return matchingItemTypeAndPatronCategoryRuleSet;
-            }
-
-            // find patron category specific rule set (default for all item types) OR
-            const matchingPatronCategoryRuleSet = cloneDeep(
-                this.allCircRuleSets.find(
-                    ruleSet =>
-                        ruleSet.context.patron_category_id === categoryId &&
-                        ruleSet.context.item_type_id === "*" &&
-                        ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                null ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                null)
-                )
-            );
-            if (matchingPatronCategoryRuleSet) {
-                matchingPatronCategoryRuleSet.context.item_type_id = itemTypeId;
-                matchingPatronCategoryRuleSet.context.library_id = libraryId;
-                matchingPatronCategoryRuleSet[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = false;
-                return matchingPatronCategoryRuleSet;
-            }
-
-            // find item type specific rule set (default for all patron categories) OR
-            const matchingItemTypeRuleSet = cloneDeep(
-                this.allCircRuleSets.find(
-                    ruleSet =>
-                        ruleSet.context.item_type_id === itemTypeId &&
-                        ruleSet.context.patron_category_id === "*" &&
-                        ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                null ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                null)
-                )
-            );
-            if (matchingItemTypeRuleSet) {
-                matchingItemTypeRuleSet.context.patron_category_id = categoryId;
-                matchingItemTypeRuleSet.context.library_id = libraryId;
-                matchingItemTypeRuleSet[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = false;
-                return matchingItemTypeRuleSet;
-            }
-
-            // no context specific rule set found, find the default
-            const ruleSetGeneratedFromDefault = cloneDeep(
-                this.allCircRuleSets.find(
-                    ruleSet =>
-                        ruleSet.context.item_type_id == "*" &&
-                        ruleSet.context.patron_category_id == "*" &&
-                        ruleSet.context.library_id === "*" &&
-                        (ruleSet[`overdue_${triggerNumber}_delay`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_notice`] !==
-                                null ||
-                            ruleSet[`overdue_${triggerNumber}_mtt`] !== null ||
-                            ruleSet[`overdue_${triggerNumber}_restrict`] !==
-                                null)
-                )
-            );
-
-            if (ruleSetGeneratedFromDefault) {
-                ruleSetGeneratedFromDefault.context.patron_category_id =
-                    categoryId;
-                ruleSetGeneratedFromDefault.context.item_type_id = itemTypeId;
-                ruleSetGeneratedFromDefault.context.library_id = libraryId;
-                ruleSetGeneratedFromDefault[
-                    `overdue_${triggerNumber}_ruleset_exists_in_db`
-                ] = false;
-                return ruleSetGeneratedFromDefault;
-            }
-            // no ruleSet exist for the specific trigger
-            return null;
-        },
-        // handles searches for rules by context using 'all patron categories and item types'
-        // MUST CREATE OR UPDATE
-        generateExhaustiveRuleListForSearchParams(params) {
-            // handle searches where no patron category or item type are specified
-            const ruleSetList = [];
-
             // get the number of triggers
-            const regex = /overdue_(\d+)_delay/g;
-            const numberOfTriggers = Object.keys(
-                this.allCircRuleSets[0]
-            ).filter(ruleName => regex.test(ruleName)).length;
-
+            this.updateTriggerCount();
             // handle searches for any patron category and item type combinations
-            if (!params.patron_category_id && !params.item_type_id) {
-                this.patronCategories.forEach(category => {
-                    this.itemTypes.forEach(itemType => {
-                        for (let i = 1; i <= numberOfTriggers; i++) {
-                            const currentCategory = cloneDeep(category);
-                            const currentItemType = cloneDeep(itemType);
-
-                            const ruleSubSet =
-                                this.generateContextAndTriggerSpecificRuleSet(
-                                    currentCategory.patron_category_id,
-                                    currentItemType.item_type_id,
-                                    params.library_id,
-                                    i
-                                );
-
-                            // no rule subset exist for this context/trigger combination, abort
-                            if (ruleSubSet === null) {
-                                continue;
-                            }
-
-                            const ruleSetIndex = ruleSetList.findIndex(
-                                ruleSet =>
-                                    ruleSet.context.item_type_id ===
-                                        currentItemType.item_type_id &&
-                                    ruleSet.context.patron_category_id ===
-                                        currentCategory.patron_category_id &&
-                                    ruleSet.context.library_id ===
-                                        params.library_id
-                            );
-
-                            // there is not rule set for this context, create one
-                            if (ruleSetIndex === -1) {
-                                ruleSetList.push(ruleSubSet);
-                                continue;
-                            }
-
-                            // there is a rule set for this context, update it
-                            const updatedRuleSet = {
-                                ...ruleSetList[ruleSetIndex],
-                                [`overdue_${i}_delay`]:
-                                    ruleSubSet[`overdue_${i}_delay`] ?? null,
-                                [`overdue_${i}_notice`]:
-                                    ruleSubSet[`overdue_${i}_notice`] ?? null,
-                                [`overdue_${i}_mtt`]:
-                                    ruleSubSet[`overdue_${i}_mtt`] ?? null,
-                                [`overdue_${i}_restrict`]:
-                                    ruleSubSet[`overdue_${i}_restrict`] ?? null,
-                                [`overdue_${i}_ruleset_exists_in_db`]:
-                                    ruleSubSet[
-                                        `overdue_${i}_ruleset_exists_in_db`
-                                    ] ?? null,
-                            };
-                            ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
-                        }
-                    });
-                });
-                return ruleSetList;
+            if (
+                !selectedParams.patron_category_id &&
+                !selectedParams.item_type_id
+            ) {
+                this.ruleSets = this.allExhaustiveEffectiveRuleSets;
+                return;
             }
 
             // handle searches where only the item type is specified
-            if (!params.patron_category_id) {
-                this.patronCategories.forEach(category => {
-                    for (let i = 1; i <= numberOfTriggers; i++) {
-                        const currentCategory = cloneDeep(category);
-                        const ruleSubSet =
-                            this.generateContextAndTriggerSpecificRuleSet(
-                                currentCategory.patron_category_id,
-                                params.item_type_id,
-                                params.library_id,
-                                i
-                            );
-
-                        // no rule subset exist for this context/trigger combination, abort
-                        if (ruleSubSet === null) {
-                            continue;
-                        }
-
-                        const ruleSetIndex = ruleSetList.findIndex(
-                            ruleSet =>
-                                ruleSet.context.item_type_id ===
-                                    params.item_type_id &&
-                                ruleSet.context.patron_category_id ===
-                                    currentCategory.patron_category_id &&
-                                ruleSet.context.library_id === params.library_id
-                        );
-
-                        // there is not rule set for this context, create one
-                        if (ruleSetIndex === -1) {
-                            ruleSetList.push(ruleSubSet);
-                            continue;
-                        }
-
-                        // there is a rule set for this context, update it
-                        const updatedRuleSet = {
-                            ...ruleSetList[ruleSetIndex],
-                            [`overdue_${i}_delay`]:
-                                ruleSubSet[`overdue_${i}_delay`] ?? null,
-                            [`overdue_${i}_notice`]:
-                                ruleSubSet[`overdue_${i}_notice`] ?? null,
-                            [`overdue_${i}_mtt`]:
-                                ruleSubSet[`overdue_${i}_mtt`] ?? null,
-                            [`overdue_${i}_restrict`]:
-                                ruleSubSet[`overdue_${i}_restrict`] ?? null,
-                            [`overdue_${i}_ruleset_exists_in_db`]:
-                                ruleSubSet[
-                                    `overdue_${i}_ruleset_exists_in_db`
-                                ] ?? null,
-                        };
-                        ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
-                    }
-                });
-                return ruleSetList;
+            if (!selectedParams.patron_category_id) {
+                this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
+                    ruleSet =>
+                        ruleSet.context.item_type_id === context.item_type_id &&
+                        ruleSet.context.library_id === context.library_id
+                );
+                return;
             }
 
             // handle searches where only the patron category is specified
-            if (!params.item_type_id) {
-                this.itemTypes.forEach(itemType => {
-                    for (let i = 1; i <= numberOfTriggers; i++) {
-                        const currentItemType = cloneDeep(itemType);
-                        const ruleSubSet =
-                            this.generateContextAndTriggerSpecificRuleSet(
-                                params.patron_category_id,
-                                currentItemType.item_type_id,
-                                params.library_id,
-                                i
-                            );
-
-                        if (i === 1) {
-                            ruleSetList.push(ruleSubSet);
-                            continue;
-                        }
-
-                        const ruleSetIndex = ruleSetList.findIndex(
-                            ruleSet =>
-                                ruleSet.context.item_type_id ===
-                                    currentItemType.item_type_id &&
-                                ruleSet.context.patron_category_id ===
-                                    params.patron_category_id &&
-                                ruleSet.context.library_id === params.library_id
-                        );
-
-                        const updatedRuleSet = {
-                            ...ruleSetList[ruleSetIndex],
-                            [`overdue_${i}_delay`]:
-                                ruleSubSet[`overdue_${i}_delay`] ?? null,
-                            [`overdue_${i}_notice`]:
-                                ruleSubSet[`overdue_${i}_notice`] ?? null,
-                            [`overdue_${i}_mtt`]:
-                                ruleSubSet[`overdue_${i}_mtt`] ?? null,
-                            [`overdue_${i}_restrict`]:
-                                ruleSubSet[`overdue_${i}_restrict`] ?? null,
-                            [`overdue_${i}_ruleset_exists_in_db`]:
-                                ruleSubSet[
-                                    `overdue_${i}_ruleset_exists_in_db`
-                                ] ?? null,
-                        };
-                        ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
-                    }
-                });
-                return ruleSetList;
+            if (!selectedParams.item_type_id) {
+                this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
+                    ruleSet =>
+                        ruleSet.context.patron_category_id ===
+                            context.patron_category_id &&
+                        ruleSet.context.library_id === context.library_id
+                );
+                return;
             }
 
             // handle searches where both patron category and item type are specified and one specific rule is retrieved
-            for (let i = 1; i <= numberOfTriggers; i++) {
-                const ruleSubSet =
-                    this.generateContextAndTriggerSpecificRuleSet(
-                        params.patron_category_id,
-                        params.item_type_id,
-                        params.library_id,
-                        i
-                    );
-
-                if (i === 1) {
-                    ruleSetList.push(ruleSubSet);
-                    continue;
-                }
-
-                const ruleSetIndex = ruleSetList.findIndex(
-                    ruleSet =>
-                        ruleSet.context.item_type_id === params.item_type_id &&
-                        ruleSet.context.patron_category_id ===
-                            params.patron_category_id &&
-                        ruleSet.context.library_id === params.library_id
-                );
-
-                const updatedRuleSet = {
-                    ...ruleSetList[ruleSetIndex],
-                    [`overdue_${i}_delay`]:
-                        ruleSubSet[`overdue_${i}_delay`] ?? null,
-                    [`overdue_${i}_notice`]:
-                        ruleSubSet[`overdue_${i}_notice`] ?? null,
-                    [`overdue_${i}_mtt`]:
-                        ruleSubSet[`overdue_${i}_mtt`] ?? null,
-                    [`overdue_${i}_restrict`]:
-                        ruleSubSet[`overdue_${i}_restrict`] ?? null,
-                    [`overdue_${i}_ruleset_exists_in_db`]:
-                        ruleSubSet[`overdue_${i}_ruleset_exists_in_db`] ?? null,
-                };
-                ruleSetList.splice(ruleSetIndex, 1, updatedRuleSet);
-            }
-            return ruleSetList;
+            this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
+                ruleSet =>
+                    ruleSet.context.item_type_id === context.item_type_id &&
+                    ruleSet.context.patron_category_id ===
+                        context.patron_category_id &&
+                    ruleSet.context.library_id === context.library_id
+            );
+            return;
         },
         changeTabContent(e) {
             this.tabSelected = e.target.getAttribute("data-content");

@@ -45,13 +45,12 @@
             </thead>
             <tbody>
                 <tr
-                    v-for="(ruleSet, i) in modal
-                        ? filterCircRulesByContext(ruleSetBeingEdited)
-                        : filterCircRulesByTabNumber(triggerNumber)"
+                    v-for="(ruleSet, i) in ruleSets"
                     :key="'ruleSet' + i"
                     :class="{
                         selected_rule_set:
-                            modal && i + 1 === parseInt(triggerBeingEdited),
+                            modal &&
+                            i + 1 === parseInt(activeTriggerBeingEdited),
                     }"
                 >
                     <td v-if="!modal" class="trigger_context">
@@ -88,55 +87,35 @@
                     <td>
                         <span
                             :class="{
-                                fallback: findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_delay`,
-                                    modal ? i + 1 : triggerNumber
-                                ).isFallback,
+                                fallback:
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_delay`
+                                    ].isFallback,
                             }"
                         >
                             {{
-                                findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_delay`,
-                                    modal ? i + 1 : triggerNumber
-                                ).value +
-                                " " +
-                                $__("days")
+                                ruleSet[
+                                    `overdue_${modal ? i + 1 : triggerNumber}_delay`
+                                ].value
                             }}
                         </span>
                     </td>
 
-                    <!-- Notice -->
+                    <!--  Notice -->
                     <td>
                         <span
                             :class="{
-                                fallback: findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_notice`,
-                                    modal ? i + 1 : triggerNumber
-                                ).isFallback,
+                                fallback:
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                    ].isFallback,
                             }"
                         >
                             {{
                                 handleNotice(
-                                    findEffectiveRule(
-                                        allCircRuleSetsForTrigger,
-                                        ruleSet,
-                                        `overdue_${
-                                            modal ? i + 1 : triggerNumber
-                                        }_notice`,
-                                        modal ? i + 1 : triggerNumber
-                                    ).value
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                    ].value
                                 )
                             }}
                         </span>
@@ -146,37 +125,19 @@
                     <td>
                         <span
                             :class="{
-                                fallback: findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_mtt`,
-                                    modal ? i + 1 : triggerNumber
-                                ).isFallback,
+                                fallback:
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_mtt`
+                                    ].isFallback,
                             }"
                         >
                             {{
-                                findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_notice`,
-                                    modal ? i + 1 : triggerNumber
-                                ).value !== ""
-                                    ? handleTransport(
-                                          findEffectiveRule(
-                                              allCircRuleSetsForTrigger,
-                                              ruleSet,
-                                              `overdue_${
-                                                  modal ? i + 1 : triggerNumber
-                                              }_mtt`,
-                                              modal ? i + 1 : triggerNumber
-                                          ).value,
-                                          "email"
-                                      )
-                                    : ""
+                                handleTransport(
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                    ].value,
+                                    "email"
+                                )
                             }}
                         </span>
                     </td>
@@ -185,36 +146,19 @@
                     <td>
                         <span
                             :class="{
-                                fallback: findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_mtt`,
-                                    modal ? i + 1 : triggerNumber
-                                ).isFallback,
+                                fallback:
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_mtt`
+                                    ].isFallback,
                             }"
                         >
                             {{
-                                findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_notice`
-                                ).value !== ""
-                                    ? handleTransport(
-                                          findEffectiveRule(
-                                              allCircRuleSetsForTrigger,
-                                              ruleSet,
-                                              `overdue_${
-                                                  modal ? i + 1 : triggerNumber
-                                              }_mtt`,
-                                              modal ? i + 1 : triggerNumber
-                                          ).value,
-                                          "print"
-                                      )
-                                    : ""
+                                handleTransport(
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                    ].value,
+                                    "print"
+                                )
                             }}
                         </span>
                     </td>
@@ -223,36 +167,19 @@
                     <td>
                         <span
                             :class="{
-                                fallback: findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_mtt`,
-                                    modal ? i + 1 : triggerNumber
-                                ).isFallback,
+                                fallback:
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_mtt`
+                                    ].isFallback,
                             }"
                         >
                             {{
-                                findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_notice`
-                                ).value !== ""
-                                    ? handleTransport(
-                                          findEffectiveRule(
-                                              allCircRuleSetsForTrigger,
-                                              ruleSet,
-                                              `overdue_${
-                                                  modal ? i + 1 : triggerNumber
-                                              }_mtt`,
-                                              modal ? i + 1 : triggerNumber
-                                          ).value,
-                                          "sms"
-                                      )
-                                    : ""
+                                handleTransport(
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                    ].value,
+                                    "sms"
+                                )
                             }}
                         </span>
                     </td>
@@ -261,27 +188,16 @@
                     <td>
                         <span
                             :class="{
-                                fallback: findEffectiveRule(
-                                    allCircRuleSetsForTrigger,
-                                    ruleSet,
-                                    `overdue_${
-                                        modal ? i + 1 : triggerNumber
-                                    }_restrict`,
-                                    modal ? i + 1 : triggerNumber
-                                ).isFallback,
+                                fallback:
+                                    ruleSet[
+                                        `overdue_${modal ? i + 1 : triggerNumber}_restrict`
+                                    ].isFallback,
                             }"
                         >
                             {{
-                                handleRestrictions(
-                                    findEffectiveRule(
-                                        allCircRuleSetsForTrigger,
-                                        ruleSet,
-                                        `overdue_${
-                                            modal ? i + 1 : triggerNumber
-                                        }_restrict`,
-                                        modal ? i + 1 : triggerNumber
-                                    ).value
-                                )
+                                ruleSet[
+                                    `overdue_${modal ? i + 1 : triggerNumber}_restrict`
+                                ].value
                             }}
                         </span>
                     </td>
@@ -318,7 +234,7 @@
                                     patron_category_id:
                                         ruleSet.context.patron_category_id,
                                     triggerNumber: triggerNumber,
-                                    allCircRules: allCircRuleSetsForTrigger,
+                                    allCircRules: ruleSets,
                                 },
                             }"
                             class="btn btn-default btn-xs"
@@ -335,13 +251,15 @@
                                 name: 'CirculationTriggersFormAdd',
                                 query: {
                                     library_id:
-                                        ruleSetBeingEdited.context.library_id,
+                                        activeRuleSetBeingEdited.context
+                                            .library_id,
                                     item_type_id:
-                                        ruleSetBeingEdited.context.item_type_id,
+                                        activeRuleSetBeingEdited.context
+                                            .item_type_id,
                                     patron_category_id:
-                                        ruleSetBeingEdited.context
+                                        activeRuleSetBeingEdited.context
                                             .patron_category_id,
-                                    triggerNumber: numberOfTriggers + 1,
+                                    triggerNumber: triggerCount + 1,
                                 },
                             }"
                             class="btn btn-default btn-xs"
@@ -356,134 +274,56 @@
 </template>
 
 <script>
-import { cloneDeep } from "lodash";
 import { inject } from "vue";
+import { storeToRefs } from "pinia";
 
 export default {
     props: [
-        "contextSpecificCircRuleSets",
-        "allCircRuleSetsForTrigger",
         "triggerNumber",
         "modal",
         "ruleSetBeingEdited",
         "triggerBeingEdited",
-        "patronCategories",
-        "itemTypes",
-        "libraries",
-        "letters",
+        "ruleSets",
     ],
+    computed: {
+        activeRuleSetBeingEdited() {
+            return this.modal ? (this.ruleSetBeingEdited ?? 0) : null;
+        },
+        activeTriggerBeingEdited() {
+            return this.modal ? (this.triggerBeingEdited ?? {}) : null;
+        },
+    },
     setup() {
         const circRulesStore = inject("circRulesStore");
+        const {
+            triggerCount,
+            patronCategories,
+            itemTypes,
+            libraries,
+            letters,
+        } = storeToRefs(circRulesStore);
         const {
             handleContext,
             findEffectiveRule,
             handleNotice,
             handleRestrictions,
             handleTransport,
+            updateTriggerCount,
         } = circRulesStore;
+
         return {
             handleContext,
             findEffectiveRule,
             handleNotice,
             handleRestrictions,
             handleTransport,
+            triggerCount,
+            updateTriggerCount,
+            patronCategories,
+            itemTypes,
+            libraries,
+            letters,
         };
-    },
-    data() {
-        return {
-            numberOfTriggers: 0,
-        };
-    },
-    methods: {
-        filterCircRulesByContext(effectiveRule) {
-            const context = effectiveRule.context;
-
-            // Filter ruleSets that match the context
-            const contextRuleSets = this.contextSpecificCircRuleSets.filter(
-                ruleSet =>
-                    ruleSet.context.item_type_id === context.item_type_id &&
-                    ruleSet.context.patron_category_id ===
-                        context.patron_category_id &&
-                    ruleSet.context.library_id === context.library_id
-            );
-
-            // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            const regex = /overdue_(\d+)_ruleset_exists_in_db/;
-            this.numberOfTriggers = Object.keys(effectiveRule).filter(
-                key => regex.test(key) && effectiveRule[key] !== null
-            ).length;
-
-            // Shortcut for the case where no triggers exist yet
-            if (this.numberOfTriggers === 0) {
-                return undefined;
-            }
-            // // Ensure there is one contextRule per 'X' from 1 to numberOfTriggers
-            for (let i = 1; i <= this.numberOfTriggers; i++) {
-                // Check if there's already a ruleSet for overdue_X_ in contextRuleSets
-                const matchingRuleIndex = contextRuleSets.findIndex(
-                    ruleSet =>
-                        ruleSet[`overdue_${i}_ruleset_exists_in_db`] !== "0"
-                );
-
-                if (matchingRuleIndex === -1) {
-                    // Create a new ruleSet with the same context and null overdue_X_* keys
-                    const newRule = {
-                        context: { ...context }, // Clone the context
-                        [`overdue_${i}_delay`]: null,
-                        [`overdue_${i}_notice`]: null,
-                        [`overdue_${i}_mtt`]: null,
-                        [`overdue_${i}_restrict`]: null,
-                        [`overdue_${i}_ruleset_exists_in_db`]: false,
-                    };
-                    // Add the new ruleSet to contextRuleSets
-                    contextRuleSets.push(cloneDeep(newRule));
-                    continue;
-                }
-
-                const updatedRuleSet = {
-                    ...contextRuleSets[matchingRuleIndex],
-                    [`overdue_${i}_ruleset_exists_in_db`]:
-                        contextRuleSets[matchingRuleIndex][
-                            `overdue_${i}_delay`
-                        ] !== null ||
-                        contextRuleSets[matchingRuleIndex][
-                            `overdue_${i}_notice`
-                        ] !== null ||
-                        contextRuleSets[matchingRuleIndex][
-                            `overdue_${i}_mtt`
-                        ] !== null ||
-                        contextRuleSets[matchingRuleIndex][
-                            `overdue_${i}_restrict`
-                        ] !== null,
-                };
-                contextRuleSets.splice(matchingRuleIndex, 1, updatedRuleSet);
-                // console.log('updated contextRuleSets: ', contextRuleSets)
-            }
-
-            // Sort contextRuleSets by the 'X' value in 'overdue_X_delay'
-            contextRuleSets.sort((a, b) => {
-                const getX = ruleSet => {
-                    const match = Object.keys(ruleSet).find(key =>
-                        regex.test(key)
-                    );
-                    return match ? parseInt(match.match(/\d+/)[0], 10) : 0;
-                };
-
-                return getX(a) - getX(b);
-            });
-
-            return contextRuleSets;
-        },
-        filterCircRulesByTabNumber(number) {
-            return this.contextSpecificCircRuleSets.filter(
-                ruleSet =>
-                    ruleSet.triggerNumber === number &&
-                    (ruleSet[`overdue_${number}_delay`] ||
-                        ruleSet[`overdue_${number}_notice`] ||
-                        ruleSet[`overdue_${number}_mtt`] ||
-                        ruleSet[`overdue_${number}_restrict`])
-            );
-        },
     },
 };
 </script>

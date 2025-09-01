@@ -118,13 +118,11 @@
                     v-if="circRules.length && editMode !== 'confirmContext'"
                 >
                     <TriggersTable
-                        :contextSpecificCircRuleSets="circRules"
-                        :allCircRuleSetsForTrigger="circRules"
                         :triggerNumber="newTriggerNumber"
                         :modal="true"
+                        :ruleSets="circRules"
                         :ruleSetBeingEdited="ruleSetBeingEdited"
                         :triggerBeingEdited="triggerBeingEdited"
-                        :letters="filteredLetters"
                     />
                 </div>
             </fieldset>
@@ -135,7 +133,7 @@
                 class="rows"
                 v-if="editMode === 'edit' || editMode === 'add'"
             >
-                <legend v-if="ruleSetInfo.numberOfTriggers < newTriggerNumber">
+                <legend v-if="ruleSetInfo.triggerCount < newTriggerNumber">
                     {{ $__("Add new trigger") }}
                     {{ " " + newTriggerNumber }}
                 </legend>
@@ -235,7 +233,7 @@
                 class="rows"
                 v-if="editMode === 'edit' || editMode === 'add'"
             >
-                <legend v-if="ruleSetInfo.numberOfTriggers < newTriggerNumber">
+                <legend v-if="ruleSetInfo.triggerCount < newTriggerNumber">
                     {{ $__("Notice for trigger") }}
                     {{ " " + newTriggerNumber }}
                 </legend>
@@ -340,19 +338,29 @@ export default {
             getLibraries,
             getPatronCategories,
             getItemTypes,
+            updateTriggerCount,
         } = circRulesStore;
-        const { letters, libraries, itemTypes, patronCategories } =
-            storeToRefs(circRulesStore);
+        const {
+            letters,
+            libraries,
+            itemTypes,
+            patronCategories,
+            regex,
+            triggerCount,
+        } = storeToRefs(circRulesStore);
 
         return {
             splitCircRulesByTriggerNumber,
             letters,
             itemTypes,
             libraries,
+            regex,
+            triggerCount,
             patronCategories,
             getLibraries,
             getPatronCategories,
             getItemTypes,
+            updateTriggerCount,
         };
     },
     data() {
@@ -389,7 +397,7 @@ export default {
                 fine: null,
                 chargeperiod: null,
                 lengthunit: null,
-                numberOfTriggers: null,
+                triggerCount: null,
             },
             editMode: false,
             ruleSetBeingEdited: null,
@@ -441,21 +449,14 @@ export default {
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (!isEqual(oldCircRule, this.ruleSetBeingEdited)) {
-                    const regex = /overdue_(\d+)_ruleset_exists_in_db/;
-                    const numberOfTriggers = Object.keys(
-                        this.ruleSetBeingEdited
-                    ).filter(
-                        key =>
-                            regex.test(key) &&
-                            this.ruleSetBeingEdited[key] !== null
-                    ).length;
+                    this.updateTriggerCount(this.ruleSetBeingEdited);
                     const splitRules = this.filterCircRulesByContext(
                         this.ruleSetBeingEdited
                     );
                     this.newTriggerNumber =
                         this.editMode === "edit"
                             ? routeParams.triggerNumber
-                            : numberOfTriggers + 1;
+                            : this.triggerCount + 1;
                     // update the form so that up-to-date trigger data is displayed
                     this.assignTriggerValues(
                         splitRules,
@@ -550,19 +551,14 @@ export default {
                 throw e;
             }
 
-            const regex = /overdue_(\d+)_ruleset_exists_in_db/;
-            const numberOfTriggers = Object.keys(
-                this.ruleSetBeingEdited
-            ).filter(
-                key => regex.test(key) && this.ruleSetBeingEdited[key] !== null
-            ).length;
+            this.updateTriggerCount(this.ruleSetBeingEdited);
             const splitRules = this.filterCircRulesByContext(
                 this.ruleSetBeingEdited
             );
             this.newTriggerNumber =
                 this.editMode === "edit"
                     ? routeParams.triggerNumber
-                    : numberOfTriggers + 1;
+                    : this.triggerCount + 1;
             this.assignTriggerValues(splitRules, this.newTriggerNumber, {
                 library_id: this.ruleSetBeingEdited.context.library_id,
                 item_type_id: this.ruleSetBeingEdited.context.item_type_id,
@@ -575,7 +571,7 @@ export default {
                 fine: this.ruleSetBeingEdited.fine,
                 chargeperiod: this.ruleSetBeingEdited.chargeperiod,
                 lengthunit: this.ruleSetBeingEdited.lengthunit,
-                numberOfTriggers: numberOfTriggers,
+                triggerCount: this.triggerCount,
             };
             this.setMinDelay();
             this.setMaxDelay();
@@ -621,21 +617,13 @@ export default {
             });
 
             // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            const regex = /overdue_(\d+)_ruleset_exists_in_db/;
-            const numberOfTriggers = Object.keys(effectiveRule).filter(
-                key => regex.test(key) && effectiveRule[key] !== null
-            ).length;
+            this.updateTriggerCount(effectiveRule);
 
-            // Ensure there is one contextRule per 'X' from 1 to numberOfTriggers
-            for (let i = 1; i <= numberOfTriggers; i++) {
+            // Ensure there is one contextRule per 'X' from 1 to this.triggerCount
+            for (let i = 1; i <= this.triggerCount; i++) {
                 // Check if there's already a ruleSet for overdue_X_ in contextRules
                 const matchingRule = contextRules.find(
                     ruleSet =>
-                        // ruleSet[`overdue_${i}_delay`] !== undefined ||
-                        // ruleSet[`overdue_${i}_notice`] !== undefined ||
-                        // ruleSet[`overdue_${i}_mtt`] !== undefined ||
-                        // ruleSet[`overdue_${i}_restrict`] !== undefined ||
-                        // ruleSet[`overdue_${i}_active`] == "1" ||
                         ruleSet[
                             `overdue_${this.newTriggerNumber}_ruleset_exists_in_db`
                         ] === "1"
@@ -660,8 +648,8 @@ export default {
             // Sort contextRules by the 'X' value in 'overdue_X_delay'
             contextRules.sort((a, b) => {
                 const getX = ruleSet => {
-                    const match = Object.keys(ruleSet).find(key =>
-                        regex.test(key)
+                    const match = Object.keys(ruleSet).find(ruleName =>
+                        this.regex.test(ruleName)
                     );
                     return match ? parseInt(match.match(/\d+/)[0], 10) : 0;
                 };
