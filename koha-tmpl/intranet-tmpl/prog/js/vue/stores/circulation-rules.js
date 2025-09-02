@@ -34,7 +34,7 @@ export const useCircRulesStore = defineStore("circRules", {
         allDefaultLibraryRawRuleSets: [], // source of truth for default library
         allCurrentLibraryRawRuleSets: [], // source of truth for current library
         // effectiveContextFilteredRuleSets: [],
-        // effectiveTabFilteredRuleSets: [],
+        effectiveTriggerFilteredRuleSets: [],
         // effectiveContextRuleSets: [],
         allEffectiveRuleSets: [], // main data set for display explicitly set rules for current library
         // exhaustiveEffectiveContextFilteredRuleSets: [],
@@ -47,7 +47,7 @@ export const useCircRulesStore = defineStore("circRules", {
             const context = effectiveRule.context;
 
             // Filter ruleSets that match the context
-            const contextRuleSets = this.contextSpecificCircRuleSets.filter(
+            const contextRuleSets = this.allEffectiveRuleSets.filter(
                 ruleSet =>
                     ruleSet.context.item_type_id === context.item_type_id &&
                     ruleSet.context.patron_category_id ===
@@ -91,7 +91,7 @@ export const useCircRulesStore = defineStore("circRules", {
             contextRuleSets.sort((a, b) => {
                 const getX = ruleSet => {
                     const match = Object.keys(ruleSet).find(key =>
-                        regex.test(key)
+                        this.regex.test(key)
                     );
                     return match ? parseInt(match.match(/\d+/)[0], 10) : 0;
                 };
@@ -280,7 +280,7 @@ export const useCircRulesStore = defineStore("circRules", {
             }
             return value.includes(type) ? $__("Yes") : $__("No");
         },
-        splitCircRulesByTriggerNumber(ruleSets) {
+        splitCircRulesByTriggerNumber(ruleSets = this.allEffectiveRuleSets) {
             let numberOfTabs = [1];
             const ruleSetsPerTrigger = ruleSets.reduce((acc, ruleSet) => {
                 this.updateTriggerCount(ruleSet);
@@ -308,8 +308,9 @@ export const useCircRulesStore = defineStore("circRules", {
                 return acc;
             }, []);
 
-            return { numberOfTabs, ruleSetsPerTrigger };
+            this.effectiveTriggerFilteredRuleSets = ruleSetsPerTrigger;
         },
+        // FIXME: use updateTriggerCount instead
         setNumberOfTabs(triggerCount, tabCount) {
             if (triggerCount > tabCount) {
                 return Array.from({ length: triggerCount }, (_, i) => i + 1);
@@ -347,6 +348,27 @@ export const useCircRulesStore = defineStore("circRules", {
                     }
                     this.allExhaustiveEffectiveRuleSets.push(effectiveRuleSet);
                 });
+            });
+        },
+        setAllEffectiveRuleSets() {
+            // clear array
+            this.allEffectiveRuleSets = [];
+            // generate complete rule set list
+            this.allCurrentLibraryRawRuleSets.forEach(ruleSet => {
+                const effectiveRuleSet = {
+                    context: { ...ruleSet.context },
+                };
+                for (let i = 1; i <= this.triggerCount; i++) {
+                    this.ruleSuffixes.forEach(ruleSuffix => {
+                        effectiveRuleSet[`overdue_${i}_${ruleSuffix}`] =
+                            this.findEffectiveRule(
+                                effectiveRuleSet,
+                                ruleSuffix,
+                                i
+                            );
+                    });
+                }
+                this.allEffectiveRuleSets.push(effectiveRuleSet);
             });
         },
         // updates the raw rules sets for both default and currently selected library

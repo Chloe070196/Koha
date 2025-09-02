@@ -18,7 +18,10 @@
             ></router-link>
         </div>
         <div class="modal-body">
-            <div class="page-section bg-info" v-if="circRules.length">
+            <div
+                class="page-section bg-info"
+                v-if="effectiveTriggerFilteredRuleSets.length"
+            >
                 <h2>{{ $__("Circulation context") }}</h2>
                 <TriggerContext :ruleSetInfo="ruleSetInfo" />
             </div>
@@ -115,12 +118,15 @@
                 </div>
                 <div
                     class="page-section bg-warning-subtle"
-                    v-if="circRules.length && editMode !== 'confirmContext'"
+                    v-if="
+                        effectiveTriggerFilteredRuleSets.length &&
+                        editMode !== 'confirmContext'
+                    "
                 >
                     <TriggersTable
                         :triggerNumber="newTriggerNumber"
                         :modal="true"
-                        :ruleSets="circRules"
+                        :ruleSets="effectiveTriggerFilteredRuleSets"
                         :ruleSetBeingEdited="ruleSetBeingEdited"
                         :triggerBeingEdited="triggerBeingEdited"
                     />
@@ -339,6 +345,10 @@ export default {
             getPatronCategories,
             getItemTypes,
             updateTriggerCount,
+            setAllEffectiveRuleSets,
+            filterCircRulesByContext,
+            findEffectiveRule,
+            setAllRawRuleSets,
         } = circRulesStore;
         const {
             letters,
@@ -347,6 +357,7 @@ export default {
             patronCategories,
             regex,
             triggerCount,
+            effectiveTriggerFilteredRuleSets,
         } = storeToRefs(circRulesStore);
 
         return {
@@ -361,12 +372,16 @@ export default {
             getPatronCategories,
             getItemTypes,
             updateTriggerCount,
+            setAllEffectiveRuleSets,
+            filterCircRulesByContext,
+            findEffectiveRule,
+            effectiveTriggerFilteredRuleSets,
+            setAllRawRuleSets,
         };
     },
     data() {
         return {
             initialized: false,
-            circRules: [],
             newRule: {
                 item_type_id: "*",
                 library_id: "*",
@@ -409,15 +424,14 @@ export default {
         };
     },
     beforeRouteEnter(to, from, next) {
-       next(async vm => {
-           await vm.getLibraries();
-           await vm.getPatronCategories();
-           await vm.getItemTypes();
-           await vm.getCircRules();
-           const { query } = to;
-           await vm.checkForExistingRules(query);
-           vm.initialized = true;
-       });
+        next(async vm => {
+            vm.setAllRawRuleSets();
+            vm.setAllEffectiveRuleSets();
+            vm.splitCircRulesByTriggerNumber();
+            const { query } = to;
+            await vm.checkForExistingRules(query);
+            vm.initialized = true;
+        });
     },
     methods: {
         async addCircRule(e) {
@@ -445,16 +459,13 @@ export default {
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (!isEqual(oldCircRule, this.ruleSetBeingEdited)) {
                     this.updateTriggerCount(this.ruleSetBeingEdited);
-                    const splitRules = this.filterCircRulesByContext(
-                        this.ruleSetBeingEdited
-                    );
                     this.newTriggerNumber =
                         this.editMode === "edit"
                             ? routeParams.triggerNumber
                             : this.triggerCount + 1;
                     // update the form so that up-to-date trigger data is displayed
                     this.assignTriggerValues(
-                        splitRules,
+                        this.effectiveTriggerFilteredRuleSets,
                         this.newTriggerNumber,
                         {
                             library_id:
@@ -510,23 +521,6 @@ export default {
             });
             this.$router.go(0);
         },
-        async getCircRules() {
-            const client = APIClient.circRule;
-            let ruleSets;
-            try {
-                ruleSets = await client.circRules.getAll(
-                    {},
-                    { effective: false }
-                );
-            } catch (e) {
-                // TODO: handle e
-            }
-            const { ruleSetsPerTrigger } =
-                this.splitCircRulesByTriggerNumber(ruleSets);
-            this.circRules = ruleSetsPerTrigger.length
-                ? ruleSetsPerTrigger
-                : ruleSets;
-        },
         async handleContextChange() {
             await this.checkForExistingRules();
         },
@@ -545,21 +539,21 @@ export default {
             } catch (e) {
                 throw e;
             }
-
             this.updateTriggerCount(this.ruleSetBeingEdited);
-            const splitRules = this.filterCircRulesByContext(
-                this.ruleSetBeingEdited
-            );
             this.newTriggerNumber =
                 this.editMode === "edit"
                     ? routeParams.triggerNumber
                     : this.triggerCount + 1;
-            this.assignTriggerValues(splitRules, this.newTriggerNumber, {
-                library_id: this.ruleSetBeingEdited.context.library_id,
-                item_type_id: this.ruleSetBeingEdited.context.item_type_id,
-                patron_category_id:
-                    this.ruleSetBeingEdited.context.patron_category_id,
-            });
+            this.assignTriggerValues(
+                this.effectiveTriggerFilteredRuleSets,
+                this.newTriggerNumber,
+                {
+                    library_id: this.ruleSetBeingEdited.context.library_id,
+                    item_type_id: this.ruleSetBeingEdited.context.item_type_id,
+                    patron_category_id:
+                        this.ruleSetBeingEdited.context.patron_category_id,
+                }
+            );
             this.ruleSetInfo = {
                 issuelength: this.ruleSetBeingEdited.issuelength,
                 decreaseloanholds: this.ruleSetBeingEdited.decreaseloanholds,
@@ -601,164 +595,47 @@ export default {
             this.ruleSetBeingEdited = result[0];
             this.ruleSetBeingEdited.context = params;
         },
-        filterCircRulesByContext(effectiveRule) {
-            const context = effectiveRule.context;
-
-            // Filter ruleSets that match the context
-            let contextRules = this.circRules.filter(ruleSet => {
-                return Object.keys(context).every(key => {
-                    return context[key] === ruleSet.context[key];
-                });
-            });
-
-            // Calculate the number of 'overdue_X_' triggers in the effectiveRule
-            this.updateTriggerCount(effectiveRule);
-
-            // Ensure there is one contextRule per 'X' from 1 to this.triggerCount
-            for (let i = 1; i <= this.triggerCount; i++) {
-                // Check if there's already a ruleSet for overdue_X_ in contextRules
-                const matchingRule = contextRules.find(
-                    ruleSet =>
-                        ruleSet[
-                            `overdue_${this.newTriggerNumber}_ruleset_exists_in_db`
-                        ] === "1"
-                );
-
-                if (!matchingRule) {
-                    // Create a new ruleSet with the same context and null overdue_X_* keys
-                    const placeholderRule = {
-                        context: { ...context }, // Clone the context
-                        [`overdue_${i}_delay`]: null,
-                        [`overdue_${i}_notice`]: null,
-                        [`overdue_${i}_mtt`]: null,
-                        [`overdue_${i}_restrict`]: null,
-                        [`overdue_${i}_ruleset_exists_in_db`]: true,
-                    };
-
-                    // Add the new ruleSet to contextRules
-                    contextRules.push(placeholderRule);
-                }
-            }
-
-            // Sort contextRules by the 'X' value in 'overdue_X_delay'
-            contextRules.sort((a, b) => {
-                const getX = ruleSet => {
-                    const match = Object.keys(ruleSet).find(ruleName =>
-                        this.regex.test(ruleName)
-                    );
-                    return match ? parseInt(match.match(/\d+/)[0], 10) : 0;
-                };
-
-                return getX(a) - getX(b);
-            });
-
-            return contextRules;
-        },
-        findFallbackRule(currentContext, key) {
-            // Filter ruleSets to only those with non-null values for the specified key and not the current context
-            const relevantRules = this.circRules.filter(ruleSet => {
-                return (
-                    Object.keys(currentContext).some(
-                        key => currentContext[key] !== ruleSet.context[key]
-                    ) &&
-                    ruleSet[key] !== null &&
-                    ruleSet[key] !== undefined
-                );
-            });
-
-            // Function to calculate specificity score
-            const getSpecificityScore = ruleSetContext => {
-                let score = 0;
-                if (
-                    ruleSetContext.library_id !== "*" &&
-                    ruleSetContext.library_id === currentContext.library_id
-                )
-                    score += 4;
-                if (
-                    ruleSetContext.patron_category_id !== "*" &&
-                    ruleSetContext.patron_category_id ===
-                        currentContext.patron_category_id
-                )
-                    score += 2;
-                if (
-                    ruleSetContext.item_type_id !== "*" &&
-                    ruleSetContext.item_type_id === currentContext.item_type_id
-                )
-                    score += 1;
-                return score;
-            };
-
-            // Sort the ruleSets based on specificity score, descending
-            const sortedRules = relevantRules.sort((a, b) => {
-                return (
-                    getSpecificityScore(b.context) -
-                    getSpecificityScore(a.context)
-                );
-            });
-
-            // If no ruleSet found, return null
-            if (sortedRules.length === 0) {
-                return null;
-            }
-
-            // Get the value from the most specific ruleSet
-            const bestRule = sortedRules[0];
-            return bestRule[key];
-        },
-        assignTriggerValues(ruleSets, triggerNumber, context = null) {
+        assignTriggerValues(ruleSet, triggerNumber, context = null) {
+            const i = parseInt(triggerNumber);
             this.newRule = {
-                item_type_id: context
-                    ? context.item_type_id
-                    : ruleSets[triggerNumber - 1].context.item_type_id || "*",
-                library_id: context
-                    ? context.library_id
-                    : ruleSets[triggerNumber - 1].context.library_id || "*",
-                patron_category_id: context
-                    ? context.patron_category_id
-                    : ruleSets[triggerNumber - 1].context.patron_category_id ||
-                      "*",
-                delay: ruleSets[triggerNumber - 1]
-                    ? ruleSets[triggerNumber - 1][
-                          `overdue_${triggerNumber}_delay`
-                      ]
-                    : null,
-                notice: ruleSets[triggerNumber - 1]
-                    ? ruleSets[triggerNumber - 1][
-                          `overdue_${triggerNumber}_notice`
-                      ]
-                    : null,
-                mtt: ruleSets[triggerNumber - 1]
-                    ? ruleSets[triggerNumber - 1][
-                          `overdue_${triggerNumber}_mtt`
-                      ]
-                        ? ruleSets[triggerNumber - 1][
-                              `overdue_${triggerNumber}_mtt`
-                          ].split(",")
-                        : []
-                    : null,
-                restrict: ruleSets[triggerNumber - 1]
-                    ? ruleSets[triggerNumber - 1][
-                          `overdue_${triggerNumber}_restrict`
-                      ]
-                    : null,
+                item_type_id:
+                    context?.item_type_id ??
+                    ruleSet[i - 1]?.context?.item_type_id ??
+                    "*",
+                library_id:
+                    context?.library_id ??
+                    ruleSet[i - 1]?.context?.library_id ??
+                    "*",
+                patron_category_id:
+                    context?.patron_category_id ??
+                    ruleSet[i - 1]?.context?.patron_category_id ??
+                    "*",
+                delay: ruleSet[i - 1]?.[`overdue_${i}_delay`]?.value ?? null,
+                notice: ruleSet[i - 1]?.[`overdue_${i}_notice`]?.value ?? null,
+                mtt:
+                    ruleSet[i - 1]?.[`overdue_${i}_mtt`]?.value?.split(",") ??
+                    [],
+                restrict:
+                    ruleSet[i - 1]?.[`overdue_${i}_restrict`]?.value ?? null,
             };
             this.fallbackRule = {
-                delay: this.findFallbackRule(
-                    context,
-                    `overdue_${triggerNumber}_delay`
-                ),
-                notice: this.findFallbackRule(
-                    context,
-                    `overdue_${triggerNumber}_notice`
-                ),
-                mtt: this.findFallbackRule(
-                    context,
-                    `overdue_${triggerNumber}_mtt`
-                ),
-                restrict: this.findFallbackRule(
-                    context,
-                    `overdue_${triggerNumber}_restrict`
-                ),
+                delay: this.findEffectiveRule(
+                    this.ruleSetBeingEdited,
+                    "delay",
+                    i
+                ).value,
+                notice: this.findEffectiveRule(
+                    this.ruleSetBeingEdited,
+                    "notice",
+                    i
+                ).value,
+                mtt: this.findEffectiveRule(this.ruleSetBeingEdited, "mtt", i)
+                    .value,
+                restrict: this.findEffectiveRule(
+                    this.ruleSetBeingEdited,
+                    "restrict",
+                    i
+                ).value,
             };
         },
         setMinDelay() {
