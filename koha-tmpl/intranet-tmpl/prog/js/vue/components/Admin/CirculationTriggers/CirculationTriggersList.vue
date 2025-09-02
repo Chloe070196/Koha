@@ -206,10 +206,10 @@
         <div id="circ_triggers_tabs" class="toptabs numbered">
             <ul class="nav nav-tabs" role="tablist">
                 <li
-                    v-for="(number, i) in numberOfTabs"
+                    v-for="number in triggerCount"
                     class="nav-item"
                     role="presentation"
-                    :key="`noticeTab${i}`"
+                    :key="`noticeTab_${number}`"
                 >
                     <a
                         href="#"
@@ -226,7 +226,7 @@
             </ul>
         </div>
         <div class="tab-content">
-            <template v-for="(number, i) in numberOfTabs">
+            <template v-for="number in triggerCount">
                 <div
                     class="tab-pane"
                     role="tabpanel"
@@ -234,7 +234,7 @@
                         tabSelected === `Notice ${number}` ? 'show active' : ''
                     "
                     v-if="tabSelected === `Notice ${number}`"
-                    :key="`noticeTabContent${i}`"
+                    :key="`noticeTabContent_${number}`"
                 >
                     <TriggersTable
                         :modal="false"
