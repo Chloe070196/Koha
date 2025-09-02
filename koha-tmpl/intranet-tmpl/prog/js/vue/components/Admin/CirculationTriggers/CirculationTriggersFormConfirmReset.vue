@@ -350,21 +350,13 @@ export default {
         };
     },
     beforeRouteEnter(to, from, next) {
-        next(vm => {
+        next(async vm => {
             const { query } = to;
-            vm.getCircRuleSetForReset(query).then(() =>
-                vm
-                    .getLibraryName()
-                    .then(() =>
-                        vm
-                            .getCategoryName()
-                            .then(() =>
-                                vm
-                                    .getItemTypeName()
-                                    .then(() => (vm.initialized = true))
-                            )
-                    )
-            );
+            await vm.getCircRuleSetForReset(query);
+            await vm.getLibraryName();
+            await vm.getCategoryName();
+            await vm.getItemTypeName();
+            vm.initialized = true;
         });
     },
     // TODO: determine which methods will be needed, limit amount of code repetition, consider extracting to circRuleStore

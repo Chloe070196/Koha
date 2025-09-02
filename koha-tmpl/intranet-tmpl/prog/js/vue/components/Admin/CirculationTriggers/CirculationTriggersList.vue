@@ -317,20 +317,16 @@ export default {
         };
     },
     beforeRouteEnter(to, from, next) {
-        next(vm => {
-            vm.getLibraries().then(() =>
-                vm.getPatronCategories().then(() =>
-                    vm.getItemTypes().then(() =>
-                        vm.setAllRawRuleSets().then(() => {
-                            vm.updateTriggerCount();
-                            vm.setAllExhaustiveEffectiveRuleSets();
-                            vm.filterRuleSetsbySearchParam();
-                            vm.initialized = true;
-                        })
-                    )
-                )
-            );
-        });
+       next(async vm => {
+        await vm.getLibraries();
+        await vm.getPatronCategories();
+        await vm.getItemTypes();
+        await vm.setAllRawRuleSets();
+        vm.updateTriggerCount();
+        vm.setAllExhaustiveEffectiveRuleSets();
+        vm.filterRuleSetsbySearchParam();
+        vm.initialized = true;
+       });
     },
     methods: {
         filterRuleSetsbySearchParam() {
