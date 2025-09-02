@@ -304,7 +304,6 @@ export default {
         } = storeToRefs(circRulesStore);
         const {
             handleContext,
-            findEffectiveRule,
             handleNotice,
             handleRestrictions,
             handleTransport,
@@ -313,7 +312,6 @@ export default {
 
         return {
             handleContext,
-            findEffectiveRule,
             handleNotice,
             handleRestrictions,
             handleTransport,
