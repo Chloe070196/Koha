@@ -4,9 +4,9 @@
             :to="{
                 name: 'CirculationTriggersFormConfirmContext',
                 query: {
-                    library_id: selectedLibrary,
-                    patron_category_id: selectedCategory,
-                    item_type_id: selectedItemType,
+                    library_id: currentLibraryId,
+                    patron_category_id: currentPatronCategoryId,
+                    item_type_id: currentItemTypeId,
                 },
             }"
             icon="plus"
@@ -114,7 +114,7 @@
                         <td>
                             <v-select
                                 id="library_select"
-                                v-model="selectedLibrary"
+                                v-model="currentLibraryId"
                                 label="name"
                                 :reduce="lib => lib.library_id"
                                 :options="libraries"
@@ -125,7 +125,7 @@
                             >
                                 <template #search="{ attributes, events }">
                                     <input
-                                        :required="!selectedLibrary"
+                                        :required="!currentLibraryId"
                                         class="vs__search"
                                         v-bind="attributes"
                                         v-on="events"
@@ -136,7 +136,7 @@
                         <td>
                             <v-select
                                 id="patron_category_select"
-                                v-model="selectedCategory"
+                                v-model="currentPatronCategoryId"
                                 label="name"
                                 :reduce="cat => cat.patron_category_id"
                                 :options="patronCategories"
@@ -147,7 +147,7 @@
                             >
                                 <template #search="{ attributes, events }">
                                     <input
-                                        :required="!selectedCategory"
+                                        :required="!currentPatronCategoryId"
                                         class="vs__search"
                                         v-bind="attributes"
                                         v-on="events"
@@ -158,7 +158,7 @@
                         <td>
                             <v-select
                                 id="item_type_select"
-                                v-model="selectedItemType"
+                                v-model="currentItemTypeId"
                                 label="description"
                                 :reduce="itype => itype.item_type_id"
                                 :options="itemTypes"
@@ -169,7 +169,7 @@
                             >
                                 <template #search="{ attributes, events }">
                                     <input
-                                        :required="!selectedItemType"
+                                        :required="!currentItemTypeId"
                                         class="vs__search"
                                         v-bind="attributes"
                                         v-on="events"
@@ -275,6 +275,9 @@ export default {
             setAllExhaustiveEffectiveRuleSets,
         } = circRulesStore;
         const {
+            currentLibraryId,
+            currentPatronCategoryId,
+            currentItemTypeId,
             itemTypes,
             letters,
             libraries,
@@ -285,6 +288,9 @@ export default {
         } = storeToRefs(circRulesStore);
 
         return {
+            currentLibraryId,
+            currentPatronCategoryId,
+            currentItemTypeId,
             splitCircRulesByTriggerNumber,
             letters,
             itemTypes,
@@ -305,9 +311,6 @@ export default {
     data() {
         return {
             initialized: false,
-            selectedLibrary: null,
-            selectedCategory: null,
-            selectedItemType: null,
             circRuleSets: null,
             numberOfTabs: [1],
             tabSelected: "Notice 1",
@@ -317,32 +320,33 @@ export default {
         };
     },
     beforeRouteEnter(to, from, next) {
-       next(async vm => {
-        await vm.getLibraries();
-        await vm.getPatronCategories();
-        await vm.getItemTypes();
-        await vm.setAllRawRuleSets();
-        vm.updateTriggerCount();
-        vm.setAllExhaustiveEffectiveRuleSets();
-        vm.filterRuleSetsbySearchParam();
-        vm.initialized = true;
-       });
+        next(async vm => {
+            await vm.getLibraries();
+            await vm.getPatronCategories();
+            await vm.getItemTypes();
+            await vm.setAllRawRuleSets();
+            vm.updateTriggerCount();
+            vm.setAllExhaustiveEffectiveRuleSets();
+            vm.filterRuleSetsbySearchParam();
+            vm.initialized = true;
+        });
     },
     methods: {
         filterRuleSetsbySearchParam() {
             const selectedParams = {};
             selectedParams.effective = true;
-            if (this.selectedLibrary) {
-                selectedParams.library_id = this.selectedLibrary;
+            if (this.currentLibraryId) {
+                selectedParams.library_id = this.currentLibraryId;
             } else {
                 selectedParams.library_id = "*";
             }
 
-            if (this.selectedCategory) {
-                selectedParams.patron_category_id = this.selectedCategory;
+            if (this.currentPatronCategoryId) {
+                selectedParams.patron_category_id =
+                    this.currentPatronCategoryId;
             }
-            if (this.selectedItemType) {
-                selectedParams.item_type_id = this.selectedItemType;
+            if (this.currentItemTypeId) {
+                selectedParams.item_type_id = this.currentItemTypeId;
             }
 
             // get the number of triggers
@@ -360,8 +364,9 @@ export default {
             if (!selectedParams.patron_category_id) {
                 this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
                     ruleSet =>
-                        ruleSet.context.item_type_id === context.item_type_id &&
-                        ruleSet.context.library_id === context.library_id
+                        ruleSet.context.item_type_id ===
+                            selectedParams.item_type_id &&
+                        ruleSet.context.library_id === selectedParams.library_id
                 );
                 return;
             }
@@ -371,8 +376,8 @@ export default {
                 this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
                     ruleSet =>
                         ruleSet.context.patron_category_id ===
-                            context.patron_category_id &&
-                        ruleSet.context.library_id === context.library_id
+                            selectedParams.patron_category_id &&
+                        ruleSet.context.library_id === selectedParams.library_id
                 );
                 return;
             }
@@ -380,10 +385,11 @@ export default {
             // handle searches where both patron category and item type are specified and one specific rule is retrieved
             this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
                 ruleSet =>
-                    ruleSet.context.item_type_id === context.item_type_id &&
+                    ruleSet.context.item_type_id ===
+                        selectedParams.item_type_id &&
                     ruleSet.context.patron_category_id ===
-                        context.patron_category_id &&
-                    ruleSet.context.library_id === context.library_id
+                        selectedParams.patron_category_id &&
+                    ruleSet.context.library_id === selectedParams.library_id
             );
             return;
         },

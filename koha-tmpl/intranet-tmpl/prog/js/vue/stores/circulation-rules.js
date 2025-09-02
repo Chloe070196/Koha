@@ -10,6 +10,8 @@ export const useCircRulesStore = defineStore("circRules", {
     state: () => ({
         // context
         currentLibraryId: "*",
+        currentPatronCategoryId: null,
+        currentItemTypeId: null,
         itemTypes: [],
         libraries: [],
         patronCategories: [],
