@@ -356,6 +356,7 @@ export default {
             updateTriggerCount,
             filterCircRulesByContext,
             findEffectiveRule,
+            getRawSelectedRuleSet,
         } = circRulesStore;
         const {
             letters,
@@ -377,6 +378,7 @@ export default {
             getLibraries,
             getPatronCategories,
             getItemTypes,
+            getRawSelectedRuleSet,
             updateTriggerCount,
             filterCircRulesByContext,
             findEffectiveRule,
@@ -457,7 +459,11 @@ export default {
                 // refresh this.ruleSetBeingEdited so it matches the database
                 const routeParams = this.newRule;
                 routeParams.triggerNumber = this.newTriggerNumber;
-                await this.setRulesBeingEdited(routeParams);
+                this.ruleSetBeingEdited = await this.getRawSelectedRuleSet(
+                    routeParams.library_id,
+                    routeParams.patron_category_id,
+                    routeParams.item_type_id
+                );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (!isEqual(oldCircRule, this.ruleSetBeingEdited)) {
@@ -538,7 +544,11 @@ export default {
             }
 
             try {
-                await this.setRulesBeingEdited(routeParams);
+                this.ruleSetBeingEdited = await this.getRawSelectedRuleSet(
+                    routeParams.library_id,
+                    routeParams.patron_category_id,
+                    routeParams.item_type_id
+                );
             } catch (e) {
                 throw e;
             }
@@ -568,35 +578,6 @@ export default {
             this.setMinDelay();
             this.setMaxDelay();
             this.setFilteredLetters();
-        },
-        async setRulesBeingEdited(routeParams) {
-            const library_id =
-                routeParams && routeParams.library_id
-                    ? routeParams.library_id
-                    : this.newRule.library_id || "*";
-            const item_type_id =
-                routeParams && routeParams.item_type_id
-                    ? routeParams.item_type_id
-                    : this.newRule.item_type_id || "*";
-            const patron_category_id =
-                routeParams && routeParams.patron_category_id
-                    ? routeParams.patron_category_id
-                    : this.newRule.patron_category_id || "*";
-            const params = {
-                library_id,
-                item_type_id,
-                patron_category_id,
-            };
-
-            const client = APIClient.circRule;
-            let result;
-            try {
-                result = await client.circRules.getAll({}, params);
-            } catch (e) {
-                throw e;
-            }
-            this.ruleSetBeingEdited = result[0];
-            this.ruleSetBeingEdited.context = params;
         },
         assignTriggerValues(ruleSet, triggerNumber, context = null) {
             const i = parseInt(triggerNumber);

@@ -269,6 +269,27 @@ export const useCircRulesStore = defineStore("circRules", {
             });
             this.patronCategories = patronCategories;
         },
+        async getRawSelectedRuleSet(
+            library_id = "*",
+            patron_category_id = null,
+            item_type_id = null
+        ) {
+            const context = {
+                library_id,
+                item_type_id,
+                patron_category_id,
+            };
+            const client = APIClient.circRule;
+            let result;
+            try {
+                result = await client.circRules.getAll({}, context);
+            } catch (e) {
+                throw e;
+            }
+            const rawRuleSet = result[0];
+            rawRuleSet.context = context;
+            return rawRuleSet;
+        },
         handleContext(value, data, type, displayProperty = "name") {
             const item = data.find(item => item[type] === value);
             return item[displayProperty];
