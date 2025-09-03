@@ -129,6 +129,8 @@ export const useCircRulesStore = defineStore("circRules", {
                 ruleSet =>
                     ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
                         undefined &&
+                    ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
+                        null &&
                     ruleSet?.context.library_id ===
                         selectedRuleSet.context.library_id &&
                     ruleSet?.context.patron_category_id ===
@@ -156,6 +158,8 @@ export const useCircRulesStore = defineStore("circRules", {
                 ruleSet =>
                     ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
                         undefined &&
+                    ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
+                        null &&
                     (ruleSet.context.library_id ===
                         selectedRuleSet.context.library_id ||
                         ruleSet.context.library_id === "*") &&
