@@ -425,7 +425,7 @@ export default {
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            vm.setAllRawRuleSets();
+            await vm.setAllRawRuleSets();
             vm.setAllEffectiveRuleSets();
             vm.splitCircRulesByTriggerNumber();
             const { query } = to;
