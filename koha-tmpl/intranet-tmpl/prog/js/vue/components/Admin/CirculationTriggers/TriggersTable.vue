@@ -53,7 +53,15 @@
                             i + 1 === parseInt(activeTriggerBeingEdited),
                     }"
                 >
-                    <td v-if="!modal" class="trigger_context">
+                    <td
+                        v-if="
+                            !modal &&
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                        class="trigger_context"
+                    >
                         {{
                             handleContext(
                                 ruleSet.context.library_id,
@@ -62,7 +70,15 @@
                             )
                         }}
                     </td>
-                    <td v-if="!modal" class="trigger_context">
+                    <td
+                        v-if="
+                            !modal &&
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                        class="trigger_context"
+                    >
                         {{
                             handleContext(
                                 ruleSet.context.patron_category_id,
@@ -71,7 +87,15 @@
                             )
                         }}
                     </td>
-                    <td v-if="!modal" class="trigger_context border_right">
+                    <td
+                        v-if="
+                            !modal &&
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                        class="trigger_context border_right"
+                    >
                         {{
                             handleContext(
                                 ruleSet.context.item_type_id,
@@ -81,10 +105,25 @@
                             )
                         }}
                     </td>
-                    <td v-if="modal">{{ i + 1 }}</td>
+                    <td
+                        v-if="
+                            modal &&
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                    >
+                        {{ i + 1 }}
+                    </td>
 
                     <!-- Delay -->
-                    <td>
+                    <td
+                        v-if="
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                    >
                         <span
                             :class="{
                                 fallback:
@@ -102,7 +141,13 @@
                     </td>
 
                     <!--  Notice -->
-                    <td>
+                    <td
+                        v-if="
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                    >
                         <span
                             :class="{
                                 fallback:
@@ -122,7 +167,13 @@
                     </td>
 
                     <!-- Email -->
-                    <td>
+                    <td
+                        v-if="
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                    >
                         <span
                             :class="{
                                 fallback:
@@ -143,7 +194,13 @@
                     </td>
 
                     <!-- Print -->
-                    <td>
+                    <td
+                        v-if="
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                    >
                         <span
                             :class="{
                                 fallback:
@@ -164,7 +221,13 @@
                     </td>
 
                     <!-- SMS -->
-                    <td>
+                    <td
+                        v-if="
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                    >
                         <span
                             :class="{
                                 fallback:
@@ -185,7 +248,13 @@
                     </td>
 
                     <!-- Restricts Checkouts -->
-                    <td>
+                    <td
+                        v-if="
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                    >
                         <span
                             :class="{
                                 fallback:
@@ -202,7 +271,14 @@
                         </span>
                     </td>
 
-                    <td class="actions">
+                    <td
+                        v-if="
+                            ruleSet[
+                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                            ]
+                        "
+                        class="actions"
+                    >
                         <router-link
                             :to="{
                                 name: 'CirculationTriggersFormEdit',

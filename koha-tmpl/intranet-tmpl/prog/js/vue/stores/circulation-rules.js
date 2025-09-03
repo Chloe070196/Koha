@@ -365,6 +365,9 @@ export const useCircRulesStore = defineStore("circRules", {
                     context: { ...ruleSet.context },
                 };
                 for (let i = 1; i <= this.triggerCount; i++) {
+                    if (ruleSet[`overdue_${i}_ruleset_exists_in_db`] === null) {
+                        continue;
+                    }
                     this.ruleSuffixes.forEach(ruleSuffix => {
                         effectiveRuleSet[`overdue_${i}_${ruleSuffix}`] =
                             this.findEffectiveRule(
