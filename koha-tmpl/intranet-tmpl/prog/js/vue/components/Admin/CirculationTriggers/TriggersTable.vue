@@ -185,7 +185,7 @@
                             {{
                                 handleTransport(
                                     ruleSet[
-                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                        `overdue_${modal ? i + 1 : triggerNumber}_mtt`
                                     ].value,
                                     "email"
                                 )
@@ -212,7 +212,7 @@
                             {{
                                 handleTransport(
                                     ruleSet[
-                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                        `overdue_${modal ? i + 1 : triggerNumber}_mtt`
                                     ].value,
                                     "print"
                                 )
@@ -239,7 +239,7 @@
                             {{
                                 handleTransport(
                                     ruleSet[
-                                        `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                        `overdue_${modal ? i + 1 : triggerNumber}_mtt`
                                     ].value,
                                     "sms"
                                 )
