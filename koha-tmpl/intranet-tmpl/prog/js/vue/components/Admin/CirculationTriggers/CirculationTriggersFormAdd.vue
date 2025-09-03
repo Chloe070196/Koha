@@ -139,7 +139,7 @@
                 class="rows"
                 v-if="editMode === 'edit' || editMode === 'add'"
             >
-                <legend v-if="ruleSetInfo.triggerCount < newTriggerNumber">
+                <legend v-if="editMode === 'add'">
                     {{ $__("Add new trigger") }}
                     {{ " " + newTriggerNumber }}
                 </legend>
@@ -152,6 +152,7 @@
                         <div class="numeric-input-wrapper">
                             <div class="input-with-clear">
                                 <input
+                                    @change="checkReadyForSubmission"
                                     id="overdue_delay"
                                     v-model="newRule.delay"
                                     type="number"
@@ -204,6 +205,7 @@
                         >
                         <div>
                             <input
+                                @change="checkReadyForSubmission"
                                 type="radio"
                                 id="restricts-yes"
                                 v-model="newRule.restrict"
@@ -211,6 +213,7 @@
                             />
                             {{ $__("Yes") }}
                             <input
+                                @change="checkReadyForSubmission"
                                 type="radio"
                                 id="restricts-no"
                                 v-model="newRule.restrict"
@@ -218,6 +221,7 @@
                             />
                             {{ $__("No") }}
                             <input
+                                @change="checkReadyForSubmission"
                                 type="radio"
                                 id="restricts-fallback"
                                 v-model="newRule.restrict"
@@ -256,9 +260,11 @@
                             label="name"
                             :reduce="type => type.code"
                             :options="filteredLetters"
+                            @change="checkReadyForSubmission"
                         >
                             <template #search="{ attributes, events }">
                                 <input
+                                    @change="checkReadyForSubmission"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -295,6 +301,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
+                                    @change="checkReadyForSubmission"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -313,7 +320,10 @@
             </fieldset>
         </div>
         <div class="modal-footer">
-            <ButtonSubmit v-if="editMode === 'edit' || editMode === 'add'" />
+            <ButtonSubmit
+                v-if="editMode === 'edit' || editMode === 'add'"
+                :disabled="!allowSubmission"
+            />
             <router-link
                 :to="{
                     name: 'CirculationTriggersList',
@@ -415,12 +425,14 @@ export default {
             maxDelay: Infinity,
             filteredLetters: [],
             alertMessage: null,
+            allowSubmission: false,
         };
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             const { query } = to;
             await vm.checkForExistingRules(query);
+            vm.checkReadyForSubmission();
             vm.initialized = true;
         });
     },
@@ -693,6 +705,7 @@ export default {
             else {
                 this.newRule["delay"] = Math.min(this.newRule.delay + 1, max);
             }
+            this.checkReadyForSubmission();
         },
         decrementDelay() {
             // Check for minDelay
@@ -702,6 +715,14 @@ export default {
             if (this.newRule.delay > min) {
                 this.newRule.delay--;
             }
+            this.checkReadyForSubmission();
+        },
+        checkReadyForSubmission() {
+            this.allowSubmission =
+                this.newRule.delay !== null ||
+                this.newRule.notice !== null ||
+                this.newRule.mtt.length !== 0 ||
+                this.newRule.restrict !== null;
         },
     },
     watch: {
