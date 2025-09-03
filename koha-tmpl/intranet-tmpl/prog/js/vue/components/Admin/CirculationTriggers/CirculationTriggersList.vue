@@ -119,7 +119,7 @@
                                 :reduce="lib => lib.library_id"
                                 :options="libraries"
                                 @update:modelValue="
-                                    filterRuleSetsbySearchParam(params)
+                                    filterRuleSetsbySearchParam()
                                 "
                                 placeholder="Default rules for all libraries"
                             >
@@ -141,7 +141,7 @@
                                 :reduce="cat => cat.patron_category_id"
                                 :options="patronCategories"
                                 @update:modelValue="
-                                    filterRuleSetsbySearchParam(params)
+                                    filterRuleSetsbySearchParam()
                                 "
                                 placeholder="any"
                             >
@@ -163,7 +163,7 @@
                                 :reduce="itype => itype.item_type_id"
                                 :options="itemTypes"
                                 @update:modelValue="
-                                    filterRuleSetsbySearchParam(params)
+                                    filterRuleSetsbySearchParam()
                                 "
                                 placeholder="any"
                             >
@@ -196,7 +196,7 @@
                             label: 'all applied rules.',
                         },
                     ]"
-                    @update:modelValue="filterRuleSetsbySearchParam(params)"
+                    @update:modelValue="filterRuleSetsbySearchParam()"
                 >
                 </v-select>
             </div>
@@ -266,12 +266,12 @@ export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
         const {
-            splitCircRulesByTriggerNumber,
             getLibraries,
             getPatronCategories,
             getItemTypes,
             updateTriggerCount,
             setAllRawRuleSets,
+            setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
         } = circRulesStore;
         const {
@@ -279,23 +279,19 @@ export default {
             currentPatronCategoryId,
             currentItemTypeId,
             itemTypes,
-            letters,
             libraries,
             patronCategories,
-            regex,
             triggerCount,
             allExhaustiveEffectiveRuleSets,
+            allEffectiveRuleSets,
         } = storeToRefs(circRulesStore);
 
         return {
             currentLibraryId,
             currentPatronCategoryId,
             currentItemTypeId,
-            splitCircRulesByTriggerNumber,
-            letters,
             itemTypes,
             libraries,
-            regex,
             triggerCount,
             patronCategories,
             getLibraries,
@@ -304,19 +300,18 @@ export default {
             updateTriggerCount,
             allExhaustiveEffectiveRuleSets,
             setAllRawRuleSets,
+            setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
+            allEffectiveRuleSets,
             from_branch,
         };
     },
     data() {
         return {
             initialized: false,
-            circRuleSets: null,
-            numberOfTabs: [1],
             tabSelected: "Notice 1",
             showModal: false,
             displayAllApplicableRules: 1,
-            allCircRuleSets: [],
         };
     },
     beforeRouteEnter(to, from, next) {
@@ -326,6 +321,7 @@ export default {
             await vm.getItemTypes();
             await vm.setAllRawRuleSets();
             vm.updateTriggerCount();
+            vm.setAllEffectiveRuleSets();
             vm.setAllExhaustiveEffectiveRuleSets();
             vm.filterRuleSetsbySearchParam();
             vm.initialized = true;
@@ -356,13 +352,19 @@ export default {
                 !selectedParams.patron_category_id &&
                 !selectedParams.item_type_id
             ) {
-                this.ruleSets = this.allExhaustiveEffectiveRuleSets;
+                this.ruleSets = this.displayAllApplicableRules
+                    ? this.allExhaustiveEffectiveRuleSets
+                    : this.allEffectiveRuleSets;
                 return;
             }
 
             // handle searches where only the item type is specified
             if (!selectedParams.patron_category_id) {
-                this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
+                this.ruleSets = (
+                    this.displayAllApplicableRules
+                        ? this.allExhaustiveEffectiveRuleSets
+                        : this.allEffectiveRuleSets
+                ).filter(
                     ruleSet =>
                         ruleSet.context.item_type_id ===
                             selectedParams.item_type_id &&
@@ -373,7 +375,11 @@ export default {
 
             // handle searches where only the patron category is specified
             if (!selectedParams.item_type_id) {
-                this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
+                this.ruleSets = (
+                    this.displayAllApplicableRules
+                        ? this.allExhaustiveEffectiveRuleSets
+                        : this.allEffectiveRuleSets
+                ).filter(
                     ruleSet =>
                         ruleSet.context.patron_category_id ===
                             selectedParams.patron_category_id &&
@@ -383,7 +389,11 @@ export default {
             }
 
             // handle searches where both patron category and item type are specified and one specific rule is retrieved
-            this.ruleSets = this.allExhaustiveEffectiveRuleSets.filter(
+            this.ruleSets = (
+                this.displayAllApplicableRules
+                    ? this.allExhaustiveEffectiveRuleSets
+                    : this.allEffectiveRuleSets
+            ).filter(
                 ruleSet =>
                     ruleSet.context.item_type_id ===
                         selectedParams.item_type_id &&
