@@ -340,15 +340,12 @@ export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
         const {
-            splitCircRulesByTriggerNumber,
             getLibraries,
             getPatronCategories,
             getItemTypes,
             updateTriggerCount,
-            setAllEffectiveRuleSets,
             filterCircRulesByContext,
             findEffectiveRule,
-            setAllRawRuleSets,
         } = circRulesStore;
         const {
             letters,
@@ -361,7 +358,6 @@ export default {
         } = storeToRefs(circRulesStore);
 
         return {
-            splitCircRulesByTriggerNumber,
             letters,
             itemTypes,
             libraries,
@@ -372,11 +368,9 @@ export default {
             getPatronCategories,
             getItemTypes,
             updateTriggerCount,
-            setAllEffectiveRuleSets,
             filterCircRulesByContext,
             findEffectiveRule,
             effectiveTriggerFilteredRuleSets,
-            setAllRawRuleSets,
         };
     },
     data() {
@@ -425,9 +419,6 @@ export default {
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            await vm.setAllRawRuleSets();
-            vm.setAllEffectiveRuleSets();
-            vm.splitCircRulesByTriggerNumber();
             const { query } = to;
             await vm.checkForExistingRules(query);
             vm.initialized = true;

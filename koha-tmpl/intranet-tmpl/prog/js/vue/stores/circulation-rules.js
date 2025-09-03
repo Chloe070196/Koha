@@ -288,33 +288,36 @@ export const useCircRulesStore = defineStore("circRules", {
         },
         splitCircRulesByTriggerNumber(ruleSets = this.allEffectiveRuleSets) {
             let numberOfTabs = [1];
-            const ruleSetsPerTrigger = ruleSets.reduce((acc, ruleSet) => {
-                this.updateTriggerCount(ruleSet);
-                numberOfTabs = this.setNumberOfTabs(
-                    this.triggerCount,
-                    numberOfTabs
-                );
-                const triggerNumbers = Array.from(
-                    { length: this.triggerCount },
-                    (_, i) => i + 1
-                );
-                triggerNumbers.forEach(i => {
-                    const ruleSetCopy = JSON.parse(JSON.stringify(ruleSet));
-                    const rulesToDelete = triggerNumbers.filter(
-                        num => num !== i
+            this.effectiveTriggerFilteredRuleSets = ruleSets.reduce(
+                (acc, ruleSet) => {
+                    this.updateTriggerCount(ruleSet);
+                    numberOfTabs = this.setNumberOfTabs(
+                        this.triggerCount,
+                        numberOfTabs
                     );
-                    this.ruleSuffixes.forEach(suffix => {
-                        rulesToDelete.forEach(number => {
-                            delete ruleSetCopy[`overdue_${number}_${suffix}`];
+                    const triggerNumbers = Array.from(
+                        { length: this.triggerCount },
+                        (_, i) => i + 1
+                    );
+                    triggerNumbers.forEach(i => {
+                        const ruleSetCopy = JSON.parse(JSON.stringify(ruleSet));
+                        const rulesToDelete = triggerNumbers.filter(
+                            num => num !== i
+                        );
+                        this.ruleSuffixes.forEach(suffix => {
+                            rulesToDelete.forEach(number => {
+                                delete ruleSetCopy[
+                                    `overdue_${number}_${suffix}`
+                                ];
+                            });
                         });
+                        ruleSetCopy.triggerNumber = i;
+                        acc.push(ruleSetCopy);
                     });
-                    ruleSetCopy.triggerNumber = i;
-                    acc.push(ruleSetCopy);
-                });
-                return acc;
-            }, []);
-
-            this.effectiveTriggerFilteredRuleSets = ruleSetsPerTrigger;
+                    return acc;
+                },
+                []
+            );
         },
         // FIXME: use updateTriggerCount instead
         setNumberOfTabs(triggerCount, tabCount) {
