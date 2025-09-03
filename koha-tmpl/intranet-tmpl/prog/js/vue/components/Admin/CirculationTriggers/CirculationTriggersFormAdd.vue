@@ -313,7 +313,7 @@
             </fieldset>
         </div>
         <div class="modal-footer">
-            <ButtonSubmit />
+            <ButtonSubmit v-if="editMode === 'edit' || editMode === 'add'" />
             <router-link
                 :to="{
                     name: 'CirculationTriggersList',
