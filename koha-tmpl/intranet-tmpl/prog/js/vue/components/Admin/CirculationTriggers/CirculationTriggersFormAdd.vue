@@ -841,4 +841,8 @@ input[type="number"] {
 .router-link-active {
     margin-left: 10px;
 }
+.modal-header {
+   display: flex;
+   justify-content: space-between;
+}
 </style>
