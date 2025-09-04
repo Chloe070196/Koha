@@ -57,7 +57,7 @@
                         v-if="
                             !modal &&
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                         class="trigger_context"
@@ -74,7 +74,7 @@
                         v-if="
                             !modal &&
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                         class="trigger_context"
@@ -91,7 +91,7 @@
                         v-if="
                             !modal &&
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                         class="trigger_context border_right"
@@ -109,7 +109,7 @@
                         v-if="
                             modal &&
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                     >
@@ -120,7 +120,7 @@
                     <td
                         v-if="
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                     >
@@ -144,7 +144,7 @@
                     <td
                         v-if="
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                     >
@@ -170,7 +170,7 @@
                     <td
                         v-if="
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                     >
@@ -197,7 +197,7 @@
                     <td
                         v-if="
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                     >
@@ -224,7 +224,7 @@
                     <td
                         v-if="
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                     >
@@ -251,7 +251,7 @@
                     <td
                         v-if="
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                     >
@@ -274,7 +274,7 @@
                     <td
                         v-if="
                             ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                             ]
                         "
                         class="actions"
@@ -299,7 +299,7 @@
                         <router-link
                             v-if="
                                 ruleSet[
-                                    `overdue_${modal ? i + 1 : triggerNumber}_ruleset_exists_in_db`
+                                    `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
                                 ]
                             "
                             :to="{

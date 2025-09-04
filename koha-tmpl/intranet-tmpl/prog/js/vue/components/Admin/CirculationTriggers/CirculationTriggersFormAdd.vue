@@ -514,7 +514,7 @@ export default {
                 ruleSetToSubmit.mtt && ruleSetToSubmit.mtt.length
                     ? ruleSetToSubmit.mtt.join(",")
                     : null;
-            circRule[`overdue_${this.newTriggerNumber}_ruleset_exists_in_db`] =
+            circRule[`overdue_${this.triggerNumber}_has_rules`] =
                 true;
 
             const client = APIClient.circRule;

@@ -85,7 +85,13 @@
                         <tbody v-if="initialized">
                             <tr>
                                 <!-- Delay -->
-                                <td>
+                                <td
+                                    v-if="
+                                        ruleSet[
+                                            `overdue_${triggerNumber}_has_rules`
+                                        ]
+                                    "
+                                >
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
@@ -108,8 +114,15 @@
                                         }}
                                     </span>
                                 </td>
-                                <!-- Notice -->
-                                <td>
+
+                                <!--  Notice -->
+                                <td
+                                    v-if="
+                                        ruleSet[
+                                            `overdue_${triggerNumber}_has_rules`
+                                        ]
+                                    "
+                                >
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
@@ -137,7 +150,13 @@
                                     </span>
                                 </td>
                                 <!-- Email -->
-                                <td>
+                                <td
+                                    v-if="
+                                        ruleSet[
+                                            `overdue_${triggerNumber}_has_rules`
+                                        ]
+                                    "
+                                >
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
@@ -171,7 +190,13 @@
                                     </span>
                                 </td>
                                 <!-- Print -->
-                                <td>
+                                <td
+                                    v-if="
+                                        ruleSet[
+                                            `overdue_${triggerNumber}_has_rules`
+                                        ]
+                                    "
+                                >
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
@@ -207,7 +232,13 @@
                                     </span>
                                 </td>
                                 <!-- SMS -->
-                                <td>
+                                <td
+                                    v-if="
+                                        ruleSet[
+                                            `overdue_${triggerNumber}_has_rules`
+                                        ]
+                                    "
+                                >
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
@@ -243,7 +274,13 @@
                                     </span>
                                 </td>
                                 <!-- Restricts Checkouts -->
-                                <td>
+                                <td
+                                    v-if="
+                                        ruleSet[
+                                            `overdue_${triggerNumber}_has_rules`
+                                        ]
+                                    "
+                                >
                                     <span
                                         :class="{
                                             fallback: findEffectiveRule(
@@ -409,7 +446,7 @@ export default {
             ) {
                 circRule[`overdue_${this.triggerNumber}_mtt`] = null;
             }
-            circRule[`overdue_${this.triggerNumber}_ruleset_exists_in_db`] =
+            circRule[`overdue_${this.triggerNumber}_has_rules`] =
                 null;
 
             try {

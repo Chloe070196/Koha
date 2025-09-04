@@ -23,10 +23,10 @@ export const useCircRulesStore = defineStore("circRules", {
             "notice",
             "mtt",
             "restrict",
-            "ruleset_exists_in_db",
+            "has_rules",
         ],
         transportTypes: ["email", "sms", "print"],
-        regex: /overdue_(\d+)_ruleset_exists_in_db/,
+        regex: /overdue_(\d+)_has_rules/,
         // rule sets
         // TODO: confirm which are useful to keep
         // TODO: make them trigger number specific
@@ -70,7 +70,7 @@ export const useCircRulesStore = defineStore("circRules", {
                 // Check if there's already a ruleSet for overdue_X_ in contextRuleSets
                 const matchingRule = contextRuleSets.find(
                     ruleSet =>
-                        ruleSet[`overdue_${i}_ruleset_exists_in_db`] === "1"
+                        ruleSet[`overdue_${i}_has_rules`] === "1"
                 );
 
                 if (!matchingRule) {
@@ -81,7 +81,7 @@ export const useCircRulesStore = defineStore("circRules", {
                         [`overdue_${i}_notice`]: null,
                         [`overdue_${i}_mtt`]: null,
                         [`overdue_${i}_restrict`]: null,
-                        [`overdue_${i}_ruleset_exists_in_db`]: true,
+                        [`overdue_${i}_has_rules`]: true,
                     };
 
                     // Add the new ruleSet to contextRuleSets
@@ -147,7 +147,7 @@ export const useCircRulesStore = defineStore("circRules", {
                     ],
                     isFallback:
                         !existingRule[
-                            `overdue_${triggerNumber}_ruleset_exists_in_db`
+                            `overdue_${triggerNumber}_has_rules`
                         ],
                 };
             }
@@ -389,7 +389,7 @@ export const useCircRulesStore = defineStore("circRules", {
                     context: { ...ruleSet.context },
                 };
                 for (let i = 1; i <= this.triggerCount; i++) {
-                    if (ruleSet[`overdue_${i}_ruleset_exists_in_db`] === null) {
+                    if (ruleSet[`overdue_${i}_has_rules`] === null) {
                         continue;
                     }
                     this.ruleSuffixes.forEach(ruleSuffix => {
