@@ -422,5 +422,26 @@ export const useCircRulesStore = defineStore("circRules", {
                 // TODO: handle error
             }
         },
+        setEffectiveTriggerFilteredRuleSet(ruleSet) {
+            const effectiveTriggerFilteredRuleSets = [];
+            for (let i = 1; i <= this.triggerCount; i++) {
+                const triggerSpecificRuleSet = {
+                    context: { ...ruleSet.context },
+                };
+                if (ruleSet[`overdue_${i}_has_rules`] === null) {
+                    continue;
+                }
+                this.ruleSuffixes.forEach(ruleSuffix => {
+                    triggerSpecificRuleSet[`overdue_${i}_${ruleSuffix}`] =
+                        this.findEffectiveRule(
+                            triggerSpecificRuleSet,
+                            ruleSuffix,
+                            i
+                        );
+                });
+                effectiveTriggerFilteredRuleSets.push(triggerSpecificRuleSet);
+            }
+            return effectiveTriggerFilteredRuleSets;
+        },
     },
 });
