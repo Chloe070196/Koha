@@ -394,7 +394,6 @@
 </template>
 
 <script>
-import { APIClient } from "../../../fetch/api-client.js";
 import TriggersTable from "./TriggersTable.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
@@ -448,9 +447,6 @@ export default {
             initialized: false,
             triggerNumber: 1,
             libraryId: "*",
-            library_id: null,
-            patron_category_id: null,
-            item_type_id: null,
             fallbackRuleSet: null,
             ruleSetInfo: {
                 issuelength: null,
@@ -474,7 +470,6 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             const { query } = to;
-            vm.setContext(query);
             vm.setEditMode();
             vm.setTriggerNumber(query.triggerNumber);
             if (vm.editMode === "edit") {
@@ -598,11 +593,6 @@ export default {
             this.effectiveTriggerFilteredRuleSets =
                 this.setEffectiveTriggerFilteredRuleSet(this.ruleSet);
             this.setFallbackRuleSet();
-        },
-        setContext(query) {
-            this.libraryId = query.libraryId ?? "*";
-            this.patronCategoryId = query.patron_category_id ?? null;
-            this.itemTypeId = query.item_type_id ?? null;
         },
         setEditMode() {
             this.editMode = this.$route.path.substring(
