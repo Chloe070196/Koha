@@ -152,7 +152,7 @@
                         <div class="numeric-input-wrapper">
                             <div class="input-with-clear">
                                 <input
-                                    @change="checkReadyForSubmission"
+                                    @change="isReadyForSubmission"
                                     id="overdue_delay"
                                     v-model="newRule.delay"
                                     type="number"
@@ -205,7 +205,7 @@
                         >
                         <div>
                             <input
-                                @change="checkReadyForSubmission"
+                                @change="isReadyForSubmission"
                                 type="radio"
                                 id="restricts-yes"
                                 v-model="newRule.restrict"
@@ -213,7 +213,7 @@
                             />
                             {{ $__("Yes") }}
                             <input
-                                @change="checkReadyForSubmission"
+                                @change="isReadyForSubmission"
                                 type="radio"
                                 id="restricts-no"
                                 v-model="newRule.restrict"
@@ -221,7 +221,7 @@
                             />
                             {{ $__("No") }}
                             <input
-                                @change="checkReadyForSubmission"
+                                @change="isReadyForSubmission"
                                 type="radio"
                                 id="restricts-fallback"
                                 v-model="newRule.restrict"
@@ -260,11 +260,11 @@
                             label="name"
                             :reduce="type => type.code"
                             :options="filteredLetters"
-                            @change="checkReadyForSubmission"
+                            @change="isReadyForSubmission"
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    @change="checkReadyForSubmission"
+                                    @change="isReadyForSubmission"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -301,7 +301,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    @change="checkReadyForSubmission"
+                                    @change="isReadyForSubmission"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -434,7 +434,7 @@ export default {
         next(async vm => {
             const { query } = to;
             await vm.checkForExistingRules(query);
-            vm.checkReadyForSubmission();
+            vm.isReadyForSubmission();
             vm.initialized = true;
         });
     },
@@ -686,7 +686,7 @@ export default {
             else {
                 this.newRule["delay"] = Math.min(this.newRule.delay + 1, max);
             }
-            this.checkReadyForSubmission();
+            this.isReadyForSubmission();
         },
         decrementDelay() {
             // Check for minDelay
@@ -696,9 +696,9 @@ export default {
             if (this.newRule.delay > min) {
                 this.newRule.delay--;
             }
-            this.checkReadyForSubmission();
+            this.isReadyForSubmission();
         },
-        checkReadyForSubmission() {
+        isReadyForSubmission() {
             this.allowSubmission =
                 this.newRule.delay !== null ||
                 this.newRule.notice !== null ||
