@@ -266,7 +266,7 @@ export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
         const {
-            splitCircRulesByTriggerNumber,
+            setEffectiveTriggerFilteredRuleSets,
             getLibraries,
             getPatronCategories,
             getItemTypes,
@@ -288,7 +288,7 @@ export default {
         } = storeToRefs(circRulesStore);
 
         return {
-            splitCircRulesByTriggerNumber,
+            setEffectiveTriggerFilteredRuleSets,
             currentLibraryId,
             currentPatronCategoryId,
             currentItemTypeId,
@@ -326,7 +326,6 @@ export default {
             vm.setAllEffectiveRuleSets();
             vm.setAllExhaustiveEffectiveRuleSets();
             vm.filterRuleSetsbySearchParam();
-            vm.splitCircRulesByTriggerNumber();
             vm.initialized = true;
         });
     },
