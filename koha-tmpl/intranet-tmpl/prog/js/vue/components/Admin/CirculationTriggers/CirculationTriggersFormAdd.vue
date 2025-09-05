@@ -140,7 +140,10 @@
             </fieldset>
             <fieldset
                 class="rows"
-                v-if="editMode === 'edit' || editMode === 'add'"
+                v-if="
+                    ruleSet[`overdue_${triggerNumber}_has_rules`] === '1' &&
+                    (editMode === 'edit' || editMode === 'add')
+                "
             >
                 <legend v-if="editMode === 'add'">
                     {{ $__("Add new trigger") }}
@@ -494,12 +497,13 @@ export default {
                     [`overdue_${vm.triggerNumber}_restrict`]: null,
                 };
             }
+            vm.effectiveTriggerFilteredRuleSets =
+                vm.setEffectiveTriggerFilteredRuleSet(vm.ruleSet);
+            vm.setFallbackRuleSet();
             vm.setMinDelay();
             vm.setMaxDelay();
             vm.setFilteredLetters();
             vm.isReadyForSubmission();
-            vm.effectiveTriggerFilteredRuleSets =
-                vm.setEffectiveTriggerFilteredRuleSet(vm.ruleSet);
             vm.initialized = true;
         });
     },
@@ -601,8 +605,30 @@ export default {
             });
             this.$router.go(0);
         },
-        handleContextChange() {
-            this.assignTriggerValues();
+        async handleContextChange() {
+            if (this.editMode === "edit") {
+                this.ruleSet = await this.getRawSelectedRuleSet(
+                    query.library_id,
+                    query.patron_category_id,
+                    query.item_type_id
+                );
+                this.updateTriggerCount(this.ruleSet);
+            } else {
+                this.ruleSet = {
+                    context: {
+                        library_id: query.library_id ?? "*",
+                        patron_category_id: query.patron_category_id ?? "*",
+                        item_type_id: query.item_type_id ?? "*",
+                    },
+                    [`overdue_${this.triggerNumber}_delay`]: null,
+                    [`overdue_${this.triggerNumber}_notice`]: null,
+                    [`overdue_${this.triggerNumber}_mtt`]: null,
+                    [`overdue_${this.triggerNumber}_restrict`]: null,
+                };
+            }
+            this.effectiveTriggerFilteredRuleSets =
+                this.setEffectiveTriggerFilteredRuleSet(this.ruleSet);
+            vm.setFallbackRuleSet();
         },
         setContext(query) {
             this.libraryId = query.libraryId ?? "*";
@@ -638,35 +664,7 @@ export default {
                     : this.triggerCount + 1;
         },
         // TODO: move into store, refactor - and check need for this also
-        assignTriggerValues(ruleSets, context = null) {
-            // const i = this.triggerNumber;
-            this.ruleSet = {
-                item_type_id:
-                    context?.item_type_id ??
-                    ruleSets[i - 1]?.context?.item_type_id ??
-                    "*",
-                library_id:
-                    context?.library_id ??
-                    ruleSets[i - 1]?.context?.library_id ??
-                    "*",
-                patron_category_id:
-                    context?.patron_category_id ??
-                    ruleSets[i - 1]?.context?.patron_category_id ??
-                    "*",
-                delay:
-                    ruleSets[i - 1]?.[`overdue_${this.triggerNumber}_delay`]
-                        ?.value ?? null,
-                notice:
-                    ruleSets[i - 1]?.[`overdue_${this.triggerNumber}_notice`]
-                        ?.value ?? null,
-                mtt:
-                    ruleSets[i - 1]?.[
-                        `overdue_${this.triggerNumber}_mtt`
-                    ]?.value?.split(",") ?? [],
-                restrict:
-                    ruleSets[i - 1]?.[`overdue_${this.triggerNumber}_restrict`]
-                        ?.value ?? null,
-            };
+        setFallbackRuleSet(ruleSets, context = null) {
             this.fallbackRuleSet = {
                 [`overdue_${this.triggerNumber}_delay`]: this.findEffectiveRule(
                     this.ruleSet,
