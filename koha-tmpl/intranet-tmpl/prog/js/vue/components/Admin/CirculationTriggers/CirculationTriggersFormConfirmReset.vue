@@ -94,23 +94,16 @@
                                 >
                                     <span
                                         :class="{
-                                            fallback: findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${triggerNumber}_delay`,
-                                                triggerNumber
-                                            ).isFallback,
+                                            fallback:
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_delay`
+                                                ].isFallback,
                                         }"
                                     >
                                         {{
-                                            findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${triggerNumber}_delay`,
-                                                triggerNumber
-                                            ).value +
-                                            " " +
-                                            $__("days")
+                                            ruleSet[
+                                                `overdue_${triggerNumber}_delay`
+                                            ].value
                                         }}
                                     </span>
                                 </td>
@@ -125,26 +118,17 @@
                                 >
                                     <span
                                         :class="{
-                                            fallback: findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${
-                                                    triggerNumber
-                                                }_notice`,
-                                                triggerNumber
-                                            ).isFallback,
+                                            fallback:
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_notice`
+                                                ].isFallback,
                                         }"
                                     >
                                         {{
                                             handleNotice(
-                                                findEffectiveRule(
-                                                    allCircRules,
-                                                    ruleSetForReset,
-                                                    `overdue_${
-                                                        triggerNumber
-                                                    }_notice`,
-                                                    triggerNumber
-                                                ).value
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_notice`
+                                                ].value
                                             )
                                         }}
                                     </span>
@@ -159,33 +143,19 @@
                                 >
                                     <span
                                         :class="{
-                                            fallback: findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${triggerNumber}_mtt`,
-                                                triggerNumber
-                                            ).isFallback,
+                                            fallback:
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_mtt`
+                                                ].isFallback,
                                         }"
                                     >
                                         {{
-                                            findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${
-                                                    triggerNumber
-                                                }_notice`,
-                                                triggerNumber
-                                            ).value !== ""
-                                                ? handleTransport(
-                                                      findEffectiveRule(
-                                                          allCircRules,
-                                                          ruleSetForReset,
-                                                          `overdue_${triggerNumber}_mtt`,
-                                                          triggerNumber
-                                                      ).value,
-                                                      "email"
-                                                  )
-                                                : ""
+                                            handleTransport(
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_mtt`
+                                                ].value,
+                                                "email"
+                                            )
                                         }}
                                     </span>
                                 </td>
@@ -199,35 +169,19 @@
                                 >
                                     <span
                                         :class="{
-                                            fallback: findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${triggerNumber}_mtt`,
-                                                triggerNumber
-                                            ).isFallback,
+                                            fallback:
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_mtt`
+                                                ].isFallback,
                                         }"
                                     >
                                         {{
-                                            findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${
-                                                    triggerNumber
-                                                }_notice`,
-                                                triggerNumber
-                                            ).value !== ""
-                                                ? handleTransport(
-                                                      findEffectiveRule(
-                                                          allCircRules,
-                                                          ruleSetForReset,
-                                                          `overdue_${
-                                                              triggerNumber
-                                                          }_mtt`,
-                                                          triggerNumber
-                                                      ).value,
-                                                      "print"
-                                                  )
-                                                : ""
+                                            handleTransport(
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_mtt`
+                                                ].value,
+                                                "print"
+                                            )
                                         }}
                                     </span>
                                 </td>
@@ -241,35 +195,19 @@
                                 >
                                     <span
                                         :class="{
-                                            fallback: findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${triggerNumber}_mtt`,
-                                                triggerNumber
-                                            ).isFallback,
+                                            fallback:
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_mtt`
+                                                ].isFallback,
                                         }"
                                     >
                                         {{
-                                            findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${
-                                                    triggerNumber
-                                                }_notice`,
-                                                triggerNumber
-                                            ).value !== ""
-                                                ? handleTransport(
-                                                      findEffectiveRule(
-                                                          allCircRules,
-                                                          ruleSetForReset,
-                                                          `overdue_${
-                                                              triggerNumber
-                                                          }_mtt`,
-                                                          triggerNumber
-                                                      ).value,
-                                                      "sms"
-                                                  )
-                                                : ""
+                                            handleTransport(
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_mtt`
+                                                ].value,
+                                                "sms"
+                                            )
                                         }}
                                     </span>
                                 </td>
@@ -283,27 +221,16 @@
                                 >
                                     <span
                                         :class="{
-                                            fallback: findEffectiveRule(
-                                                allCircRules,
-                                                ruleSetForReset,
-                                                `overdue_${
-                                                    triggerNumber
-                                                }_restrict`,
-                                                triggerNumber
-                                            ).isFallback,
+                                            fallback:
+                                                ruleSet[
+                                                    `overdue_${triggerNumber}_restrict`
+                                                ].isFallback,
                                         }"
                                     >
                                         {{
-                                            handleRestrictions(
-                                                findEffectiveRule(
-                                                    allCircRules,
-                                                    ruleSetForReset,
-                                                    `overdue_${
-                                                        triggerNumber
-                                                    }_restrict`,
-                                                    triggerNumber
-                                                ).value
-                                            )
+                                            ruleSet[
+                                                `overdue_${triggerNumber}_restrict`
+                                            ].value
                                         }}
                                     </span>
                                 </td>
@@ -353,15 +280,21 @@ export default {
             handleRestrictions,
             handleTransport,
             findEffectiveRule,
+            getRawSelectedRuleSet,
         } = circRulesStore;
-        const { letters } = storeToRefs(circRulesStore);
+        const { letters, libraries, itemTypes, patronCategories } =
+            storeToRefs(circRulesStore);
         return {
             letters,
+            libraries,
+            itemTypes,
+            patronCategories,
             handleContext,
             findEffectiveRule,
             handleNotice,
             handleRestrictions,
             handleTransport,
+            getRawSelectedRuleSet,
         };
     },
     data() {
@@ -375,24 +308,21 @@ export default {
             categoryName: null,
             itemTypeName: null,
             triggerNumber: null,
-            ruleSetForReset: {
-                item_type_id: "*",
-                library_id: "*",
-                patron_category_id: "*",
-                delay: null,
-                notice: null,
-                mtt: null,
-                restrict: null,
-            },
+            ruleSet: null,
         };
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             const { query } = to;
-            await vm.getCircRuleSetForReset(query);
             await vm.getLibraryName();
             await vm.getCategoryName();
             await vm.getItemTypeName();
+            vm.ruleSet = await vm.getRawSelectedRuleSet(
+                query.library_id,
+                query.patron_category_id,
+                query.item_type_id
+            );
+            vm.triggerNumber = to.query.triggerNumber;
             vm.initialized = true;
         });
     },
@@ -412,38 +342,27 @@ export default {
                 this.$router.push({
                     path: "/cgi-bin/koha/admin/circulation_triggers/reset",
                     query: {
-                        ...this.ruleSetForReset.context,
+                        ...this.ruleSet.context,
                         triggerNumber: this.triggerNumber,
                     },
                 });
                 return;
             }
 
-            const circRule = { context: this.ruleSetForReset.context };
+            const circRule = { context: this.ruleSet.context };
 
-            if (
-                this.ruleSetForReset[`overdue_${this.triggerNumber}_delay`] !==
-                null
-            ) {
+            if (this.ruleSet[`overdue_${this.triggerNumber}_delay`] !== null) {
                 circRule[`overdue_${this.triggerNumber}_delay`] = null;
             }
-            if (
-                this.ruleSetForReset[`overdue_${this.triggerNumber}_notice`] !==
-                null
-            ) {
+            if (this.ruleSet[`overdue_${this.triggerNumber}_notice`] !== null) {
                 circRule[`overdue_${this.triggerNumber}_notice`] = null;
             }
             if (
-                this.ruleSetForReset[
-                    `overdue_${this.triggerNumber}_restrict`
-                ] !== null
+                this.ruleSet[`overdue_${this.triggerNumber}_restrict`] !== null
             ) {
                 circRule[`overdue_${this.triggerNumber}_restrict`] = null;
             }
-            if (
-                this.ruleSetForReset[`overdue_${this.triggerNumber}_mtt`] !==
-                null
-            ) {
+            if (this.ruleSet[`overdue_${this.triggerNumber}_mtt`] !== null) {
                 circRule[`overdue_${this.triggerNumber}_mtt`] = null;
             }
             circRule[`overdue_${this.triggerNumber}_has_rules`] =
@@ -462,12 +381,13 @@ export default {
             }
         },
         async checkForChanges() {
-            const oldCircRule = cloneDeep(this.ruleSetForReset);
-            await this.getCircRuleSetForReset({
-                ...this.ruleSetForReset.context,
-                triggerNumber: this.triggerNumber,
-            });
-            return !isEqual(oldCircRule, this.ruleSetForReset);
+            const oldCircRule = cloneDeep(this.ruleSet);
+            await this.getRawSelectedRuleSet(
+                this.ruleSet.context.library_id,
+                this.ruleSet.patron_category_id,
+                this.ruleSet.item_type_id
+            );
+            return !isEqual(oldCircRule, this.ruleSet);
         },
         async getCategoryName() {
             if (this.patron_category_id === "*") {
@@ -475,59 +395,28 @@ export default {
                     "Default rule set for all patron categories";
                 return;
             }
-            const client = APIClient.patron;
-            let categories = await client.patronCategories.getAll();
-            let category = categories.find(
+            this.categoryName = this.patronCategories.find(
                 category =>
                     category.patron_category_id === this.patron_category_id
             );
-            this.categoryName = category.name;
-        },
-        async getCircRuleSetForReset(query) {
-            const {
-                library_id,
-                patron_category_id,
-                item_type_id,
-                triggerNumber,
-            } = query;
-            this.library_id = library_id;
-            this.patron_category_id = patron_category_id;
-            this.item_type_id = item_type_id;
-            this.triggerNumber = triggerNumber;
-
-            const client = APIClient.circRule;
-            const result = await client.circRules.getAll(
-                {},
-                {
-                    library_id: this.library_id,
-                    patron_category_id: this.patron_category_id,
-                    item_type_id: this.item_type_id,
-                    effective: false,
-                }
-            );
-            this.ruleSetForReset = result[0];
-            this.allCircRules = query.allCircRules;
         },
         async getItemTypeName() {
             if (this.item_type_id === "*") {
                 this.itemTypeName = "Default rule set for all item types";
                 return;
             }
-            const client = APIClient.item;
-            let types = await client.itemTypes.getAll();
-            let type = types.find(
+            this.itemTypeName = this.itemTypes.find(
                 type => type.item_type_id === this.item_type_id
             );
-            this.itemTypeName = type.description;
         },
         async getLibraryName() {
             if (this.library_id === "*") {
                 this.libraryName = "Default rule set for all libraries";
                 return;
             }
-            const client = APIClient.library;
-            let libraries = await client.libraries.get(this.library_id);
-            this.libraryName = libraries.name;
+            this.libraryName = this.libraries.find(
+                library => library.library_id === this.library_id
+            );
         },
     },
     components: { ButtonSubmit, TriggerContext },
