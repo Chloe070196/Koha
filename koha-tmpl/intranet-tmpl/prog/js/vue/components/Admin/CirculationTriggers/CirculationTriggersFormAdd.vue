@@ -520,19 +520,19 @@ export default {
             };
 
             // this.checkForExistingRules will reset this.ruleSet - prevent this from affecting submission
-            const ruleSetToSubmit = cloneDeep(this.ruleSet);
-            circRule[`overdue_${this.triggerNumber}_delay`] =
-                ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`];
-            circRule[`overdue_${this.triggerNumber}_notice`] =
-                ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`];
-            circRule[`overdue_${this.triggerNumber}_restrict`] =
-                ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`];
-            circRule[`overdue_${this.triggerNumber}_mtt`] = ruleSetToSubmit?.[
+            const ruleSetToSubmit = cloneDeep({context: {...this.ruleSet.context}});
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
+                cloneDeep(this.ruleSet[`overdue_${this.triggerNumber}_delay`]);
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] =
+                cloneDeep(this.ruleSet[`overdue_${this.triggerNumber}_notice`]);
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
+                cloneDeep(this.ruleSet[`overdue_${this.triggerNumber}_restrict`]);
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] = cloneDeep(this.ruleSet?.[
                 `overdue_${this.triggerNumber}_mtt`
             ].length
-                ? ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`].join(",")
-                : null;
-            circRule[`overdue_${this.triggerNumber}_has_rules`] = true;
+                ? this.ruleSet[`overdue_${this.triggerNumber}_mtt`].join(",")
+                : null);
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_has_rules`] = true;
 
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
@@ -540,40 +540,16 @@ export default {
                 const oldCircRule = cloneDeep(this.ruleSet);
 
                 // refresh this.ruleSet so it matches the database
-                const routeParams = this.ruleSet;
-                routeParams.triggerNumber = this.triggerNumber;
                 this.ruleSet = await this.getRawSelectedRuleSet(
-                    routeParams.library_id,
-                    routeParams.patron_category_id,
-                    routeParams.item_type_id
+                    this.ruleSet.context.library_id,
+                    this.ruleSet.context.patron_category_id,
+                    this.ruleSet.context.item_type_id
                 );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (!isEqual(oldCircRule, this.ruleSet)) {
-                    this.updateTriggerCount(this.ruleSet);
-                    this.triggerNumber =
-                        this.editMode === "edit"
-                            ? routeParams.triggerNumber
-                            : this.triggerCount + 1;
-                    // update the form so that up-to-date trigger data is displayed
-                    this.assignTriggerValues(
-                        this.effectiveTriggerFilteredRuleSets,
-                        this.triggerNumber,
-                        {
-                            library_id:
-                                this.ruleSet[
-                                    `overdue_${this.triggerNumber}_context`
-                                ].library_id,
-                            item_type_id:
-                                this.ruleSet[
-                                    `overdue_${this.triggerNumber}_context`
-                                ].item_type_id,
-                            patron_category_id:
-                                this.ruleSet[
-                                    `overdue_${this.triggerNumber}_context`
-                                ].patron_category_id,
-                        }
-                    );
+                    // refresh form
+                    this.handleContextChange();
                     // prepare the alert message
                     this.alertMessage =
                         "Your changes could not be saved as this circulation trigger was updated elsewhere. Please see the updated trigger below.";
@@ -589,16 +565,7 @@ export default {
                 }
             }
 
-            const circRule = {
-                context,
-            };
-
-            const client = APIClient.circRule;
-            try {
-                await client.circRules.update(circRule);
-            } catch (e) {
-                // handle e
-            }
+            this.updateCircRuleSets(ruleSetToSubmit)
 
             await this.$router.replace({
                 name: "CirculationTriggersList",
