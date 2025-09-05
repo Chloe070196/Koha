@@ -18,14 +18,12 @@ export const useCircRulesStore = defineStore("circRules", {
         triggerCount: 0,
         // references
         letters: [],
-        ruleSuffixes: [
-            "delay",
-            "notice",
-            "mtt",
-            "restrict",
-            "has_rules",
+        ruleSuffixes: ["delay", "notice", "mtt", "restrict", "has_rules"],
+        transportTypes: [
+            { code: "email", name: "Email" },
+            { code: "sms", name: "SMS" },
+            { code: "print", name: "Print" },
         ],
-        transportTypes: ["email", "sms", "print"],
         regex: /overdue_(\d+)_has_rules/,
         // rule sets
         // TODO: confirm which are useful to keep
@@ -36,7 +34,6 @@ export const useCircRulesStore = defineStore("circRules", {
         allDefaultLibraryRawRuleSets: [], // source of truth for default library
         allCurrentLibraryRawRuleSets: [], // source of truth for current library
         // effectiveContextFilteredRuleSets: [],
-        effectiveTriggerFilteredRuleSets: [],
         // effectiveContextRuleSets: [],
         allEffectiveRuleSets: [], // main data set for display explicitly set rules for current library
         // exhaustiveEffectiveContextFilteredRuleSets: [],
@@ -69,8 +66,7 @@ export const useCircRulesStore = defineStore("circRules", {
             for (let i = 1; i <= this.triggerCount; i++) {
                 // Check if there's already a ruleSet for overdue_X_ in contextRuleSets
                 const matchingRule = contextRuleSets.find(
-                    ruleSet =>
-                        ruleSet[`overdue_${i}_has_rules`] === "1"
+                    ruleSet => ruleSet[`overdue_${i}_has_rules`] === "1"
                 );
 
                 if (!matchingRule) {
@@ -146,9 +142,7 @@ export const useCircRulesStore = defineStore("circRules", {
                         `overdue_${triggerNumber}_${ruleSuffix}`
                     ],
                     isFallback:
-                        !existingRule[
-                            `overdue_${triggerNumber}_has_rules`
-                        ],
+                        !existingRule[`overdue_${triggerNumber}_has_rules`],
                 };
             }
 
@@ -276,9 +270,10 @@ export const useCircRulesStore = defineStore("circRules", {
         ) {
             const context = {
                 library_id,
-                item_type_id,
-                patron_category_id,
             };
+            item_type_id && (context.item_type_id = item_type_id);
+            patron_category_id &&
+                (context.patron_category_id = patron_category_id);
             const client = APIClient.circRule;
             let result;
             try {
@@ -307,45 +302,51 @@ export const useCircRulesStore = defineStore("circRules", {
             }
             return value.includes(type) ? $__("Yes") : $__("No");
         },
-        splitCircRulesByTriggerNumber(ruleSets = this.allEffectiveRuleSets) {
-            let numberOfTabs = [1];
-            this.effectiveTriggerFilteredRuleSets = ruleSets.reduce(
-                (acc, ruleSet) => {
-                    this.updateTriggerCount(ruleSet);
-                    numberOfTabs = this.setNumberOfTabs(
-                        this.triggerCount,
-                        numberOfTabs
-                    );
-                    const triggerNumbers = Array.from(
-                        { length: this.triggerCount },
-                        (_, i) => i + 1
-                    );
-                    triggerNumbers.forEach(i => {
-                        const ruleSetCopy = JSON.parse(JSON.stringify(ruleSet));
-                        const rulesToDelete = triggerNumbers.filter(
-                            num => num !== i
-                        );
-                        this.ruleSuffixes.forEach(suffix => {
-                            rulesToDelete.forEach(number => {
-                                delete ruleSetCopy[
-                                    `overdue_${number}_${suffix}`
-                                ];
-                            });
-                        });
-                        ruleSetCopy.triggerNumber = i;
-                        acc.push(ruleSetCopy);
-                    });
-                    return acc;
-                },
-                []
-            );
-        },
         // FIXME: use updateTriggerCount instead
         setNumberOfTabs(triggerCount, tabCount) {
             if (triggerCount > tabCount) {
                 return Array.from({ length: triggerCount }, (_, i) => i + 1);
             }
             return tabCount;
+        },
+        setTriggerValues(
+            ruleSets,
+            selectedRuleSet,
+            triggerNumber,
+            context = null
+        ) {
+            const i = parseInt(triggerNumber);
+            const ruleSet = {
+                item_type_id:
+                    context?.item_type_id ??
+                    ruleSets[i - 1]?.context?.item_type_id ??
+                    "*",
+                library_id:
+                    context?.library_id ??
+                    ruleSets[i - 1]?.context?.library_id ??
+                    "*",
+                patron_category_id:
+                    context?.patron_category_id ??
+                    ruleSets[i - 1]?.context?.patron_category_id ??
+                    "*",
+                delay: ruleSets[i - 1]?.[`overdue_${i}_delay`]?.value ?? null,
+                notice: ruleSets[i - 1]?.[`overdue_${i}_notice`]?.value ?? null,
+                mtt:
+                    ruleSets[i - 1]?.[`overdue_${i}_mtt`]?.value?.split(",") ??
+                    [],
+                restrict:
+                    ruleSets[i - 1]?.[`overdue_${i}_restrict`]?.value ?? null,
+            };
+            const fallbackRuleSet = {
+                delay: this.findEffectiveRule(selectedRuleSet, "delay", i)
+                    .value,
+                notice: this.findEffectiveRule(selectedRuleSet, "notice", i)
+                    .value,
+                mtt: this.findEffectiveRule(selectedRuleSet, "mtt", i).value,
+                restrict: this.findEffectiveRule(selectedRuleSet, "restrict", i)
+                    .value,
+            };
+            return { ruleSet, fallbackRuleSet };
         },
         updateTriggerCount(ruleSet = this.allDefaultLibraryRawRuleSets[0]) {
             this.triggerCount = Object.keys(ruleSet).filter(
@@ -442,6 +443,26 @@ export const useCircRulesStore = defineStore("circRules", {
                 effectiveTriggerFilteredRuleSets.push(triggerSpecificRuleSet);
             }
             return effectiveTriggerFilteredRuleSets;
+        },
+        async updateCircRuleSets(existingRuleSet) {
+            const circRule = { context: existingRuleSet.context };
+            circRule[`overdue_${this.triggerNumber}_delay`] =
+                existingRuleSet[`overdue_${this.triggerNumber}_delay`];
+            circRule[`overdue_${this.triggerNumber}_notice`] =
+                existingRuleSet[`overdue_${this.triggerNumber}_notice`];
+            circRule[`overdue_${this.triggerNumber}_restrict`] =
+                existingRuleSet[`overdue_${this.triggerNumber}_restrict`];
+            circRule[`overdue_${this.triggerNumber}_mtt`] =
+                existingRuleSet[`overdue_${this.triggerNumber}_mtt`];
+            circRule[`overdue_${this.triggerNumber}_has_rules`] =
+                existingRuleSet[`overdue_${this.triggerNumber}_has_rules`];
+
+            try {
+                const client = APIClient.circRule;
+                await client.circRules.update(circRule);
+            } catch (e) {
+                //TODO: handle e
+            }
         },
     },
 });
