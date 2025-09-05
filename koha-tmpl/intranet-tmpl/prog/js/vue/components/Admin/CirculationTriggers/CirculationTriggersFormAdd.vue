@@ -497,6 +497,7 @@ export default {
                     [`overdue_${vm.triggerNumber}_restrict`]: null,
                 };
             }
+            vm.setRuleSetInfo();
             vm.effectiveTriggerFilteredRuleSets =
                 vm.setEffectiveTriggerFilteredRuleSet(vm.ruleSet);
             vm.setFallbackRuleSet();
@@ -626,9 +627,10 @@ export default {
                     [`overdue_${this.triggerNumber}_restrict`]: null,
                 };
             }
+            this.setRuleSetInfo();
             this.effectiveTriggerFilteredRuleSets =
                 this.setEffectiveTriggerFilteredRuleSet(this.ruleSet);
-            vm.setFallbackRuleSet();
+            this.setFallbackRuleSet();
         },
         setContext(query) {
             this.libraryId = query.libraryId ?? "*";
@@ -642,17 +644,11 @@ export default {
         },
         setRuleSetInfo() {
             this.ruleSetInfo = {
-                issuelength:
-                    this.ruleSet[`overdue_${this.triggerNumber}_issuelength`],
-                decreaseloanholds:
-                    this.ruleSet[
-                        `overdue_${this.triggerNumber}_decreaseloanholds`
-                    ],
-                fine: this.ruleSet[`overdue_${this.triggerNumber}_fine`],
-                chargeperiod:
-                    this.ruleSet[`overdue_${this.triggerNumber}_chargeperiod`],
-                lengthunit:
-                    this.ruleSet[`overdue_${this.triggerNumber}_lengthunit`],
+                issuelength: this.ruleSet.issuelength,
+                decreaseloanholds: this.ruleSet.decreaseloanholds,
+                fine: this.ruleSet.fine,
+                chargeperiod:this.ruleSet.chargeperiod,
+                lengthunit:this.ruleSet.lengthunit,
                 triggerCount: this.triggerCount,
             };
         },
