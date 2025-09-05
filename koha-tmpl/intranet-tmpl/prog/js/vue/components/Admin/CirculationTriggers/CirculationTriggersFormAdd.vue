@@ -140,10 +140,7 @@
             </fieldset>
             <fieldset
                 class="rows"
-                v-if="
-                    ruleSet[`overdue_${triggerNumber}_has_rules`] === '1' &&
-                    (editMode === 'edit' || editMode === 'add')
-                "
+                v-if="(editMode === 'edit' || editMode === 'add')"
             >
                 <legend v-if="editMode === 'add'">
                     {{ $__("Add new trigger") }}
@@ -478,7 +475,6 @@ export default {
                     query.patron_category_id,
                     query.item_type_id
                 );
-                vm.updateTriggerCount(vm.ruleSet);
             } else {
                 vm.ruleSet = {
                     context: {
