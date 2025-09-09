@@ -34,7 +34,7 @@
                         >
                         <v-select
                             id="library_id"
-                            v-model="ruleSet.context.library_id"
+                            v-model="libraryId"
                             label="name"
                             :reduce="lib => lib.library_id"
                             :options="libraries"
@@ -43,7 +43,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    :required="!ruleSet.context.library_id"
+                                    :required="!libraryId"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -58,7 +58,7 @@
                         >
                         <v-select
                             id="patron_category_id"
-                            v-model="ruleSet.context.patron_category_id"
+                            v-model="patronCategoryId"
                             label="name"
                             :reduce="cat => cat.patron_category_id"
                             :options="patronCategories"
@@ -67,9 +67,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    :required="
-                                        !ruleSet.context.patron_category_id
-                                    "
+                                    :required="!patronCategoryId"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -84,7 +82,7 @@
                         >
                         <v-select
                             id="item_type_id"
-                            v-model="ruleSet.context.item_type_id"
+                            v-model="itemTypeId"
                             label="description"
                             :reduce="type => type.item_type_id"
                             :options="itemTypes"
@@ -93,7 +91,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    :required="!ruleSet.context.item_type_id"
+                                    :required="!itemTypeId"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -161,7 +159,7 @@
                                     "
                                     type="number"
                                     :placeholder="
-                                        fallbackRuleSet[
+                                        fallbackRuleSet?.[
                                             `overdue_${triggerNumber}_delay`
                                         ]
                                     "
@@ -252,13 +250,13 @@
                             {{ $__("Fallback to default") }}
                             <span
                                 v-if="
-                                    fallbackRuleSet[
+                                    fallbackRuleSet?.[
                                         `overdue_${triggerNumber}_restrict`
                                     ] !== null
                                 "
                             >
                                 ({{
-                                    fallbackRuleSet[
+                                    fallbackRuleSet?.[
                                         `overdue_${triggerNumber}_restrict`
                                     ] === "1"
                                         ? $__("Yes")
@@ -308,11 +306,11 @@
                                             ? letters.find(
                                                   letter =>
                                                       letter.code ===
-                                                      fallbackRuleSet[
+                                                      fallbackRuleSet?.[
                                                           `overdue_${triggerNumber}_notice`
                                                       ]
                                               )?.name ||
-                                              fallbackRuleSet[
+                                              fallbackRuleSet?.[
                                                   `overdue_${triggerNumber}_notice`
                                               ]
                                             : ''
@@ -328,7 +326,7 @@
                                 null ||
                                 ruleSet[`overdue_${triggerNumber}_notice`] ===
                                     undefined) &&
-                                fallbackRuleSet[
+                                fallbackRuleSet?.[
                                     `overdue_${triggerNumber}_notice`
                                 ] !== '')
                         "
@@ -357,7 +355,7 @@
                                         ] === undefined ||
                                         ruleSet[`overdue_${triggerNumber}_mtt`]
                                             .length === 0
-                                            ? fallbackRuleSet[
+                                            ? fallbackRuleSet?.[
                                                   `overdue_${triggerNumber}_mtt`
                                               ]
                                             : ''
@@ -445,6 +443,8 @@ export default {
             initialized: false,
             triggerNumber: 1,
             libraryId: "*",
+            itemTypeId: null,
+            patronCategoryId: null,
             fallbackRuleSet: null,
             ruleSetInfo: {
                 issuelength: null,
@@ -484,7 +484,7 @@ export default {
                         patron_category_id: query.patron_category_id ?? "*",
                         item_type_id: query.item_type_id ?? "*",
                     },
-                    [`overdue_${vm.triggerNumber}_delay`]: null,
+                    [`overdue_${vm.triggerNumber}_delay`]: 0,
                     [`overdue_${vm.triggerNumber}_notice`]: null,
                     [`overdue_${vm.triggerNumber}_mtt`]: null,
                     [`overdue_${vm.triggerNumber}_restrict`]: null,
@@ -580,19 +580,19 @@ export default {
         async handleContextChange() {
             if (this.editMode === "edit") {
                 this.ruleSet = await this.getRawSelectedRuleSet(
-                    query.library_id,
-                    query.patron_category_id,
-                    query.item_type_id
+                    this.library_id,
+                    this.patron_category_id,
+                    this.item_type_id
                 );
                 this.updateTriggerCount(this.ruleSet);
             } else {
                 this.ruleSet = {
                     context: {
-                        library_id: query.library_id ?? "*",
-                        patron_category_id: query.patron_category_id ?? "*",
-                        item_type_id: query.item_type_id ?? "*",
+                        library_id: this.library_id ?? "*",
+                        patron_category_id: this.patron_category_id ?? "*",
+                        item_type_id: this.item_type_id ?? "*",
                     },
-                    [`overdue_${this.triggerNumber}_delay`]: null,
+                    [`overdue_${this.triggerNumber}_delay`]: 0,
                     [`overdue_${this.triggerNumber}_notice`]: null,
                     [`overdue_${this.triggerNumber}_mtt`]: null,
                     [`overdue_${this.triggerNumber}_restrict`]: null,
@@ -630,7 +630,7 @@ export default {
                     : this.triggerCount + 1;
         },
         // TODO: move into store, refactor - and check need for this also
-        setFallbackRuleSet(ruleSets, context = null) {
+        setFallbackRuleSet() {
             this.fallbackRuleSet = {
                 [`overdue_${this.triggerNumber}_delay`]: this.findEffectiveRule(
                     this.ruleSet,
@@ -706,7 +706,7 @@ export default {
 
             // Increment within the valid range
             else {
-                this.ruleSet["delay"] = Math.min(
+                this.ruleSet[`overdue_${this.triggerNumber}_delay`] = Math.min(
                     this.ruleSet[`overdue_${this.triggerNumber}_delay`] + 1,
                     max
                 );
@@ -716,7 +716,6 @@ export default {
         decrementDelay() {
             // Check for minDelay
             const min = this.minDelay !== undefined ? this.minDelay : 1;
-
             // Decrement only if greater than minDelay
             if (this.ruleSet[`overdue_${this.triggerNumber}_delay`] > min) {
                 this.ruleSet[`overdue_${this.triggerNumber}_delay`]--;
