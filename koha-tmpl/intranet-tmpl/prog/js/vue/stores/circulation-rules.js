@@ -448,22 +448,21 @@ export const useCircRulesStore = defineStore("circRules", {
             }
             return effectiveTriggerFilteredRuleSets;
         },
-        async updateCircRuleSets(existingRuleSet) {
-            const circRule = { context: existingRuleSet.context };
-            circRule[`overdue_${this.triggerNumber}_delay`] =
-                existingRuleSet[`overdue_${this.triggerNumber}_delay`];
-            circRule[`overdue_${this.triggerNumber}_notice`] =
-                existingRuleSet[`overdue_${this.triggerNumber}_notice`];
-            circRule[`overdue_${this.triggerNumber}_restrict`] =
-                existingRuleSet[`overdue_${this.triggerNumber}_restrict`];
-            circRule[`overdue_${this.triggerNumber}_mtt`] =
-                existingRuleSet[`overdue_${this.triggerNumber}_mtt`];
-            circRule[`overdue_${this.triggerNumber}_has_rules`] =
-                existingRuleSet[`overdue_${this.triggerNumber}_has_rules`];
-
+        async updateCircRuleSets(existingRuleSet, triggerNumber) {
+            const circRuleSet = { context: existingRuleSet.context };
+            circRuleSet[`overdue_${triggerNumber}_delay`] =
+                existingRuleSet[`overdue_${triggerNumber}_delay`];
+            circRuleSet[`overdue_${triggerNumber}_notice`] =
+                existingRuleSet[`overdue_${triggerNumber}_notice`];
+            circRuleSet[`overdue_${triggerNumber}_restrict`] =
+                existingRuleSet[`overdue_${triggerNumber}_restrict`];
+            circRuleSet[`overdue_${triggerNumber}_mtt`] =
+                existingRuleSet[`overdue_${triggerNumber}_mtt`];
+            circRuleSet[`overdue_${triggerNumber}_has_rules`] =
+                existingRuleSet[`overdue_${triggerNumber}_has_rules`];
             try {
                 const client = APIClient.circRule;
-                await client.circRules.update(circRule);
+                await client.circRules.update(circRuleSet);
             } catch (e) {
                 //TODO: handle e
             }

@@ -407,6 +407,7 @@ export default {
             findEffectiveRule,
             getRawSelectedRuleSet,
             setEffectiveTriggerFilteredRuleSet,
+            updateCircRuleSets,
         } = circRulesStore;
         const {
             letters,
@@ -434,6 +435,7 @@ export default {
             filterCircRulesByContext,
             findEffectiveRule,
             setEffectiveTriggerFilteredRuleSet,
+            updateCircRuleSets,
         };
     },
     data() {
@@ -561,7 +563,7 @@ export default {
                 }
             }
 
-            this.updateCircRuleSets(ruleSetToSubmit);
+            await this.updateCircRuleSets(ruleSetToSubmit, this.triggerNumber);
 
             await this.$router.replace({
                 name: "CirculationTriggersList",
