@@ -522,7 +522,7 @@ export default {
                     this.ruleSet[`overdue_${this.triggerNumber}_restrict`]
                 );
             ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] = cloneDeep(
-                this.ruleSet?.[`overdue_${this.triggerNumber}_mtt`].length
+                this.ruleSet?.[`overdue_${this.triggerNumber}_mtt`]?.length
                     ? this.ruleSet[`overdue_${this.triggerNumber}_mtt`].join(
                           ","
                       )
