@@ -116,7 +116,8 @@ export const useCircRulesStore = defineStore("circRules", {
             ];
             if (
                 !currentAndDefaultRawRuleSets ||
-                !Array.isArray(currentAndDefaultRawRuleSets)
+                !Array.isArray(currentAndDefaultRawRuleSets) ||
+                currentAndDefaultRawRuleSets.length === 0
             ) {
                 return { value: null, isFallback: true };
             }
@@ -349,6 +350,9 @@ export const useCircRulesStore = defineStore("circRules", {
             return { ruleSet, fallbackRuleSet };
         },
         updateTriggerCount(ruleSet = this.allDefaultLibraryRawRuleSets[0]) {
+            if (!this.allDefaultLibraryRawRuleSets[0]) {
+                return;
+            }
             this.triggerCount = Object.keys(ruleSet).filter(
                 ruleSuffix =>
                     this.regex.test(ruleSuffix) && ruleSet[ruleSuffix] !== null
