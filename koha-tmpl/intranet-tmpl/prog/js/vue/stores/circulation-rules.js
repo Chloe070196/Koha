@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { $__ } from "../i18n";
 import { APIClient } from "../fetch/api-client.js";
+import { isEqual } from "lodash";
 
 export const useCircRulesStore = defineStore("circRules", {
     // NOTES ON RULE SETS TYPES
@@ -302,6 +303,26 @@ export const useCircRulesStore = defineStore("circRules", {
                 return "";
             }
             return value.includes(type) ? $__("Yes") : $__("No");
+        },
+        hasConflict(oldRuleSet, newRuleSet, triggerNumber) {
+            return (
+                oldRuleSet.context.library_id !==
+                    newRuleSet.context.library_id ||
+                oldRuleSet.context.item_type_id !==
+                    newRuleSet.context.item_type_id ||
+                oldRuleSet.context.patron_category_id !==
+                    newRuleSet.context.patron_category_id ||
+                oldRuleSet[`overdue_${triggerNumber}_delay`] !==
+                    newRuleSet[`overdue_${triggerNumber}_delay`] ||
+                oldRuleSet[`overdue_${triggerNumber}_notice`] !==
+                    newRuleSet[`overdue_${triggerNumber}_notice`] ||
+                oldRuleSet[`overdue_${triggerNumber}_restrict`] !==
+                    newRuleSet[`overdue_${triggerNumber}_restrict`] ||
+                !isEqual(
+                    oldRuleSet[`overdue_${triggerNumber}_mtt`],
+                    newRuleSet[`overdue_${triggerNumber}_mtt`]
+                )
+            );
         },
         // FIXME: use updateTriggerCount instead
         setNumberOfTabs(triggerCount, tabCount) {

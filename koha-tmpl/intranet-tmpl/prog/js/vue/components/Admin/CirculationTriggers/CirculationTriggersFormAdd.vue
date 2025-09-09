@@ -408,6 +408,7 @@ export default {
             getRawSelectedRuleSet,
             setEffectiveTriggerFilteredRuleSet,
             updateCircRuleSets,
+            hasConflict,
         } = circRulesStore;
         const {
             letters,
@@ -436,6 +437,7 @@ export default {
             findEffectiveRule,
             setEffectiveTriggerFilteredRuleSet,
             updateCircRuleSets,
+            hasConflict,
         };
     },
     data() {
@@ -453,7 +455,8 @@ export default {
                 triggerCount: null,
             },
             editMode: false,
-            ruleSet: null,
+            ruleSetToSumit: null,
+            currentRuleSet: null,
             triggerBeingEdited: null,
             minDelay: 0,
             maxDelay: Infinity,
@@ -488,6 +491,7 @@ export default {
                 };
             }
             vm.setRuleSetInfo();
+            vm.setCurrentRuleSet();
             vm.effectiveTriggerFilteredRuleSets =
                 vm.setEffectiveTriggerFilteredRuleSet(vm.ruleSet);
             vm.setFallbackRuleSet();
@@ -509,7 +513,6 @@ export default {
                     this.ruleSet.context.patron_category_id || "*",
             };
 
-            // this.checkForExistingRules will reset this.ruleSet - prevent this from affecting submission
             const ruleSetToSubmit = cloneDeep({
                 context: { ...this.ruleSet.context },
             });
@@ -534,9 +537,6 @@ export default {
 
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
-                // store the ruleSet as loaded initially
-                const oldCircRule = cloneDeep(this.ruleSet);
-
                 // refresh this.ruleSet so it matches the database
                 this.ruleSet = await this.getRawSelectedRuleSet(
                     this.ruleSet.context.library_id,
@@ -545,7 +545,13 @@ export default {
                 );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
-                if (!isEqual(oldCircRule, this.ruleSet)) {
+                if (
+                    this.hasConflict(
+                        this.currentRuleSet,
+                        this.ruleSet,
+                        this.triggerNumber
+                    )
+                ) {
                     // refresh form
                     this.handleContextChange();
                     // prepare the alert message
@@ -611,6 +617,10 @@ export default {
                 lengthunit: this.ruleSet.lengthunit,
                 triggerCount: this.triggerCount,
             };
+        },
+        // save the ruleSet as loaded initially
+        setCurrentRuleSet() {
+            this.currentRuleSet = cloneDeep(this.ruleSet);
         },
         // assign the triggerNumber passed to the route or generate a new trigger number
         setTriggerNumber(triggerNumber) {
