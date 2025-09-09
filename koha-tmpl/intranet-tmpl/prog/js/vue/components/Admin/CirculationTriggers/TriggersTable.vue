@@ -46,6 +46,7 @@
             <tbody>
                 <tr
                     v-for="(ruleSet, i) in ruleSets"
+                    v-if="ruleSets"
                     :key="'ruleSet' + i"
                     :class="{
                         selected_rule_set:

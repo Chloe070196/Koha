@@ -121,10 +121,7 @@
                 </div>
                 <div
                     class="page-section bg-warning-subtle"
-                    v-if="
-                        effectiveTriggerFilteredRuleSets.length &&
-                        editMode !== 'confirmContext'
-                    "
+                    v-if="editMode !== 'confirmContext'"
                 >
                     <TriggersTable
                         :triggerNumber="triggerNumber"
@@ -140,7 +137,7 @@
             </fieldset>
             <fieldset
                 class="rows"
-                v-if="(editMode === 'edit' || editMode === 'add')"
+                v-if="editMode === 'edit' || editMode === 'add'"
             >
                 <legend v-if="editMode === 'add'">
                     {{ $__("Add new trigger") }}
@@ -511,18 +508,26 @@ export default {
             };
 
             // this.checkForExistingRules will reset this.ruleSet - prevent this from affecting submission
-            const ruleSetToSubmit = cloneDeep({context: {...this.ruleSet.context}});
-            ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
-                cloneDeep(this.ruleSet[`overdue_${this.triggerNumber}_delay`]);
-            ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] =
-                cloneDeep(this.ruleSet[`overdue_${this.triggerNumber}_notice`]);
+            const ruleSetToSubmit = cloneDeep({
+                context: { ...this.ruleSet.context },
+            });
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] = cloneDeep(
+                this.ruleSet[`overdue_${this.triggerNumber}_delay`]
+            );
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] = cloneDeep(
+                this.ruleSet[`overdue_${this.triggerNumber}_notice`]
+            );
             ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
-                cloneDeep(this.ruleSet[`overdue_${this.triggerNumber}_restrict`]);
-            ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] = cloneDeep(this.ruleSet?.[
-                `overdue_${this.triggerNumber}_mtt`
-            ].length
-                ? this.ruleSet[`overdue_${this.triggerNumber}_mtt`].join(",")
-                : null);
+                cloneDeep(
+                    this.ruleSet[`overdue_${this.triggerNumber}_restrict`]
+                );
+            ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] = cloneDeep(
+                this.ruleSet?.[`overdue_${this.triggerNumber}_mtt`].length
+                    ? this.ruleSet[`overdue_${this.triggerNumber}_mtt`].join(
+                          ","
+                      )
+                    : null
+            );
             ruleSetToSubmit[`overdue_${this.triggerNumber}_has_rules`] = true;
 
             // prevent race condition related edit conflicts
@@ -556,7 +561,7 @@ export default {
                 }
             }
 
-            this.updateCircRuleSets(ruleSetToSubmit)
+            this.updateCircRuleSets(ruleSetToSubmit);
 
             await this.$router.replace({
                 name: "CirculationTriggersList",
@@ -600,8 +605,8 @@ export default {
                 issuelength: this.ruleSet.issuelength,
                 decreaseloanholds: this.ruleSet.decreaseloanholds,
                 fine: this.ruleSet.fine,
-                chargeperiod:this.ruleSet.chargeperiod,
-                lengthunit:this.ruleSet.lengthunit,
+                chargeperiod: this.ruleSet.chargeperiod,
+                lengthunit: this.ruleSet.lengthunit,
                 triggerCount: this.triggerCount,
             };
         },
