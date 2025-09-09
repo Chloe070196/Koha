@@ -13,7 +13,7 @@
             :title="$__('Add new trigger')"
         />
     </Toolbar>
-    <div v-if="initialized">
+    <div v-if="filtersInitialized">
         <h1>{{ $__("Circulation triggers") }}</h1>
         <div class="page-section bg-info">
             <p>
@@ -96,7 +96,7 @@
                 }}
             </p>
         </div>
-        <div class="page-section" v-if="initialized">
+        <div class="page-section" v-if="filtersInitialized">
             <legend>
                 Filter by
                 <span style="color: blue; font-weight: bold">context</span>
@@ -202,7 +202,7 @@
             </div>
         </div>
     </div>
-    <div v-if="initialized">
+    <div v-if="filtersInitialized && ruleSetInitialized">
         <div id="circ_triggers_tabs" class="toptabs numbered">
             <ul class="nav nav-tabs" role="tablist">
                 <li
@@ -310,7 +310,8 @@ export default {
     },
     data() {
         return {
-            initialized: false,
+            filtersInitialized: false,
+            ruleSetInitialized: false,
             tabSelected: "Notice 1",
             showModal: false,
             displayAllApplicableRules: 1,
@@ -321,16 +322,21 @@ export default {
             await vm.getLibraries();
             await vm.getPatronCategories();
             await vm.getItemTypes();
-            await vm.setAllRawRuleSets();
-            vm.updateTriggerCount();
-            vm.setAllEffectiveRuleSets();
-            vm.setAllExhaustiveEffectiveRuleSets();
-            vm.filterRuleSetsbySearchParam();
-            vm.initialized = true;
+            vm.filtersInitialized = true;
+            await vm.filterRuleSetsbySearchParam();
         });
     },
     methods: {
-        filterRuleSetsbySearchParam() {
+        async filterRuleSetsbySearchParam() {
+            this.ruleSetInitialized = false;
+
+            // load the rules sets
+            // FIXME: only do so for library id changes
+            await this.setAllRawRuleSets();
+            this.updateTriggerCount();
+            this.setAllEffectiveRuleSets();
+            this.setAllExhaustiveEffectiveRuleSets();
+
             const selectedParams = {};
             selectedParams.effective = true;
             if (this.currentLibraryId) {
@@ -357,6 +363,7 @@ export default {
                 this.ruleSets = this.displayAllApplicableRules
                     ? this.allExhaustiveEffectiveRuleSets
                     : this.allEffectiveRuleSets;
+                this.ruleSetInitialized = true;
                 return;
             }
 
@@ -372,6 +379,7 @@ export default {
                             selectedParams.item_type_id &&
                         ruleSet.context.library_id === selectedParams.library_id
                 );
+                this.ruleSetInitialized = true;
                 return;
             }
 
@@ -387,6 +395,7 @@ export default {
                             selectedParams.patron_category_id &&
                         ruleSet.context.library_id === selectedParams.library_id
                 );
+                this.ruleSetInitialized = true;
                 return;
             }
 
@@ -403,6 +412,7 @@ export default {
                         selectedParams.patron_category_id &&
                     ruleSet.context.library_id === selectedParams.library_id
             );
+            this.ruleSetInitialized = true;
             return;
         },
         changeTabContent(e) {
