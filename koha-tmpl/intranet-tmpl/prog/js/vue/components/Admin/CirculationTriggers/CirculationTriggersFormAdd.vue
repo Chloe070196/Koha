@@ -503,35 +503,69 @@ export default {
             const ruleSetToSubmit = cloneDeep({
                 context: { ...this.ruleSetToSubmit.context },
             });
-            ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] = cloneDeep(
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`]
-            );
-            ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] = cloneDeep(
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`]
-            );
-            ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
-                cloneDeep(
-                    this.ruleSetToSubmit[
-                        `overdue_${this.triggerNumber}_restrict`
-                    ]
-                );
-            ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] = cloneDeep(
-                this.ruleSetToSubmit?.[`overdue_${this.triggerNumber}_mtt`]
-                    ?.length
-                    ? this.ruleSetToSubmit[
-                          `overdue_${this.triggerNumber}_mtt`
-                      ].join(",")
-                    : null
-            );
+
+            // ensure that no property is set to null as this would delete the rule!
+            if (
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] !==
+                null
+            ) {
+                ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
+                    cloneDeep(
+                        this.ruleSetToSubmit[
+                            `overdue_${this.triggerNumber}_delay`
+                        ]
+                    );
+            }
+
+            if (
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] !==
+                null
+            ) {
+                ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] =
+                    cloneDeep(
+                        this.ruleSetToSubmit[
+                            `overdue_${this.triggerNumber}_notice`
+                        ]
+                    );
+            }
+
+            if (
+                this.ruleSetToSubmit[
+                    `overdue_${this.triggerNumber}_restrict`
+                ] !== null
+            ) {
+                ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
+                    cloneDeep(
+                        this.ruleSetToSubmit[
+                            `overdue_${this.triggerNumber}_restrict`
+                        ]
+                    );
+            }
+
+            if (
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] !==
+                    null &&
+                Array.isArray(
+                    this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`]
+                )
+            ) {
+                ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] =
+                    cloneDeep(
+                        this.ruleSetToSubmit[
+                            `overdue_${this.triggerNumber}_mtt`
+                        ].join(",")
+                    );
+            }
+
             ruleSetToSubmit[`overdue_${this.triggerNumber}_has_rules`] = true;
 
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
                 // fetch db state so it matches the database
                 const ruleSetInDb = await this.getRawSelectedRuleSet(
-                    ruleSetInDb.context.library_id,
-                    ruleSetInDb.context.patron_category_id,
-                    ruleSetInDb.context.item_type_id
+                    this.ruleSetToSubmit.context.library_id,
+                    this.ruleSetToSubmit.context.patron_category_id,
+                    this.ruleSetToSubmit.context.item_type_id
                 );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
