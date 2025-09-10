@@ -272,14 +272,7 @@
                         </span>
                     </td>
 
-                    <td
-                        v-if="
-                            ruleSet[
-                                `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
-                            ]
-                        "
-                        class="actions"
-                    >
+                    <td class="actions">
                         <router-link
                             :to="{
                                 name: 'CirculationTriggersFormEdit',
@@ -301,7 +294,7 @@
                             v-if="
                                 ruleSet[
                                     `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
-                                ]
+                                ].value
                             "
                             :to="{
                                 name: 'CirculationTriggersFormConfirmReset',

@@ -127,6 +127,15 @@ export const useCircRulesStore = defineStore("circRules", {
                         selectedRuleSet.context.item_type_id
             );
 
+            // if handling 'has_rules', stop here
+            if (ruleSuffix === "has_rules") {
+                return {
+                    value: existingRule?.[`overdue_${triggerNumber}_has_rules`],
+                    isFallback:
+                        !existingRule?.[`overdue_${triggerNumber}_has_rules`],
+                };
+            }
+
             // If the current ruleSet's value is not null, use it directly
             if (existingRule !== undefined) {
                 return {
