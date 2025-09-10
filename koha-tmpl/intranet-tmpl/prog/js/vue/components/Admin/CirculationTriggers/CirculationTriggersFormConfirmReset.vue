@@ -37,21 +37,43 @@
                             <p>
                                 <strong>{{ $__("Library") }}:</strong>
                             </p>
-                            <p id="library_id">{{ $__(libraryName) }}</p>
+                            <p id="library_id">
+                                {{
+                                handleContext(
+                                    libraryId,
+                                    libraries,
+                                    "library_id",
+                                )
+                            }}</p>
                         </li>
                         <li>
                             <p>
                                 <strong>{{ $__("Patron category") }}:</strong>
                             </p>
                             <p id="patron_category_id">
-                                {{ $__(categoryName) }}
+                                {{
+                                    handleContext(
+                                        patronCategoryId,
+                                        patronCategories,
+                                        "patron_category_id"
+                                    )
+                                }}
                             </p>
                         </li>
                         <li>
                             <p>
                                 <strong>{{ $__("Item type") }}:</strong>
                             </p>
-                            <p id="item_type_id">{{ $__(itemTypeName) }}</p>
+                            <p id="item_type_id">
+                                {{
+                                handleContext(
+                                    itemTypeId,
+                                    itemTypes,
+                                    "item_type_id",
+                                    "description"
+                                )
+                            }}
+                        </p>
                         </li>
                     </ol>
                     <div v-else>
@@ -264,16 +286,15 @@
 </template>
 
 <script>
-import { APIClient } from "../../../fetch/api-client.js";
 import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
-import { isEqual, cloneDeep } from "lodash";
 
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
+        console.log(circRulesStore)
         const {
             handleContext,
             handleNotice,
@@ -281,6 +302,8 @@ export default {
             handleTransport,
             findEffectiveRule,
             getRawSelectedRuleSet,
+            updateCircRuleSets,
+            hasConflict,
         } = circRulesStore;
         const { letters, libraries, itemTypes, patronCategories } =
             storeToRefs(circRulesStore);
@@ -295,34 +318,30 @@ export default {
             handleRestrictions,
             handleTransport,
             getRawSelectedRuleSet,
+            updateCircRuleSets,
+            hasConflict,
         };
     },
     data() {
         return {
             alertMessage: null,
             initialized: false,
-            library_id: null,
-            patron_category_id: null,
-            item_type_id: null,
-            libraryName: null,
-            categoryName: null,
-            itemTypeName: null,
+            libraryId: "*",
+            itemTypeId: "*",
+            patronCategoryId: "*",
             triggerNumber: null,
             ruleSet: null,
+            currentRuleSet: null,
         };
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            const { query } = to;
-            await vm.getLibraryName();
-            await vm.getCategoryName();
-            await vm.getItemTypeName();
+            vm.setContext(to.query)
             vm.ruleSet = await vm.getRawSelectedRuleSet(
-                query.library_id,
-                query.patron_category_id,
-                query.item_type_id
+                vm.libraryId,
+                vm.itemTypeId,
+                vm.patronCategoryId
             );
-            vm.triggerNumber = to.query.triggerNumber;
             vm.initialized = true;
         });
     },
@@ -334,8 +353,19 @@ export default {
 
             // prevent race condition related edit conflicts
             // if any changes are detected, inform the user, display the new values and go back to editing
+            const ruleSetInDb = await this.getRawSelectedRuleSet(
+                this.ruleSetToSubmit.context.library_id,
+                this.ruleSetToSubmit.context.patron_category_id,
+                this.ruleSetToSubmit.context.item_type_id
+            );
 
-            if (await this.checkForChanges()) {
+            if (
+                this.hasConflict(
+                    this.ruleSet,
+                    ruleSetInDb,
+                    this.triggerNumber
+                )
+            ) {
                 this.alertMessage =
                     "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger below.";
                 // reload the form components that have changed, remain in edit mode
@@ -368,55 +398,18 @@ export default {
             circRule[`overdue_${this.triggerNumber}_has_rules`] =
                 null;
 
-            try {
-                const client = APIClient.circRule;
-                await client.circRules.update(circRule);
-                await this.$router.push({
-                    name: "CirculationTriggersList",
-                    query: { trigger: this.triggerNumber },
-                });
-                this.$router.go(0);
-            } catch (e) {
-                //TODO: handle e
-            }
+            this.updateCircRuleSets();
+            await this.$router.push({
+                name: "CirculationTriggersList",
+                query: { trigger: this.triggerNumber },
+            });
+            this.$router.go(0);
         },
-        async checkForChanges() {
-            const oldCircRule = cloneDeep(this.ruleSet);
-            await this.getRawSelectedRuleSet(
-                this.ruleSet.context.library_id,
-                this.ruleSet.patron_category_id,
-                this.ruleSet.item_type_id
-            );
-            return !isEqual(oldCircRule, this.ruleSet);
-        },
-        async getCategoryName() {
-            if (this.patron_category_id === "*") {
-                this.categoryName =
-                    "Default rule set for all patron categories";
-                return;
-            }
-            this.categoryName = this.patronCategories.find(
-                category =>
-                    category.patron_category_id === this.patron_category_id
-            );
-        },
-        async getItemTypeName() {
-            if (this.item_type_id === "*") {
-                this.itemTypeName = "Default rule set for all item types";
-                return;
-            }
-            this.itemTypeName = this.itemTypes.find(
-                type => type.item_type_id === this.item_type_id
-            );
-        },
-        async getLibraryName() {
-            if (this.library_id === "*") {
-                this.libraryName = "Default rule set for all libraries";
-                return;
-            }
-            this.libraryName = this.libraries.find(
-                library => library.library_id === this.library_id
-            );
+        setContext(query) {
+            this.libraryId = query.library_id ?? "*";
+            this.itemTypeId = query.item_type_id ?? "*";
+            this.patronCategoryId = query.patron_category_id ?? "*";
+            this.triggerNumber = query.triggerNumber;
         },
     },
     components: { ButtonSubmit, TriggerContext },
