@@ -294,7 +294,6 @@ import { storeToRefs } from "pinia";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
-        console.log(circRulesStore)
         const {
             handleContext,
             handleNotice,
