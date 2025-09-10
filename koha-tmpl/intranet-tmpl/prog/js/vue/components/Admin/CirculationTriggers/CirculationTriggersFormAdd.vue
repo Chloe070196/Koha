@@ -409,17 +409,13 @@ import { inject } from "vue";
 import { storeToRefs } from "pinia";
 import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
-import { isEqual, cloneDeep } from "lodash";
+import { cloneDeep } from "lodash";
 
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
         const {
-            getLibraries,
-            getPatronCategories,
-            getItemTypes,
             updateTriggerCount,
-            filterCircRulesByContext,
             findEffectiveRule,
             getRawSelectedRuleSet,
             setEffectiveTriggerFilteredRuleSet,
@@ -432,7 +428,6 @@ export default {
             itemTypes,
             transportTypes,
             patronCategories,
-            regex,
             triggerCount,
         } = storeToRefs(circRulesStore);
 
@@ -441,15 +436,10 @@ export default {
             itemTypes,
             libraries,
             transportTypes,
-            regex,
             triggerCount,
             patronCategories,
-            getLibraries,
-            getPatronCategories,
-            getItemTypes,
             getRawSelectedRuleSet,
             updateTriggerCount,
-            filterCircRulesByContext,
             findEffectiveRule,
             setEffectiveTriggerFilteredRuleSet,
             updateCircRuleSets,
@@ -576,8 +566,6 @@ export default {
                         this.triggerNumber
                     )
                 ) {
-                    // refresh form
-                    this.refreshState();
                     // prepare the alert message
                     this.alertMessage =
                         "Your changes could not be saved as this circulation trigger was updated elsewhere. Please see the updated trigger below.";
