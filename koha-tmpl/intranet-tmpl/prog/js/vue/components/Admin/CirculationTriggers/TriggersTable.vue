@@ -311,7 +311,6 @@
                                     patron_category_id:
                                         ruleSet.context.patron_category_id,
                                     triggerNumber: triggerNumber,
-                                    allCircRules: ruleSets,
                                 },
                             }"
                             class="btn btn-default btn-xs"
