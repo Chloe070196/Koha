@@ -638,18 +638,22 @@ export default {
                     "delay",
                     i
                 ).value,
-                [`overdue_${this.triggerNumber}_notice`]:
-                    this.findEffectiveRule(this.ruleSetToSubmit, "notice", i)
-                        .value,
-                [`overdue_${this.triggerNumber}_mtt`]: this.findEffectiveRule(
-                    this.ruleSetToSubmit,
-                    "mtt",
-                    i
-                ).value,
-                [`overdue_${this.triggerNumber}_restrict`]:
-                    this.findEffectiveRule(this.ruleSetToSubmit, "restrict", i)
-                        .value,
             };
+
+            if (this.editMode === "add") {
+                return;
+            }
+
+            this.fallbackRuleSet[`overdue_${this.triggerNumber}_notice`] =
+                this.findEffectiveRule(this.ruleSetToSubmit, "notice", i).value;
+            this.fallbackRuleSet[`overdue_${this.triggerNumber}_mtt`] =
+                this.findEffectiveRule(this.ruleSetToSubmit, "mtt", i).value;
+            this.fallbackRuleSet[`overdue_${this.triggerNumber}_restrict`] =
+                this.findEffectiveRule(
+                    this.ruleSetToSubmit,
+                    "restrict",
+                    i
+                ).value;
         },
         setMinDelay() {
             if (this.triggerNumber === 0 || this.triggerNumber === 1) {
