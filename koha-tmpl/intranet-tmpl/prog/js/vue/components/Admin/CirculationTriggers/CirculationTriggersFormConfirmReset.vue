@@ -1,6 +1,9 @@
 <template>
-    <div class="modal-content">
-        <form @submit="resetCircRule($event)">
+        <form 
+            id="circulation-trigger-form-confirm-reset"
+            @submit="resetCircRule($event)"
+            class="modal-content"
+        >
             <div class="modal-header">
                 <h1 class="modal-title">
                     {{ $__("Confirm circulation rule set reset") }}
@@ -416,6 +419,10 @@ export default {
 </script>
 
 <style scoped>
+#circulation-trigger-form-confirm-reset {
+    max-height: 90vh;
+}
+
 form li {
     display: flex;
     align-items: center;
