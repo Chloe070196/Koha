@@ -497,7 +497,8 @@ export default {
             );
             vm.updateTriggerCount(vm.ruleSetToSubmit);
             if (vm.editMode === "add") {
-                (vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_delay`] = 0),
+                (vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_delay`] =
+                    vm.minDelay),
                     (vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_notice`] =
                         null);
                 vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_mtt`] = null;
@@ -679,24 +680,24 @@ export default {
                 `overdue_${priorTriggerNumber}_delay`
             ]
                 ? parseInt(
-                      this.ruleSetToSubmit[
-                          `overdue_${priorTriggerNumber}_delay`
-                      ]
+                      this.currentRuleSet[`overdue_${priorTriggerNumber}_delay`]
                   ) + 1
                 : 0;
+            this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
+                this.minDelay;
         },
         setMaxDelay() {
             const nextTriggerNumber = this.triggerNumber + 1;
-            this.maxDelay = this.ruleSetToSubmit?.[
+            this.maxDelay = this.currentRuleSet?.[
                 `overdue_${nextTriggerNumber}_delay`
             ]
                 ? parseInt(
-                      this.ruleSetToSubmit[`overdue_${nextTriggerNumber}_delay`]
+                      this.currentRuleSet[`overdue_${nextTriggerNumber}_delay`]
                   ) - 1
                 : Infinity;
         },
         setFilteredLetters() {
-            let library = this.ruleSetToSubmit.context.library_id;
+            let library = this.currentRuleSet.context.library_id;
             const branchcodeMatches = letters.filter(
                 letter => letter.branchcode === library
             );
