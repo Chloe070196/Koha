@@ -469,10 +469,7 @@ export const useCircRulesStore = defineStore("circRules", {
             const effectiveTriggerFilteredRuleSets = [];
             for (let i = 1; i <= this.triggerCount; i++) {
                 const triggerSpecificRuleSet =
-                    this.formatTriggerSpecificRuleSetForDisplay(
-                        ruleSet,
-                        triggerNumber
-                    );
+                    this.formatTriggerSpecificRuleSetForDisplay(ruleSet, i);
                 effectiveTriggerFilteredRuleSets.push(triggerSpecificRuleSet);
             }
             return effectiveTriggerFilteredRuleSets;
