@@ -601,7 +601,7 @@ export default {
         },
         setContext(query) {
             this.libraryId = query.library_id ?? "*";
-            this.itemTypeId = query.item_typed_id ?? "*";
+            this.itemTypeId = query.item_type_id ?? "*";
             this.patronCategoryId = query.patron_category_id ?? "*";
         },
         setEditMode() {
