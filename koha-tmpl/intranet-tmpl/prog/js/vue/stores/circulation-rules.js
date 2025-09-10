@@ -199,6 +199,24 @@ export const useCircRulesStore = defineStore("circRules", {
                 isFallback: true,
             };
         },
+        formatTriggerSpecificRuleSetForDisplay(ruleSet, triggerNumber) {
+            const triggerSpecificRuleSet = {
+                context: { ...ruleSet.context },
+            };
+            if (ruleSet[`overdue_${triggerNumber}_has_rules`] === null) {
+                return false;
+            }
+            this.ruleSuffixes.forEach(ruleSuffix => {
+                triggerSpecificRuleSet[
+                    `overdue_${triggerNumber}_${ruleSuffix}`
+                ] = this.findEffectiveRule(
+                    triggerSpecificRuleSet,
+                    ruleSuffix,
+                    triggerNumber
+                );
+            });
+            return triggerSpecificRuleSet;
+        },
         async getItemTypes() {
             const client = APIClient.item;
             let itemTypes = [];
@@ -441,20 +459,11 @@ export const useCircRulesStore = defineStore("circRules", {
         setEffectiveTriggerFilteredRuleSet(ruleSet) {
             const effectiveTriggerFilteredRuleSets = [];
             for (let i = 1; i <= this.triggerCount; i++) {
-                const triggerSpecificRuleSet = {
-                    context: { ...ruleSet.context },
-                };
-                if (ruleSet[`overdue_${i}_has_rules`] === null) {
-                    continue;
-                }
-                this.ruleSuffixes.forEach(ruleSuffix => {
-                    triggerSpecificRuleSet[`overdue_${i}_${ruleSuffix}`] =
-                        this.findEffectiveRule(
-                            triggerSpecificRuleSet,
-                            ruleSuffix,
-                            i
-                        );
-                });
+                const triggerSpecificRuleSet =
+                    this.formatTriggerSpecificRuleSetForDisplay(
+                        ruleSet,
+                        triggerNumber
+                    );
                 effectiveTriggerFilteredRuleSets.push(triggerSpecificRuleSet);
             }
             return effectiveTriggerFilteredRuleSets;
