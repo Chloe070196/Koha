@@ -344,8 +344,8 @@ export default {
             vm.setContext(to.query);
             vm.ruleSet = await vm.getRawSelectedRuleSet(
                 vm.libraryId,
-                vm.itemTypeId,
-                vm.patronCategoryId
+                vm.patronCategoryId,
+                vm.itemTypeId
             );
             vm.effectiveRuleSet = vm.formatTriggerSpecificRuleSetForDisplay(
                 vm.ruleSet,
