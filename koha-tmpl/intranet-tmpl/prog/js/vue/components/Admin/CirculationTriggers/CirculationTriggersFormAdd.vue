@@ -443,8 +443,8 @@ export default {
             initialized: false,
             triggerNumber: 1,
             libraryId: "*",
-            itemTypeId: null,
-            patronCategoryId: null,
+            itemTypeId: "*",
+            patronCategoryId: "*",
             fallbackRuleSet: null,
             ruleSetInfo: {
                 issuelength: null,
@@ -469,20 +469,21 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             const { query } = to;
+            vm.setContext(query);
             vm.setEditMode();
             vm.setTriggerNumber(query.triggerNumber);
             if (vm.editMode === "edit") {
                 vm.ruleSet = await vm.getRawSelectedRuleSet(
-                    query.library_id,
-                    query.patron_category_id,
-                    query.item_type_id
+                    vm.libraryId,
+                    vm.patronCategoryId,
+                    vm.itemTypeId
                 );
             } else {
                 vm.ruleSet = {
                     context: {
-                        library_id: query.library_id ?? "*",
-                        patron_category_id: query.patron_category_id ?? "*",
-                        item_type_id: query.item_type_id ?? "*",
+                        library_id: vm.libraryId ?? "*",
+                        patron_category_id: vm.patronCategoryId ?? "*",
+                        item_type_id: vm.itemTypeId ?? "*",
                     },
                     [`overdue_${vm.triggerNumber}_delay`]: 0,
                     [`overdue_${vm.triggerNumber}_notice`]: null,
@@ -602,6 +603,11 @@ export default {
             this.effectiveTriggerFilteredRuleSets =
                 this.setEffectiveTriggerFilteredRuleSet(this.ruleSet);
             this.setFallbackRuleSet();
+        },
+        setContext(query) {
+            this.libraryId = query.library_id ?? "*";
+            this.itemTypeId = query.item_typed_id ?? "*";
+            this.patronCategoryId = query.patron_category_id ?? "*";
         },
         setEditMode() {
             this.editMode = this.$route.path.substring(
