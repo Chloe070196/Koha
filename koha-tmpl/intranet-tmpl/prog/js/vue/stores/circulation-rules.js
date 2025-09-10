@@ -27,19 +27,9 @@ export const useCircRulesStore = defineStore("circRules", {
         ],
         regex: /overdue_(\d+)_has_rules/,
         // rule sets
-        // TODO: confirm which are useful to keep
-        // TODO: make them trigger number specific
-        // rawContextFilteredRuleSets: [],
-        // rawTabFilteredRuleSets: [],
-        // rawContextRuleSets: [],
         allDefaultLibraryRawRuleSets: [], // source of truth for default library
         allCurrentLibraryRawRuleSets: [], // source of truth for current library
-        // effectiveContextFilteredRuleSets: [],
-        // effectiveContextRuleSets: [],
         allEffectiveRuleSets: [], // main data set for display explicitly set rules for current library
-        // exhaustiveEffectiveContextFilteredRuleSets: [],
-        // exhaustiveEffectiveTabFilteredRuleSets: [],
-        // exhaustiveEffectiveContextRuleSets: [],
         allExhaustiveEffectiveRuleSets: [], // main data set for display all applied rules for current library
     }),
     actions: {
