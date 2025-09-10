@@ -38,7 +38,7 @@
                             label="name"
                             :reduce="lib => lib.library_id"
                             :options="libraries"
-                            @update:modelValue="handleContextChange($event)"
+                            @update:modelValue="refreshState($event)"
                             :disabled="editMode !== 'confirmContext'"
                         >
                             <template #search="{ attributes, events }">
@@ -62,7 +62,7 @@
                             label="name"
                             :reduce="cat => cat.patron_category_id"
                             :options="patronCategories"
-                            @update:modelValue="handleContextChange($event)"
+                            @update:modelValue="refreshState($event)"
                             :disabled="editMode !== 'confirmContext'"
                         >
                             <template #search="{ attributes, events }">
@@ -86,7 +86,7 @@
                             label="description"
                             :reduce="type => type.item_type_id"
                             :options="itemTypes"
-                            @update:modelValue="handleContextChange($event)"
+                            @update:modelValue="refreshState($event)"
                             :disabled="editMode !== 'confirmContext'"
                         >
                             <template #search="{ attributes, events }">
@@ -486,35 +486,7 @@ export default {
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            const { query } = to;
-            vm.setContext(query);
-            vm.setEditMode();
-            vm.setTriggerNumber(query.triggerNumber);
-            vm.ruleSetToSubmit = await vm.getRawSelectedRuleSet(
-                vm.libraryId,
-                vm.patronCategoryId,
-                vm.itemTypeId
-            );
-            vm.updateTriggerCount(vm.ruleSetToSubmit);
-            if (vm.editMode === "add") {
-                (vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_delay`] =
-                    vm.minDelay),
-                    (vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_notice`] =
-                        null);
-                vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_mtt`] = null;
-                vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_restrict`] =
-                    null;
-            }
-            vm.setCurrentRuleSet();
-            vm.setRuleSetInfo();
-            vm.effectiveTriggerFilteredRuleSets =
-                vm.setEffectiveTriggerFilteredRuleSet(vm.ruleSetToSubmit);
-            vm.setFallbackRuleSet();
-            vm.setMinDelay();
-            vm.setMaxDelay();
-            vm.setFilteredLetters();
-            vm.isReadyForSubmission();
-            vm.initialized = true;
+            vm.refreshState(to.query);
         });
     },
     methods: {
@@ -555,23 +527,23 @@ export default {
 
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
-                // refresh this.ruleSetToSubmit so it matches the database
-                this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
-                    this.ruleSetToSubmit.context.library_id,
-                    this.ruleSetToSubmit.context.patron_category_id,
-                    this.ruleSetToSubmit.context.item_type_id
+                // fetch db state so it matches the database
+                const ruleSetInDb = await this.getRawSelectedRuleSet(
+                    ruleSetInDb.context.library_id,
+                    ruleSetInDb.context.patron_category_id,
+                    ruleSetInDb.context.item_type_id
                 );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (
                     this.hasConflict(
                         this.currentRuleSet,
-                        this.ruleSetToSubmit,
+                        ruleSetInDb,
                         this.triggerNumber
                     )
                 ) {
                     // refresh form
-                    this.handleContextChange();
+                    this.refreshState();
                     // prepare the alert message
                     this.alertMessage =
                         "Your changes could not be saved as this circulation trigger was updated elsewhere. Please see the updated trigger below.";
@@ -595,7 +567,10 @@ export default {
             });
             this.$router.go(0);
         },
-        async handleContextChange() {
+        async refreshState(query = this.$route.query) {
+            this.setContext(query);
+            this.setEditMode();
+            this.setTriggerNumber(query.triggerNumber);
             this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
                 this.libraryId,
                 this.patronCategoryId,
@@ -604,7 +579,7 @@ export default {
             this.updateTriggerCount(this.ruleSetToSubmit);
             if (this.editMode === "add") {
                 (this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
-                    0),
+                    this.minDelay),
                     (this.ruleSetToSubmit[
                         `overdue_${this.triggerNumber}_notice`
                     ] = null);
@@ -613,10 +588,16 @@ export default {
                 this.ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
                     null;
             }
+            this.setCurrentRuleSet();
             this.setRuleSetInfo();
             this.effectiveTriggerFilteredRuleSets =
                 this.setEffectiveTriggerFilteredRuleSet(this.ruleSetToSubmit);
             this.setFallbackRuleSet();
+            this.setMinDelay();
+            this.setMaxDelay();
+            this.setFilteredLetters();
+            this.isReadyForSubmission();
+            this.initialized = true;
         },
         setContext(query) {
             this.libraryId = query.library_id ?? "*";
