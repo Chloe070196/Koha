@@ -106,10 +106,11 @@
                         :to="{
                             name: 'CirculationTriggersSelectOrAdd',
                             query: {
-                                library_id: ruleSet.context.library_id,
-                                item_type_id: ruleSet.context.item_type_id,
+                                library_id: ruleSetToSubmit.context.library_id,
+                                item_type_id:
+                                    ruleSetToSubmit.context.item_type_id,
                                 patron_category_id:
-                                    ruleSet.context.patron_category_id,
+                                    ruleSetToSubmit.context.patron_category_id,
                             },
                         }"
                         class="btn btn-default btn-xs"
@@ -125,7 +126,7 @@
                         :triggerNumber="triggerNumber"
                         :modal="true"
                         :ruleSets="effectiveTriggerFilteredRuleSets"
-                        :ruleSetBeingEdited="ruleSet"
+                        :ruleSetBeingEdited="currentRuleSet"
                         :triggerBeingEdited="triggerBeingEdited"
                     />
                 </div>
@@ -153,7 +154,7 @@
                                     @change="isReadyForSubmission"
                                     id="overdue_delay"
                                     v-model="
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_delay`
                                         ]
                                     "
@@ -169,17 +170,17 @@
                                 />
                                 <button
                                     v-if="
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_delay`
                                         ] !== null &&
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_delay`
                                         ] !== undefined
                                     "
                                     type="button"
                                     class="clear-btn"
                                     @click="
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_delay`
                                         ] = null
                                     "
@@ -223,7 +224,9 @@
                                 type="radio"
                                 id="restricts-yes"
                                 v-model="
-                                    ruleSet[`overdue_${triggerNumber}_restrict`]
+                                    ruleSetToSubmit[
+                                        `overdue_${triggerNumber}_restrict`
+                                    ]
                                 "
                                 :value="1"
                             />
@@ -233,7 +236,9 @@
                                 type="radio"
                                 id="restricts-no"
                                 v-model="
-                                    ruleSet[`overdue_${triggerNumber}_restrict`]
+                                    ruleSetToSubmit[
+                                        `overdue_${triggerNumber}_restrict`
+                                    ]
                                 "
                                 :value="0"
                             />
@@ -243,7 +248,9 @@
                                 type="radio"
                                 id="restricts-fallback"
                                 v-model="
-                                    ruleSet[`overdue_${triggerNumber}_restrict`]
+                                    ruleSetToSubmit[
+                                        `overdue_${triggerNumber}_restrict`
+                                    ]
                                 "
                                 :value="null"
                             />
@@ -284,7 +291,11 @@
                         <label for="letter_code">{{ $__("Letter") }}:</label>
                         <v-select
                             id="letter_code"
-                            v-model="ruleSet[`overdue_${triggerNumber}_notice`]"
+                            v-model="
+                                ruleSetToSubmit[
+                                    `overdue_${triggerNumber}_notice`
+                                ]
+                            "
                             label="name"
                             :reduce="type => type.code"
                             :options="filteredLetters"
@@ -297,10 +308,10 @@
                                     v-bind="attributes"
                                     v-on="events"
                                     :placeholder="
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_notice`
                                         ] === null ||
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_notice`
                                         ] === undefined
                                             ? letters.find(
@@ -321,11 +332,15 @@
                     </li>
                     <li
                         v-if="
-                            ruleSet[`overdue_${triggerNumber}_notice`] !== '' ||
-                            ((ruleSet[`overdue_${triggerNumber}_notice`] ===
-                                null ||
-                                ruleSet[`overdue_${triggerNumber}_notice`] ===
-                                    undefined) &&
+                            ruleSetToSubmit[
+                                `overdue_${triggerNumber}_notice`
+                            ] !== '' ||
+                            ((ruleSetToSubmit[
+                                `overdue_${triggerNumber}_notice`
+                            ] === null ||
+                                ruleSetToSubmit[
+                                    `overdue_${triggerNumber}_notice`
+                                ] === undefined) &&
                                 fallbackRuleSet?.[
                                     `overdue_${triggerNumber}_notice`
                                 ] !== '')
@@ -334,7 +349,9 @@
                         <label for="mtt">{{ $__("Transport type(s)") }}:</label>
                         <v-select
                             id="mtt"
-                            v-model="ruleSet[`overdue_${triggerNumber}_mtt`]"
+                            v-model="
+                                ruleSetToSubmit[`overdue_${triggerNumber}_mtt`]
+                            "
                             label="name"
                             :reduce="type => type.code"
                             :options="transportTypes"
@@ -347,14 +364,15 @@
                                     v-bind="attributes"
                                     v-on="events"
                                     :placeholder="
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_mtt`
                                         ] === null ||
-                                        ruleSet[
+                                        ruleSetToSubmit[
                                             `overdue_${triggerNumber}_mtt`
                                         ] === undefined ||
-                                        ruleSet[`overdue_${triggerNumber}_mtt`]
-                                            .length === 0
+                                        ruleSetToSubmit[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ].length === 0
                                             ? fallbackRuleSet?.[
                                                   `overdue_${triggerNumber}_mtt`
                                               ]
@@ -455,7 +473,7 @@ export default {
                 triggerCount: null,
             },
             editMode: false,
-            ruleSetToSumit: null,
+            ruleSetToSubmit: null,
             currentRuleSet: null,
             triggerBeingEdited: null,
             minDelay: 0,
@@ -472,29 +490,24 @@ export default {
             vm.setContext(query);
             vm.setEditMode();
             vm.setTriggerNumber(query.triggerNumber);
-            if (vm.editMode === "edit") {
-                vm.ruleSet = await vm.getRawSelectedRuleSet(
-                    vm.libraryId,
-                    vm.patronCategoryId,
-                    vm.itemTypeId
-                );
-            } else {
-                vm.ruleSet = {
-                    context: {
-                        library_id: vm.libraryId ?? "*",
-                        patron_category_id: vm.patronCategoryId ?? "*",
-                        item_type_id: vm.itemTypeId ?? "*",
-                    },
-                    [`overdue_${vm.triggerNumber}_delay`]: 0,
-                    [`overdue_${vm.triggerNumber}_notice`]: null,
-                    [`overdue_${vm.triggerNumber}_mtt`]: null,
-                    [`overdue_${vm.triggerNumber}_restrict`]: null,
-                };
+            vm.ruleSetToSubmit = await vm.getRawSelectedRuleSet(
+                vm.libraryId,
+                vm.patronCategoryId,
+                vm.itemTypeId
+            );
+            vm.updateTriggerCount(vm.ruleSetToSubmit);
+            if (vm.editMode === "add") {
+                (vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_delay`] = 0),
+                    (vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_notice`] =
+                        null);
+                vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_mtt`] = null;
+                vm.ruleSetToSubmit[`overdue_${vm.triggerNumber}_restrict`] =
+                    null;
             }
-            vm.setRuleSetInfo();
             vm.setCurrentRuleSet();
+            vm.setRuleSetInfo();
             vm.effectiveTriggerFilteredRuleSets =
-                vm.setEffectiveTriggerFilteredRuleSet(vm.ruleSet);
+                vm.setEffectiveTriggerFilteredRuleSet(vm.ruleSetToSubmit);
             vm.setFallbackRuleSet();
             vm.setMinDelay();
             vm.setMaxDelay();
@@ -508,48 +521,51 @@ export default {
             e.preventDefault();
 
             const context = {
-                library_id: this.ruleSet.context.library_id || "*",
-                item_type_id: this.ruleSet.context.item_type_id || "*",
+                library_id: this.ruleSetToSubmit.context.library_id || "*",
+                item_type_id: this.ruleSetToSubmit.context.item_type_id || "*",
                 patron_category_id:
-                    this.ruleSet.context.patron_category_id || "*",
+                    this.ruleSetToSubmit.context.patron_category_id || "*",
             };
 
             const ruleSetToSubmit = cloneDeep({
-                context: { ...this.ruleSet.context },
+                context: { ...this.ruleSetToSubmit.context },
             });
             ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] = cloneDeep(
-                this.ruleSet[`overdue_${this.triggerNumber}_delay`]
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`]
             );
             ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] = cloneDeep(
-                this.ruleSet[`overdue_${this.triggerNumber}_notice`]
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`]
             );
             ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
                 cloneDeep(
-                    this.ruleSet[`overdue_${this.triggerNumber}_restrict`]
+                    this.ruleSetToSubmit[
+                        `overdue_${this.triggerNumber}_restrict`
+                    ]
                 );
             ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] = cloneDeep(
-                this.ruleSet?.[`overdue_${this.triggerNumber}_mtt`]?.length
-                    ? this.ruleSet[`overdue_${this.triggerNumber}_mtt`].join(
-                          ","
-                      )
+                this.ruleSetToSubmit?.[`overdue_${this.triggerNumber}_mtt`]
+                    ?.length
+                    ? this.ruleSetToSubmit[
+                          `overdue_${this.triggerNumber}_mtt`
+                      ].join(",")
                     : null
             );
             ruleSetToSubmit[`overdue_${this.triggerNumber}_has_rules`] = true;
 
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
-                // refresh this.ruleSet so it matches the database
-                this.ruleSet = await this.getRawSelectedRuleSet(
-                    this.ruleSet.context.library_id,
-                    this.ruleSet.context.patron_category_id,
-                    this.ruleSet.context.item_type_id
+                // refresh this.ruleSetToSubmit so it matches the database
+                this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
+                    this.ruleSetToSubmit.context.library_id,
+                    this.ruleSetToSubmit.context.patron_category_id,
+                    this.ruleSetToSubmit.context.item_type_id
                 );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (
                     this.hasConflict(
                         this.currentRuleSet,
-                        this.ruleSet,
+                        this.ruleSetToSubmit,
                         this.triggerNumber
                     )
                 ) {
@@ -579,29 +595,26 @@ export default {
             this.$router.go(0);
         },
         async handleContextChange() {
-            if (this.editMode === "edit") {
-                this.ruleSet = await this.getRawSelectedRuleSet(
-                    this.library_id,
-                    this.patron_category_id,
-                    this.item_type_id
-                );
-                this.updateTriggerCount(this.ruleSet);
-            } else {
-                this.ruleSet = {
-                    context: {
-                        library_id: this.library_id ?? "*",
-                        patron_category_id: this.patron_category_id ?? "*",
-                        item_type_id: this.item_type_id ?? "*",
-                    },
-                    [`overdue_${this.triggerNumber}_delay`]: 0,
-                    [`overdue_${this.triggerNumber}_notice`]: null,
-                    [`overdue_${this.triggerNumber}_mtt`]: null,
-                    [`overdue_${this.triggerNumber}_restrict`]: null,
-                };
+            this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
+                this.libraryId,
+                this.patronCategoryId,
+                this.itemTypeId
+            );
+            this.updateTriggerCount(this.ruleSetToSubmit);
+            if (this.editMode === "add") {
+                (this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
+                    0),
+                    (this.ruleSetToSubmit[
+                        `overdue_${this.triggerNumber}_notice`
+                    ] = null);
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] =
+                    null;
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
+                    null;
             }
             this.setRuleSetInfo();
             this.effectiveTriggerFilteredRuleSets =
-                this.setEffectiveTriggerFilteredRuleSet(this.ruleSet);
+                this.setEffectiveTriggerFilteredRuleSet(this.ruleSetToSubmit);
             this.setFallbackRuleSet();
         },
         setContext(query) {
@@ -616,17 +629,17 @@ export default {
         },
         setRuleSetInfo() {
             this.ruleSetInfo = {
-                issuelength: this.ruleSet.issuelength,
-                decreaseloanholds: this.ruleSet.decreaseloanholds,
-                fine: this.ruleSet.fine,
-                chargeperiod: this.ruleSet.chargeperiod,
-                lengthunit: this.ruleSet.lengthunit,
+                issuelength: this.currentRuleSet.issuelength,
+                decreaseloanholds: this.currentRuleSet.decreaseloanholds,
+                fine: this.currentRuleSet.fine,
+                chargeperiod: this.currentRuleSet.chargeperiod,
+                lengthunit: this.currentRuleSet.lengthunit,
                 triggerCount: this.triggerCount,
             };
         },
         // save the ruleSet as loaded initially
         setCurrentRuleSet() {
-            this.currentRuleSet = cloneDeep(this.ruleSet);
+            this.currentRuleSet = cloneDeep(this.ruleSetToSubmit);
         },
         // assign the triggerNumber passed to the route or generate a new trigger number
         setTriggerNumber(triggerNumber) {
@@ -639,19 +652,21 @@ export default {
         setFallbackRuleSet() {
             this.fallbackRuleSet = {
                 [`overdue_${this.triggerNumber}_delay`]: this.findEffectiveRule(
-                    this.ruleSet,
+                    this.ruleSetToSubmit,
                     "delay",
                     i
                 ).value,
                 [`overdue_${this.triggerNumber}_notice`]:
-                    this.findEffectiveRule(this.ruleSet, "notice", i).value,
+                    this.findEffectiveRule(this.ruleSetToSubmit, "notice", i)
+                        .value,
                 [`overdue_${this.triggerNumber}_mtt`]: this.findEffectiveRule(
-                    this.ruleSet,
+                    this.ruleSetToSubmit,
                     "mtt",
                     i
                 ).value,
                 [`overdue_${this.triggerNumber}_restrict`]:
-                    this.findEffectiveRule(this.ruleSet, "restrict", i).value,
+                    this.findEffectiveRule(this.ruleSetToSubmit, "restrict", i)
+                        .value,
             };
         },
         setMinDelay() {
@@ -660,21 +675,28 @@ export default {
                 return;
             }
             const priorTriggerNumber = this.triggerNumber - 1;
-            this.minDelay = this.ruleSet[`overdue_${priorTriggerNumber}_delay`]
+            this.minDelay = this.ruleSetToSubmit[
+                `overdue_${priorTriggerNumber}_delay`
+            ]
                 ? parseInt(
-                      this.ruleSet[`overdue_${priorTriggerNumber}_delay`]
+                      this.ruleSetToSubmit[
+                          `overdue_${priorTriggerNumber}_delay`
+                      ]
                   ) + 1
                 : 0;
         },
         setMaxDelay() {
             const nextTriggerNumber = this.triggerNumber + 1;
-            this.maxDelay = this.ruleSet?.[`overdue_${nextTriggerNumber}_delay`]
-                ? parseInt(this.ruleSet[`overdue_${nextTriggerNumber}_delay`]) -
-                  1
+            this.maxDelay = this.ruleSetToSubmit?.[
+                `overdue_${nextTriggerNumber}_delay`
+            ]
+                ? parseInt(
+                      this.ruleSetToSubmit[`overdue_${nextTriggerNumber}_delay`]
+                  ) - 1
                 : Infinity;
         },
         setFilteredLetters() {
-            let library = this.ruleSet.context.library_id;
+            let library = this.ruleSetToSubmit.context.library_id;
             const branchcodeMatches = letters.filter(
                 letter => letter.branchcode === library
             );
@@ -703,19 +725,24 @@ export default {
 
             // Set to minDelay if it's null or undefined
             if (
-                this.ruleSet[`overdue_${this.triggerNumber}_delay`] ===
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] ===
                     undefined ||
-                this.ruleSet[`overdue_${this.triggerNumber}_delay`] === null
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] ===
+                    null
             ) {
-                this.ruleSet[`overdue_${this.triggerNumber}_delay`] = min;
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
+                    min;
             }
 
             // Increment within the valid range
             else {
-                this.ruleSet[`overdue_${this.triggerNumber}_delay`] = Math.min(
-                    this.ruleSet[`overdue_${this.triggerNumber}_delay`] + 1,
-                    max
-                );
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
+                    Math.min(
+                        this.ruleSetToSubmit[
+                            `overdue_${this.triggerNumber}_delay`
+                        ] + 1,
+                        max
+                    );
             }
             this.isReadyForSubmission();
         },
@@ -723,18 +750,25 @@ export default {
             // Check for minDelay
             const min = this.minDelay !== undefined ? this.minDelay : 1;
             // Decrement only if greater than minDelay
-            if (this.ruleSet[`overdue_${this.triggerNumber}_delay`] > min) {
-                this.ruleSet[`overdue_${this.triggerNumber}_delay`]--;
+            if (
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] >
+                min
+            ) {
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`]--;
             }
             this.isReadyForSubmission();
         },
         isReadyForSubmission() {
             this.allowSubmission =
-                this.ruleSet[`overdue_${this.triggerNumber}_delay`] !== null ||
-                this.ruleSet[`overdue_${this.triggerNumber}_notice`] !== null ||
-                this.ruleSet[`overdue_${this.triggerNumber}_mtt`]?.length !==
-                    0 ||
-                this.ruleSet[`overdue_${this.triggerNumber}_restrict`] !== null;
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] !==
+                    null ||
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] !==
+                    null ||
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`]
+                    ?.length !== 0 ||
+                this.ruleSetToSubmit[
+                    `overdue_${this.triggerNumber}_restrict`
+                ] !== null;
         },
     },
     watch: {
