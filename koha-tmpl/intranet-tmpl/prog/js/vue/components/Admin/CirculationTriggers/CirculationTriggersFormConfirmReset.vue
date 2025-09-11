@@ -376,7 +376,7 @@ export default {
                 )
             ) {
                 this.alertMessage =
-                    "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger below.";
+                    "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger above.";
                 // reload the form components that have changed, remain in edit mode
                 this.$router.push({
                     path: "/cgi-bin/koha/admin/circulation_triggers/reset",
