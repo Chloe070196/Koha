@@ -265,11 +265,9 @@ import { storeToRefs } from "pinia";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
+        circRulesStore.init();
         const {
             setEffectiveTriggerFilteredRuleSets,
-            getLibraries,
-            getPatronCategories,
-            getItemTypes,
             updateTriggerCount,
             setAllRawRuleSets,
             setAllEffectiveRuleSets,
@@ -296,9 +294,6 @@ export default {
             libraries,
             triggerCounts,
             patronCategories,
-            getLibraries,
-            getPatronCategories,
-            getItemTypes,
             updateTriggerCount,
             allExhaustiveEffectiveRuleSets,
             setAllRawRuleSets,
@@ -319,9 +314,6 @@ export default {
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            await vm.getLibraries();
-            await vm.getPatronCategories();
-            await vm.getItemTypes();
             vm.filtersInitialized = true;
             await vm.filterRuleSetsbySearchParam();
         });

@@ -13,11 +13,11 @@ export const useCircRulesStore = defineStore("circRules", {
         currentLibraryId: "*",
         currentPatronCategoryId: null,
         currentItemTypeId: null,
+        triggerCounts: { "*": 0 },
+        // references
         itemTypes: [],
         libraries: [],
         patronCategories: [],
-        triggerCounts: { "*": 0 },
-        // references
         letters: [],
         ruleSuffixes: ["delay", "notice", "mtt", "restrict", "has_rules"],
         transportTypes: [
@@ -482,6 +482,12 @@ export const useCircRulesStore = defineStore("circRules", {
                 i++;
             }
             this.triggerCounts[this.currentLibraryId] = i - 1;
+        },
+        async init() {
+            await this.getItemTypes();
+            await this.getLibraries();
+            await this.getPatronCategories();
+            await this.getLetters();
         },
     },
 });
