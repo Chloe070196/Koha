@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 import { $__ } from "../i18n";
 import { APIClient } from "../fetch/api-client.js";
-import { isEqual } from "lodash";
-import { faGrinTongueSquint } from "@fortawesome/free-solid-svg-icons";
+import { cloneDeep, isEqual } from "lodash";
 
 export const useCircRulesStore = defineStore("circRules", {
     // NOTES ON RULE SETS TYPES
