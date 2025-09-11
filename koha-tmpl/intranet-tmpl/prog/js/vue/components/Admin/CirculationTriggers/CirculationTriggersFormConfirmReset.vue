@@ -86,7 +86,9 @@
             </fieldset>
 
             <fieldset class="rows">
-                <legend>{{ $__("Rule set for reset") }}</legend>
+                <legend>
+                    {{ $__("Rules (overrides) which will be deleted") }}
+                </legend>
                 <table>
                     <thead>
                         <th>
@@ -111,14 +113,13 @@
                     <tbody v-if="initialized">
                         <tr>
                             <!-- Delay -->
-                            <td
-                                v-if="
-                                    effectiveRuleSet[
-                                        `overdue_${triggerNumber}_has_rules`
-                                    ]
-                                "
-                            >
+                            <td>
                                 <span
+                                    v-if="
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_delay`
+                                        ]
+                                    "
                                     :class="{
                                         fallback:
                                             effectiveRuleSet[
@@ -135,14 +136,13 @@
                             </td>
 
                             <!--  Notice -->
-                            <td
-                                v-if="
-                                    effectiveRuleSet[
-                                        `overdue_${triggerNumber}_has_rules`
-                                    ]
-                                "
-                            >
+                            <td>
                                 <span
+                                    v-if="
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_notice`
+                                        ]
+                                    "
                                     :class="{
                                         fallback:
                                             effectiveRuleSet[
@@ -160,14 +160,13 @@
                                 </span>
                             </td>
                             <!-- Email -->
-                            <td
-                                v-if="
-                                    effectiveRuleSet[
-                                        `overdue_${triggerNumber}_has_rules`
-                                    ]
-                                "
-                            >
+                            <td>
                                 <span
+                                    v-if="
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ]?.length
+                                    "
                                     :class="{
                                         fallback:
                                             effectiveRuleSet[
@@ -186,14 +185,13 @@
                                 </span>
                             </td>
                             <!-- Print -->
-                            <td
-                                v-if="
-                                    effectiveRuleSet[
-                                        `overdue_${triggerNumber}_has_rules`
-                                    ]
-                                "
-                            >
+                            <td>
                                 <span
+                                    v-if="
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ]?.length
+                                    "
                                     :class="{
                                         fallback:
                                             effectiveRuleSet[
@@ -212,14 +210,13 @@
                                 </span>
                             </td>
                             <!-- SMS -->
-                            <td
-                                v-if="
-                                    effectiveRuleSet[
-                                        `overdue_${triggerNumber}_has_rules`
-                                    ]
-                                "
-                            >
+                            <td>
                                 <span
+                                    v-if="
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ]?.length
+                                    "
                                     :class="{
                                         fallback:
                                             effectiveRuleSet[
@@ -238,14 +235,13 @@
                                 </span>
                             </td>
                             <!-- Restricts Checkouts -->
-                            <td
-                                v-if="
-                                    effectiveRuleSet[
-                                        `overdue_${triggerNumber}_has_rules`
-                                    ]
-                                "
-                            >
+                            <td>
                                 <span
+                                    v-if="
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_restrict`
+                                        ]
+                                    "
                                     :class="{
                                         fallback:
                                             effectiveRuleSet[
@@ -350,7 +346,8 @@ export default {
             );
             vm.effectiveRuleSet = vm.formatTriggerSpecificRuleSetForDisplay(
                 vm.currentRuleSet,
-                vm.triggerNumber
+                vm.triggerNumber,
+                false
             );
             vm.initialized = true;
         });

@@ -33,7 +33,12 @@ export const useCircRulesStore = defineStore("circRules", {
         allExhaustiveEffectiveRuleSets: [], // main data set for display all applied rules for current library
     }),
     actions: {
-        findEffectiveRule(selectedRuleSet, ruleSuffix, triggerNumber) {
+        findEffectiveRule(
+            selectedRuleSet,
+            ruleSuffix,
+            triggerNumber,
+            includeFallbacks = true
+        ) {
             const currentAndDefaultRawRuleSets = [
                 ...this.allCurrentLibraryRawRuleSets,
                 ...this.allDefaultLibraryRawRuleSets,
@@ -78,6 +83,11 @@ export const useCircRulesStore = defineStore("circRules", {
                     isFallback:
                         !existingRule[`overdue_${triggerNumber}_has_rules`],
                 };
+            }
+
+            // If set to return a raw set, return
+            if (!includeFallbacks) {
+                return;
             }
 
             // Filter ruleSets to only those with non-null values for the specified ruleSuffix
@@ -141,7 +151,11 @@ export const useCircRulesStore = defineStore("circRules", {
                 isFallback: true,
             };
         },
-        formatTriggerSpecificRuleSetForDisplay(ruleSet, triggerNumber) {
+        formatTriggerSpecificRuleSetForDisplay(
+            ruleSet,
+            triggerNumber,
+            includeFallbacks = true
+        ) {
             const triggerSpecificRuleSet = {
                 context: { ...ruleSet.context },
             };
@@ -154,7 +168,8 @@ export const useCircRulesStore = defineStore("circRules", {
                 ] = this.findEffectiveRule(
                     triggerSpecificRuleSet,
                     ruleSuffix,
-                    triggerNumber
+                    triggerNumber,
+                    includeFallbacks
                 );
             });
             return triggerSpecificRuleSet;
