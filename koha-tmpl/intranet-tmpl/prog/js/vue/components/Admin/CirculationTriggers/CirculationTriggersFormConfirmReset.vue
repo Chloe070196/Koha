@@ -389,37 +389,38 @@ export default {
                 return;
             }
 
-            const circRule = { context: this.effectiveRuleSet.context };
+            const rulesForDeletion = { context: this.effectiveRuleSet.context };
 
             if (
                 this.effectiveRuleSet[`overdue_${this.triggerNumber}_delay`] !==
                 null
             ) {
-                circRule[`overdue_${this.triggerNumber}_delay`] = null;
+                rulesForDeletion[`overdue_${this.triggerNumber}_delay`] = null;
             }
             if (
                 this.effectiveRuleSet[
                     `overdue_${this.triggerNumber}_notice`
                 ] !== null
             ) {
-                circRule[`overdue_${this.triggerNumber}_notice`] = null;
+                rulesForDeletion[`overdue_${this.triggerNumber}_notice`] = null;
             }
             if (
                 this.effectiveRuleSet[
                     `overdue_${this.triggerNumber}_restrict`
                 ] !== null
             ) {
-                circRule[`overdue_${this.triggerNumber}_restrict`] = null;
+                rulesForDeletion[`overdue_${this.triggerNumber}_restrict`] =
+                    null;
             }
             if (
                 this.effectiveRuleSet[`overdue_${this.triggerNumber}_mtt`] !==
                 null
             ) {
-                circRule[`overdue_${this.triggerNumber}_mtt`] = null;
+                rulesForDeletion[`overdue_${this.triggerNumber}_mtt`] = null;
             }
-            circRule[`overdue_${this.triggerNumber}_has_rules`] = null;
+            rulesForDeletion[`overdue_${this.triggerNumber}_has_rules`] = null;
 
-            this.updateCircRuleSets();
+            this.updateCircRuleSets(rulesForDeletion, this.triggerNumber);
             await this.$router.push({
                 name: "CirculationTriggersList",
                 query: { trigger: this.triggerNumber },
