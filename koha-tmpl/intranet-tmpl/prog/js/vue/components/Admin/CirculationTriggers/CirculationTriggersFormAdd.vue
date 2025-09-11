@@ -476,7 +476,9 @@ export default {
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            vm.refreshState(to.query);
+            const { query } = to;
+            vm.setContext(query);
+            vm.refreshState(query);
         });
     },
     methods: {
@@ -590,7 +592,6 @@ export default {
             this.$router.go(0);
         },
         async refreshState(query = this.$route.query) {
-            this.setContext(query);
             this.setEditMode();
             this.setTriggerNumber(query.triggerNumber, query.library_id);
             this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
