@@ -329,7 +329,11 @@
                                     patron_category_id:
                                         activeRuleSetBeingEdited.context
                                             .patron_category_id,
-                                    triggerNumber: triggerCount + 1,
+                                    triggerNumber:
+                                        triggerCount[
+                                            activeRuleSetBeingEdited.context
+                                                .library_id
+                                        ] + 1,
                                 },
                             }"
                             class="btn btn-default btn-xs"

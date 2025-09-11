@@ -16,7 +16,7 @@ export const useCircRulesStore = defineStore("circRules", {
         itemTypes: [],
         libraries: [],
         patronCategories: [],
-        triggerCount: 0,
+        triggerCount: { "*": 0 },
         // references
         letters: [],
         ruleSuffixes: ["delay", "notice", "mtt", "restrict", "has_rules"],
@@ -49,12 +49,16 @@ export const useCircRulesStore = defineStore("circRules", {
             this.updateTriggerCount(effectiveRule);
 
             // Shortcut for the case where no triggers exist yet
-            if (this.triggerCount === 0) {
+            if (this.triggerCount[this.currentLibraryId] === 0) {
                 return undefined;
             }
 
             // Ensure there is one contextRule per 'X' from 1 to triggerCount
-            for (let i = 1; i <= this.triggerCount; i++) {
+            for (
+                let i = 1;
+                i <= this.triggerCount[this.currentLibraryId];
+                i++
+            ) {
                 // Check if there's already a ruleSet for overdue_X_ in contextRuleSets
                 const matchingRule = contextRuleSets.find(
                     ruleSet => ruleSet[`overdue_${i}_has_rules`] === "1"
@@ -349,12 +353,18 @@ export const useCircRulesStore = defineStore("circRules", {
             );
         },
         isLastTrigger(triggerNumber) {
-            return parseInt(triggerNumber) === this.triggerCount;
+            return (
+                parseInt(triggerNumber) ===
+                this.triggerCount[this.currentLibraryId]
+            );
         },
         // FIXME: use updateTriggerCount instead
         setNumberOfTabs(triggerCount, tabCount) {
-            if (triggerCount > tabCount) {
-                return Array.from({ length: triggerCount }, (_, i) => i + 1);
+            if (triggerCount[this.currentLibraryId] > tabCount) {
+                return Array.from(
+                    { length: triggerCount[this.currentLibraryId] },
+                    (_, i) => i + 1
+                );
             }
             return tabCount;
         },
@@ -401,7 +411,9 @@ export const useCircRulesStore = defineStore("circRules", {
             if (!this.allDefaultLibraryRawRuleSets[0]) {
                 return;
             }
-            this.triggerCount = Object.keys(ruleSet).filter(
+            this.triggerCount[this.currentLibraryId] = Object.keys(
+                ruleSet
+            ).filter(
                 ruleSuffix =>
                     this.regex.test(ruleSuffix) && ruleSet[ruleSuffix] !== null
             ).length;
@@ -419,7 +431,11 @@ export const useCircRulesStore = defineStore("circRules", {
                             item_type_id: itemType.item_type_id,
                         },
                     };
-                    for (let i = 1; i <= this.triggerCount; i++) {
+                    for (
+                        let i = 1;
+                        i <= this.triggerCount[this.currentLibraryId];
+                        i++
+                    ) {
                         this.ruleSuffixes.forEach(ruleSuffix => {
                             effectiveRuleSet[`overdue_${i}_${ruleSuffix}`] =
                                 this.findEffectiveRule(
@@ -441,7 +457,11 @@ export const useCircRulesStore = defineStore("circRules", {
                 const effectiveRuleSet = {
                     context: { ...ruleSet.context },
                 };
-                for (let i = 1; i <= this.triggerCount; i++) {
+                for (
+                    let i = 1;
+                    i <= this.triggerCount[this.currentLibraryId];
+                    i++
+                ) {
                     if (ruleSet[`overdue_${i}_has_rules`] === null) {
                         continue;
                     }
@@ -477,7 +497,11 @@ export const useCircRulesStore = defineStore("circRules", {
         },
         setEffectiveTriggerFilteredRuleSet(ruleSet) {
             const effectiveTriggerFilteredRuleSets = [];
-            for (let i = 1; i <= this.triggerCount; i++) {
+            for (
+                let i = 1;
+                i <= this.triggerCount[this.currentLibraryId];
+                i++
+            ) {
                 const triggerSpecificRuleSet =
                     this.formatTriggerSpecificRuleSetForDisplay(ruleSet, i);
                 effectiveTriggerFilteredRuleSets.push(triggerSpecificRuleSet);

@@ -278,7 +278,9 @@
                 class="rows"
                 v-if="editMode === 'edit' || editMode === 'add'"
             >
-                <legend v-if="ruleSetInfo.triggerCount < triggerNumber">
+                <legend
+                    v-if="ruleSetInfo.triggerCount[libraryId] < triggerNumber"
+                >
                     {{ $__("Notice for trigger") }}
                     {{ " " + triggerNumber }}
                 </legend>
@@ -592,7 +594,7 @@ export default {
         async refreshState(query = this.$route.query) {
             this.setContext(query);
             this.setEditMode();
-            this.setTriggerNumber(query.triggerNumber);
+            this.setTriggerNumber(query.triggerNumber, query.library_id);
             this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
                 this.libraryId,
                 this.patronCategoryId,
@@ -638,7 +640,7 @@ export default {
                 fine: this.currentRuleSet.fine,
                 chargeperiod: this.currentRuleSet.chargeperiod,
                 lengthunit: this.currentRuleSet.lengthunit,
-                triggerCount: this.triggerCount,
+                triggerCount: this.triggerCount[this.currentRuleSet.library_id],
             };
         },
         // save the ruleSet as loaded initially
@@ -646,11 +648,11 @@ export default {
             this.currentRuleSet = cloneDeep(this.ruleSetToSubmit);
         },
         // assign the triggerNumber passed to the route or generate a new trigger number
-        setTriggerNumber(triggerNumber) {
+        setTriggerNumber(triggerNumber, libraryId) {
             this.triggerNumber =
                 this.editMode === "edit"
                     ? triggerNumber
-                    : this.triggerCount + 1;
+                    : this.triggerCount[libraryId] + 1;
         },
         // TODO: move into store, refactor - and check need for this also
         setFallbackRuleSet() {

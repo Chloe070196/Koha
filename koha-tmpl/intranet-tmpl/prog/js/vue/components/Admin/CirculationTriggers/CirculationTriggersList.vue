@@ -206,7 +206,7 @@
         <div id="circ_triggers_tabs" class="toptabs numbered">
             <ul class="nav nav-tabs" role="tablist">
                 <li
-                    v-for="number in triggerCount"
+                    v-for="number in triggerCount[currentLibraryId]"
                     class="nav-item"
                     role="presentation"
                     :key="`noticeTab_${number}`"
@@ -226,7 +226,7 @@
             </ul>
         </div>
         <div class="tab-content">
-            <template v-for="number in triggerCount">
+            <template v-for="number in triggerCount[currentLibraryId]">
                 <div
                     class="tab-pane"
                     role="tabpanel"
