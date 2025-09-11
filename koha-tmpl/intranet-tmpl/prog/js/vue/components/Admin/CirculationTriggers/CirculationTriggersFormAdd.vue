@@ -278,9 +278,7 @@
                 class="rows"
                 v-if="editMode === 'edit' || editMode === 'add'"
             >
-                <legend
-                    v-if="ruleSetInfo.triggerCount[libraryId] < triggerNumber"
-                >
+                <legend v-if="ruleSetInfo.triggerCount < triggerNumber">
                     {{ $__("Notice for trigger") }}
                     {{ " " + triggerNumber }}
                 </legend>
