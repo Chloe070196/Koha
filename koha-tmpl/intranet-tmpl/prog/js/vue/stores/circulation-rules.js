@@ -473,18 +473,15 @@ export const useCircRulesStore = defineStore("circRules", {
 
             // Set a library-specific trigger count: at least one rule set exists -> start from the first trigger for which there is no default rule set
             let i = this.triggerCounts["*"] + 1;
-            this.allCurrentLibraryRawRuleSets.forEach(ruleSet => {
-                while (
-                    ruleNames.includes(`overdue_${i}_has_rules`) &&
-                    ruleSet[`overdue_${i}_has_rules`] !== null
-                ) {
-                    i++;
-                }
-                this.triggerCounts[this.currentLibraryId] = Math.max(
-                    this.triggerCounts[this.currentLibraryId] || 0,
-                    i - 1
-                );
-            });
+            while (
+                ruleNames.includes(`overdue_${i}_has_rules`) &&
+                this.allCurrentLibraryRawRuleSets.some(
+                    ruleSet => ruleSet[`overdue_${i}_has_rules`] !== null
+                )
+            ) {
+                i++;
+            }
+            this.triggerCounts[this.currentLibraryId] = i - 1;
         },
     },
 });
