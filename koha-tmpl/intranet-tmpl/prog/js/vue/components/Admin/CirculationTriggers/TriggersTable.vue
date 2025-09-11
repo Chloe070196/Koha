@@ -294,7 +294,8 @@
                             v-if="
                                 ruleSet[
                                     `overdue_${modal ? i + 1 : triggerNumber}_has_rules`
-                                ].value
+                                ].value &&
+                                !isOnlyRuleSetForTrigger(triggerNumber)
                             "
                             :to="{
                                 name: 'CirculationTriggersFormConfirmReset',
@@ -378,6 +379,7 @@ export default {
             handleTransport,
             updateTriggerCount,
             isLastTrigger,
+            isOnlyRuleSetForTrigger,
         } = circRulesStore;
 
         return {
@@ -392,6 +394,7 @@ export default {
             libraries,
             letters,
             isLastTrigger,
+            isOnlyRuleSetForTrigger,
         };
     },
 };

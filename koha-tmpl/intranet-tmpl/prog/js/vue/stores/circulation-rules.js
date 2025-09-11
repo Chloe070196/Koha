@@ -341,6 +341,13 @@ export const useCircRulesStore = defineStore("circRules", {
                 )
             );
         },
+        isOnlyRuleSetForTrigger(triggerNumber) {
+            return (
+                this.allCurrentLibraryRawRuleSets.filter(
+                    ruleSet => ruleSet[`overdue_${triggerNumber}_has_rules`]
+                ).length === 1
+            );
+        },
         isLastTrigger(triggerNumber) {
             return parseInt(triggerNumber) === this.triggerCount;
         },
