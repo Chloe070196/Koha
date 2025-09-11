@@ -381,7 +381,6 @@ export default {
             handleNotice,
             handleRestrictions,
             handleTransport,
-            updateTriggerCount,
             isLastTrigger,
             isOnlyRuleSetForTrigger,
         } = circRulesStore;
@@ -392,7 +391,6 @@ export default {
             handleRestrictions,
             handleTransport,
             triggerCounts,
-            updateTriggerCount,
             patronCategories,
             itemTypes,
             libraries,
