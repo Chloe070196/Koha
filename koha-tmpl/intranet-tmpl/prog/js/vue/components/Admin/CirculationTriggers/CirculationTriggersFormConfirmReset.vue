@@ -337,18 +337,19 @@ export default {
             ruleSet: null,
             currentRuleSet: null,
             fallbackRuleSet: null,
+            effectiveRuleSet: null,
         };
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             vm.setContext(to.query);
-            vm.ruleSet = await vm.getRawSelectedRuleSet(
+            vm.currentRuleSet = await vm.getRawSelectedRuleSet(
                 vm.libraryId,
                 vm.patronCategoryId,
                 vm.itemTypeId
             );
             vm.effectiveRuleSet = vm.formatTriggerSpecificRuleSetForDisplay(
-                vm.ruleSet,
+                vm.currentRuleSet,
                 vm.triggerNumber
             );
             vm.initialized = true;
@@ -370,7 +371,7 @@ export default {
 
             if (
                 this.hasConflict(
-                    this.effectiveRuleSet,
+                    this.currentRuleSet,
                     ruleSetInDb,
                     this.triggerNumber
                 )
