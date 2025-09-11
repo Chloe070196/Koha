@@ -353,8 +353,6 @@ export default {
                 selectedParams.item_type_id = this.currentItemTypeId;
             }
 
-            // get the number of triggers
-            this.updateTriggerCount();
             // handle searches for any patron category and item type combinations
             if (
                 !selectedParams.patron_category_id &&
