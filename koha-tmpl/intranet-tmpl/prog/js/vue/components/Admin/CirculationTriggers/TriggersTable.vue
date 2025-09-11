@@ -330,7 +330,7 @@
                                         activeRuleSetBeingEdited.context
                                             .patron_category_id,
                                     triggerNumber:
-                                        triggerCount[
+                                        triggerCounts[
                                             activeRuleSetBeingEdited.context
                                                 .library_id
                                         ] + 1,
@@ -370,7 +370,7 @@ export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
         const {
-            triggerCount,
+            triggerCounts,
             patronCategories,
             itemTypes,
             libraries,
@@ -391,7 +391,7 @@ export default {
             handleNotice,
             handleRestrictions,
             handleTransport,
-            triggerCount,
+            triggerCounts,
             updateTriggerCount,
             patronCategories,
             itemTypes,

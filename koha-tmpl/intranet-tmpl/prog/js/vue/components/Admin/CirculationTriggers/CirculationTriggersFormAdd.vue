@@ -428,7 +428,7 @@ export default {
             itemTypes,
             transportTypes,
             patronCategories,
-            triggerCount,
+            triggerCounts,
         } = storeToRefs(circRulesStore);
 
         return {
@@ -436,7 +436,7 @@ export default {
             itemTypes,
             libraries,
             transportTypes,
-            triggerCount,
+            triggerCounts,
             patronCategories,
             getRawSelectedRuleSet,
             updateTriggerCount,
@@ -650,7 +650,7 @@ export default {
             this.triggerNumber =
                 this.editMode === "edit"
                     ? triggerNumber
-                    : this.triggerCount[libraryId] + 1;
+                    : this.triggerCounts[libraryId] + 1;
         },
         // TODO: move into store, refactor - and check need for this also
         setFallbackRuleSet() {

@@ -16,7 +16,7 @@ export const useCircRulesStore = defineStore("circRules", {
         itemTypes: [],
         libraries: [],
         patronCategories: [],
-        triggerCount: { "*": 0 },
+        triggerCounts: { "*": 0 },
         // references
         letters: [],
         ruleSuffixes: ["delay", "notice", "mtt", "restrict", "has_rules"],
@@ -355,14 +355,14 @@ export const useCircRulesStore = defineStore("circRules", {
         isLastTrigger(triggerNumber) {
             return (
                 parseInt(triggerNumber) ===
-                this.triggerCount[this.currentLibraryId]
+                this.triggerCounts[this.currentLibraryId]
             );
         },
         // FIXME: use updateTriggerCount instead
-        setNumberOfTabs(triggerCount, tabCount) {
-            if (triggerCount[this.currentLibraryId] > tabCount) {
+        setNumberOfTabs(triggerCounts, tabCount) {
+            if (triggerCounts[this.currentLibraryId] > tabCount) {
                 return Array.from(
-                    { length: triggerCount[this.currentLibraryId] },
+                    { length: triggerCounts[this.currentLibraryId] },
                     (_, i) => i + 1
                 );
             }
@@ -411,7 +411,7 @@ export const useCircRulesStore = defineStore("circRules", {
             if (!this.allDefaultLibraryRawRuleSets[0]) {
                 return;
             }
-            this.triggerCount[this.currentLibraryId] = Object.keys(
+            this.triggerCounts[this.currentLibraryId] = Object.keys(
                 ruleSet
             ).filter(
                 ruleSuffix =>
@@ -433,7 +433,7 @@ export const useCircRulesStore = defineStore("circRules", {
                     };
                     for (
                         let i = 1;
-                        i <= this.triggerCount[this.currentLibraryId];
+                        i <= this.triggerCounts[this.currentLibraryId];
                         i++
                     ) {
                         this.ruleSuffixes.forEach(ruleSuffix => {
@@ -459,7 +459,7 @@ export const useCircRulesStore = defineStore("circRules", {
                 };
                 for (
                     let i = 1;
-                    i <= this.triggerCount[this.currentLibraryId];
+                    i <= this.triggerCounts[this.currentLibraryId];
                     i++
                 ) {
                     if (ruleSet[`overdue_${i}_has_rules`] === null) {
@@ -499,7 +499,7 @@ export const useCircRulesStore = defineStore("circRules", {
             const effectiveTriggerFilteredRuleSets = [];
             for (
                 let i = 1;
-                i <= this.triggerCount[this.currentLibraryId];
+                i <= this.triggerCounts[this.currentLibraryId];
                 i++
             ) {
                 const triggerSpecificRuleSet =
