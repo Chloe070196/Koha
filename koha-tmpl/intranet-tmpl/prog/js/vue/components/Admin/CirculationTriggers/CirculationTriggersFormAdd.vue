@@ -638,7 +638,8 @@ export default {
                 fine: this.currentRuleSet.fine,
                 chargeperiod: this.currentRuleSet.chargeperiod,
                 lengthunit: this.currentRuleSet.lengthunit,
-                triggerCount: this.triggerCount[this.currentRuleSet.library_id],
+                triggerCount:
+                    this.triggerCounts[this.currentRuleSet.context.library_id],
             };
         },
         // save the ruleSet as loaded initially
