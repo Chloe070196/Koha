@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { $__ } from "../i18n";
 import { APIClient } from "../fetch/api-client.js";
 import { isEqual } from "lodash";
+import { faGrinTongueSquint } from "@fortawesome/free-solid-svg-icons";
 
 export const useCircRulesStore = defineStore("circRules", {
     // NOTES ON RULE SETS TYPES
@@ -336,16 +337,51 @@ export const useCircRulesStore = defineStore("circRules", {
             };
             return { ruleSet, fallbackRuleSet };
         },
-        updateTriggerCount(ruleSet = this.allDefaultLibraryRawRuleSets[0]) {
-            if (!this.allDefaultLibraryRawRuleSets[0]) {
+        updateTriggerCount() {
+            // Set the triggerCount for the default library rule set
+            if (this.currentLibraryId === "*") {
+                this.triggerCounts["*"] = Object.keys(
+                    this.allDefaultLibraryRawRuleSets[0]
+                ).filter(
+                    ruleSuffix =>
+                        this.regex.test(ruleSuffix) &&
+                        this.allDefaultLibraryRawRuleSets[0][ruleSuffix] !==
+                            null
+                ).length;
                 return;
             }
-            this.triggerCounts[this.currentLibraryId] = Object.keys(
-                ruleSet
-            ).filter(
-                ruleSuffix =>
-                    this.regex.test(ruleSuffix) && ruleSet[ruleSuffix] !== null
-            ).length;
+
+            // Set a library-specific trigger count
+
+            // Library-specific triggerCounts can fall into the following use cases:
+            // - No rule sets specific to them exist. Therefore, their triggerCount is the same as default's.
+            // - Rule sets exists that override default triggers. Therefore, their triggerCount is the same as default's.
+            // - Rule sets exists for triggers for which there is no default.
+            //     => such triggers are follow up addition to the existing default sequence.
+            //     => the triggerCount for this library will be higher than default's, and equal to the highest trigger number for this library for which has_rules is not null.
+
+            // no rule set exists - simply use the default trigger count
+            if (this.allCurrentLibraryRawRuleSets.length === 0) {
+                this.triggerCounts[this.currentLibraryId] =
+                    this.triggerCounts["*"];
+                return;
+            }
+
+            // at least one rule set exists
+            // start from the first trigger for which there is no default rule set
+            let ruleNames = Object.keys(this.allDefaultLibraryRawRuleSets[0]);
+            let i = this.triggerCounts["*"] + 1;
+            // if has_rule exists, increment the count.
+            while (
+                ruleNames.includes(`overdue_${i}_has_rules`) &&
+                this.allDefaultLibraryRawRuleSets[0][
+                    `overdue_${i}_has_rules`
+                ] !== null
+            ) {
+                this.allDefaultLibraryRawRuleSets[1];
+                i++;
+            }
+            this.triggerCounts[this.currentLibraryId] = i;
         },
         setAllExhaustiveEffectiveRuleSets() {
             // clear array
