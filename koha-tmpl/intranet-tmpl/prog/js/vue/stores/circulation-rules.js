@@ -341,6 +341,9 @@ export const useCircRulesStore = defineStore("circRules", {
                 )
             );
         },
+        isLastTrigger(triggerNumber) {
+            return parseInt(triggerNumber) === this.triggerCount;
+        },
         // FIXME: use updateTriggerCount instead
         setNumberOfTabs(triggerCount, tabCount) {
             if (triggerCount > tabCount) {

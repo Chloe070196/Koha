@@ -377,6 +377,7 @@ export default {
             handleRestrictions,
             handleTransport,
             updateTriggerCount,
+            isLastTrigger,
         } = circRulesStore;
 
         return {
@@ -390,6 +391,7 @@ export default {
             itemTypes,
             libraries,
             letters,
+            isLastTrigger,
         };
     },
 };
