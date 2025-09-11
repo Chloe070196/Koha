@@ -33,6 +33,7 @@ export const useCircRulesStore = defineStore("circRules", {
         allExhaustiveEffectiveRuleSets: [], // main data set for display all applied rules for current library
     }),
     actions: {
+        // TODO: if notice is set to null, and processing mtt, do not include defaults
         findEffectiveRule(
             selectedRuleSet,
             ruleSuffix,
