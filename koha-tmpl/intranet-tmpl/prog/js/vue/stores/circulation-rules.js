@@ -478,7 +478,6 @@ export const useCircRulesStore = defineStore("circRules", {
                     ruleNames.includes(`overdue_${i}_has_rules`) &&
                     ruleSet[`overdue_${i}_has_rules`] !== null
                 ) {
-                    ruleSet;
                     i++;
                 }
                 this.triggerCounts[this.currentLibraryId] = Math.max(
