@@ -409,7 +409,7 @@ import { inject } from "vue";
 import { storeToRefs } from "pinia";
 import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
-import { cloneDeep } from "lodash";
+import { isEqual, cloneDeep } from "lodash";
 
 export default {
     setup() {
@@ -499,7 +499,9 @@ export default {
             // ensure that no property is set to null as this would delete the rule!
             if (
                 this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] !==
-                null
+                    null &&
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] !==
+                    this.fallbackRuleSet[`overdue_${this.triggerNumber}_delay`]
             ) {
                 ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
                     cloneDeep(
@@ -511,7 +513,9 @@ export default {
 
             if (
                 this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] !==
-                null
+                    null &&
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] !==
+                    this.fallbackRuleSet[`overdue_${this.triggerNumber}_notice`]
             ) {
                 ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] =
                     cloneDeep(
@@ -524,7 +528,13 @@ export default {
             if (
                 this.ruleSetToSubmit[
                     `overdue_${this.triggerNumber}_restrict`
-                ] !== null
+                ] !== null &&
+                this.ruleSetToSubmit[
+                    `overdue_${this.triggerNumber}_restrict`
+                ] !==
+                    this.fallbackRuleSet[
+                        `overdue_${this.triggerNumber}_restrict`
+                    ]
             ) {
                 ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
                     cloneDeep(
@@ -539,6 +549,10 @@ export default {
                     null &&
                 Array.isArray(
                     this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`]
+                ) &&
+                isEqual(
+                    this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`],
+                    this.fallbackRuleSet[`overdue_${this.triggerNumber}_mtt`]
                 )
             ) {
                 ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] =
@@ -587,7 +601,6 @@ export default {
 
             await this.$router.replace({
                 name: "CirculationTriggersList",
-                query: { trigger: this.triggerNumber },
             });
             this.$router.go(0);
         },
@@ -667,17 +680,30 @@ export default {
             if (this.editMode === "add") {
                 return;
             }
-
-            this.fallbackRuleSet[`overdue_${this.triggerNumber}_notice`] =
-                this.findEffectiveRule(this.ruleSetToSubmit, "notice", i).value;
-            this.fallbackRuleSet[`overdue_${this.triggerNumber}_mtt`] =
-                this.findEffectiveRule(this.ruleSetToSubmit, "mtt", i).value;
-            this.fallbackRuleSet[`overdue_${this.triggerNumber}_restrict`] =
-                this.findEffectiveRule(
+            this.fallbackRuleSet = {
+                [`overdue_${this.triggerNumber}_delay`]: this.findEffectiveRule(
                     this.ruleSetToSubmit,
-                    "restrict",
-                    i
-                ).value;
+                    "delay",
+                    this.triggerNumber
+                ).value,
+                [`overdue_${this.triggerNumber}_notice`]:
+                    this.findEffectiveRule(
+                        this.ruleSetToSubmit,
+                        "notice",
+                        this.triggerNumber
+                    ).value,
+                [`overdue_${this.triggerNumber}_mtt`]: this.findEffectiveRule(
+                    this.ruleSetToSubmit,
+                    "mtt",
+                    this.triggerNumber
+                ).value,
+                [`overdue_${this.triggerNumber}_restrict`]:
+                    this.findEffectiveRule(
+                        this.ruleSetToSubmit,
+                        "restrict",
+                        this.triggerNumber
+                    ).value,
+            };
         },
         setMinDelay() {
             if (this.triggerNumber === 0 || this.triggerNumber === 1) {
