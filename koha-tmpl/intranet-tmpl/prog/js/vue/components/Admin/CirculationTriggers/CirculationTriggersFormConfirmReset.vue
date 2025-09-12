@@ -420,7 +420,6 @@ export default {
             this.updateCircRuleSets(rulesForDeletion, this.triggerNumber);
             await this.$router.push({
                 name: "CirculationTriggersList",
-                query: { trigger: this.triggerNumber },
             });
             this.$router.go(0);
         },
