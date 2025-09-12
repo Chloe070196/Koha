@@ -220,8 +220,21 @@
                         "
                         @click="changeTabContent"
                         :data-content="`Notice ${number}`"
-                        >{{ $__("Trigger") + " " + number }}</a
-                    >
+                        >{{ $__("Trigger") + " " + number }}
+                        <router-link
+                            v-if="isLastTrigger(number)"
+                            :to="{
+                                name: 'CirculationTriggersFormConfirmTriggerDelete',
+                                query: {
+                                    triggerNumber: number,
+                                },
+                            }"
+                            class="btn btn-default btn-xs"
+                        >
+                            <i class="fa-solid fa-xmark"></i>
+                            {{ $__("Delete") }}
+                        </router-link>
+                    </a>
                 </li>
             </ul>
         </div>
@@ -272,6 +285,7 @@ export default {
             setAllRawRuleSets,
             setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
+            isLastTrigger,
         } = circRulesStore;
         const {
             currentLibraryId,
@@ -300,6 +314,7 @@ export default {
             setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
             allEffectiveRuleSets,
+            isLastTrigger,
             from_branch,
         };
     },
