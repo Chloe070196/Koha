@@ -95,6 +95,7 @@ export default {
             hasConflict,
             formatTriggerSpecificRuleSetForDisplay,
             setAllRawRuleSets,
+            deleteRuleSet,
         } = circRulesStore;
         const {
             letters,
@@ -123,6 +124,7 @@ export default {
             setAllRawRuleSets,
             ruleSuffixes,
             currentLibraryId,
+            deleteRuleSet,
         };
     },
     data() {
@@ -147,8 +149,24 @@ export default {
         async deleteTrigger(e) {
             e.preventDefault();
             for (const ruleSet of this.allCurrentLibraryRawRuleSets) {
-                await this.resetCircRule(ruleSet);
+                try {
+                    await this.deleteRuleSet(ruleSet, this.triggerNumber);
+                } catch (e) {
+                    this.alertMessage = e;
+                    // reload the form components that have changed, remain in reset mode
+                    this.$router.push({
+                        path: "/cgi-bin/koha/admin/circulation_triggers/reset",
+                        query: {
+                            ...ruleSet.context,
+                            triggerNumber: this.triggerNumber,
+                        },
+                    });
+                }
             }
+            await this.$router.push({
+                name: "CirculationTriggersList",
+            });
+            this.$router.go(0);
         },
         setFormattedEffectiveRuleSets() {
             // clear array
@@ -175,52 +193,6 @@ export default {
                 });
                 this.formattedEffectiveRuleSets.push(effectiveRuleSet);
             });
-        },
-        async resetCircRule(ruleSet) {
-            // prevent race condition related edit conflicts
-            // if any changes are detected, inform the user, display the new values and go back to editing
-            const ruleSetInDb = await this.getRawSelectedRuleSet(
-                ruleSet.context.library_id,
-                ruleSet.context.patron_category_id,
-                ruleSet.context.item_type_id
-            );
-
-            if (this.hasConflict(ruleSet, ruleSetInDb, this.triggerNumber)) {
-                this.alertMessage =
-                    "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger above.";
-                // reload the form components that have changed, remain in edit mode
-                this.$router.push({
-                    path: "/cgi-bin/koha/admin/circulation_triggers/reset",
-                    query: {
-                        ...ruleSet.context,
-                        triggerNumber: this.triggerNumber,
-                    },
-                });
-                return;
-            }
-
-            const rulesForDeletion = { context: ruleSet.context };
-
-            if (ruleSet[`overdue_${this.triggerNumber}_delay`] !== null) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_delay`] = null;
-            }
-            if (ruleSet[`overdue_${this.triggerNumber}_notice`] !== null) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_notice`] = null;
-            }
-            if (ruleSet[`overdue_${this.triggerNumber}_restrict`] !== null) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_restrict`] =
-                    null;
-            }
-            if (ruleSet[`overdue_${this.triggerNumber}_mtt`] !== null) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_mtt`] = null;
-            }
-            rulesForDeletion[`overdue_${this.triggerNumber}_has_rules`] = null;
-
-            this.updateCircRuleSets(rulesForDeletion, this.triggerNumber);
-            await this.$router.push({
-                name: "CirculationTriggersList",
-            });
-            this.$router.go(0);
         },
         setContext(query) {
             this.libraryId = query.library_id ?? "*";

@@ -33,7 +33,34 @@ export const useCircRulesStore = defineStore("circRules", {
         allExhaustiveEffectiveRuleSets: [], // main data set for display all applied rules for current library
     }),
     actions: {
-        // TODO: if notice is set to null, and processing mtt, do not include defaults
+        async deleteRuleSet(ruleSet, triggerNumber) {
+            const ruleSetInDb = await this.getRawSelectedRuleSet(
+                ruleSet.context.library_id,
+                ruleSet.context.patron_category_id,
+                ruleSet.context.item_type_id
+            );
+
+            if (this.hasConflict(ruleSet, ruleSetInDb, triggerNumber)) {
+                throw "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger above.";
+            }
+
+            const rulesForDeletion = { context: ruleSet.context };
+
+            if (ruleSet[`overdue_${triggerNumber}_delay`] !== null) {
+                rulesForDeletion[`overdue_${triggerNumber}_delay`] = null;
+            }
+            if (ruleSet[`overdue_${triggerNumber}_notice`] !== null) {
+                rulesForDeletion[`overdue_${triggerNumber}_notice`] = null;
+            }
+            if (ruleSet[`overdue_${triggerNumber}_restrict`] !== null) {
+                rulesForDeletion[`overdue_${triggerNumber}_restrict`] = null;
+            }
+            if (ruleSet[`overdue_${triggerNumber}_mtt`] !== null) {
+                rulesForDeletion[`overdue_${triggerNumber}_mtt`] = null;
+            }
+            rulesForDeletion[`overdue_${triggerNumber}_has_rules`] = null;
+            this.updateCircRuleSets(rulesForDeletion, triggerNumber);
+        },
         findEffectiveRule(
             selectedRuleSet,
             ruleSuffix,

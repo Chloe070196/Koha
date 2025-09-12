@@ -1,7 +1,7 @@
 <template>
     <form
         id="circulation-trigger-form-confirm-reset"
-        @submit="resetCircRule($event)"
+        @submit="resetCircRules($event)"
         class="modal-content"
     >
         <div class="modal-header">
@@ -303,6 +303,7 @@ export default {
             updateCircRuleSets,
             hasConflict,
             formatTriggerSpecificRuleSetForDisplay,
+            deleteRuleSet,
         } = circRulesStore;
         const { letters, libraries, itemTypes, patronCategories } =
             storeToRefs(circRulesStore);
@@ -320,6 +321,7 @@ export default {
             updateCircRuleSets,
             hasConflict,
             formatTriggerSpecificRuleSetForDisplay,
+            deleteRuleSet,
         };
     },
     data() {
@@ -354,70 +356,24 @@ export default {
     },
     // TODO: determine which methods will be needed, limit amount of code repetition, consider extracting to circRuleStore
     methods: {
-        async resetCircRule(e) {
-            //TODO: convert this draft into functional code
+        async resetCircRules(e) {
             e.preventDefault();
-
-            // prevent race condition related edit conflicts
-            // if any changes are detected, inform the user, display the new values and go back to editing
-            const ruleSetInDb = await this.getRawSelectedRuleSet(
-                this.effectiveRuleSet.context.library_id,
-                this.effectiveRuleSet.context.patron_category_id,
-                this.effectiveRuleSet.context.item_type_id
-            );
-
-            if (
-                this.hasConflict(
+            try {
+                await this.deleteRuleSet(
                     this.currentRuleSet,
-                    ruleSetInDb,
                     this.triggerNumber
-                )
-            ) {
-                this.alertMessage =
-                    "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger above.";
+                );
+            } catch (e) {
+                this.alertMessage = e;
                 // reload the form components that have changed, remain in edit mode
                 this.$router.push({
                     path: "/cgi-bin/koha/admin/circulation_triggers/reset",
                     query: {
-                        ...this.effectiveRuleSet.context,
-                        triggerNumber: this.triggerNumber,
+                        ...ruleSet.context,
+                        triggerNumber: triggerNumber,
                     },
                 });
-                return;
             }
-
-            const rulesForDeletion = { context: this.effectiveRuleSet.context };
-
-            if (
-                this.effectiveRuleSet[`overdue_${this.triggerNumber}_delay`] !==
-                null
-            ) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_delay`] = null;
-            }
-            if (
-                this.effectiveRuleSet[
-                    `overdue_${this.triggerNumber}_notice`
-                ] !== null
-            ) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_notice`] = null;
-            }
-            if (
-                this.effectiveRuleSet[
-                    `overdue_${this.triggerNumber}_restrict`
-                ] !== null
-            ) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_restrict`] =
-                    null;
-            }
-            if (
-                this.effectiveRuleSet[`overdue_${this.triggerNumber}_mtt`] !==
-                null
-            ) {
-                rulesForDeletion[`overdue_${this.triggerNumber}_mtt`] = null;
-            }
-            rulesForDeletion[`overdue_${this.triggerNumber}_has_rules`] = null;
-
-            this.updateCircRuleSets(rulesForDeletion, this.triggerNumber);
             await this.$router.push({
                 name: "CirculationTriggersList",
             });
