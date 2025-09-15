@@ -1,6 +1,25 @@
 <template>
     <div class="page-section">
-        <div v-if="!modal" class="page-section bg-info">
+        <router-link
+            v-if="isLastTrigger(triggerNumber)"
+            :to="{
+                name: 'CirculationTriggersFormConfirmTriggerDelete',
+                query: {
+                    triggerNumber: triggerNumber,
+                },
+            }"
+            class="btn btn-primary"
+        >
+            <i class="fa-solid fa-xmark"></i>
+            {{ $__("Delete") }}
+        </router-link>
+        <div
+            v-if="!modal"
+            :class="{
+                'page-section bg-info': true,
+                'inline-block': isLastTrigger(triggerNumber),
+            }"
+        >
             {{
                 $__(
                     "Bolid italic values denote fallback values where an override has not been set for the context."
@@ -426,5 +445,10 @@ th.trigger_context {
 
 .border_right {
     border-right: solid 4px black;
+}
+.inline-block {
+    display: inline-block;
+    width: calc(100% - 90.25px);
+    margin: 0 0 0 13px;
 }
 </style>
