@@ -236,11 +236,39 @@
                     v-if="tabSelected === `Notice ${number}`"
                     :key="`noticeTabContent_${number}`"
                 >
-                    <TriggersTable
-                        :modal="false"
-                        :ruleSets="ruleSets"
-                        :triggerNumber="number"
-                    />
+                    <div class="page-section">
+                        <TriggersTable
+                            :modal="false"
+                            :ruleSets="ruleSets"
+                            :triggerNumber="number"
+                        >
+                            <router-link
+                                v-if="isLastTrigger(number)"
+                                :to="{
+                                    name: 'CirculationTriggersFormConfirmTriggerDelete',
+                                    query: {
+                                        triggerNumber: number,
+                                    },
+                                }"
+                                class="btn btn-primary"
+                            >
+                                <i class="fa-solid fa-xmark"></i>
+                                {{ $__("Delete") }}
+                            </router-link>
+                            <div
+                                :class="{
+                                    'page-section bg-info': true,
+                                    'inline-block': isLastTrigger(number),
+                                }"
+                            >
+                                {{
+                                    $__(
+                                        "Bolid italic values denote fallback values where an override has not been set for the context."
+                                    )
+                                }}
+                            </div>
+                        </TriggersTable>
+                    </div>
                 </div>
             </template>
         </div>
@@ -424,6 +452,11 @@ export default {
 </script>
 
 <style scoped>
+.inline-block {
+    display: inline-block;
+    width: calc(100% - 90.25px);
+    margin: 0 0 0 13px;
+}
 .page-section table {
     width: 100%;
     table-layout: fixed;
