@@ -276,9 +276,7 @@ export const useCircRulesStore = defineStore("circRules", {
             } catch (e) {
                 throw e;
             }
-            const rawRuleSet = result[0];
-            rawRuleSet.context = context;
-            return rawRuleSet;
+            return result[0];
         },
         handleContext(value, data, type, displayProperty = "name") {
             const item = data.find(item => item[type] === value);
