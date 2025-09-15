@@ -380,10 +380,10 @@ export default {
     ],
     computed: {
         activeRuleSetBeingEdited() {
-            return this.modal ? (this.ruleSetBeingEdited ?? 0) : null;
+            return this.modal ? this.ruleSetBeingEdited : null;
         },
         activeTriggerBeingEdited() {
-            return this.modal ? (this.triggerBeingEdited ?? {}) : null;
+            return this.modal ? this.triggerBeingEdited : null;
         },
     },
     setup() {
