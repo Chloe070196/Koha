@@ -125,6 +125,7 @@
                     <TriggersTable
                         :triggerNumber="triggerNumber"
                         :modal="true"
+                        :actions="true"
                         :ruleSets="effectiveTriggerFilteredRuleSets"
                         :ruleSetBeingEdited="currentRuleSet"
                         :triggerBeingEdited="triggerBeingEdited"

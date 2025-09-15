@@ -34,6 +34,7 @@
             <TriggersTable
                 :triggerNumber="triggerNumber"
                 :modal="false"
+                :actions="false"
                 :ruleSets="formattedEffectiveRuleSets"
             />
         </fieldset>

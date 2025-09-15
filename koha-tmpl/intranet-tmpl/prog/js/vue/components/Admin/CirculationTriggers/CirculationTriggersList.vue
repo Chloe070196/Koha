@@ -239,6 +239,7 @@
                     <div class="page-section">
                         <TriggersTable
                             :modal="false"
+                            :actions="true"
                             :ruleSets="ruleSets"
                             :triggerNumber="number"
                         >

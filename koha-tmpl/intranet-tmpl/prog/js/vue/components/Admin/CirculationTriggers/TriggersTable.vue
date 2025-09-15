@@ -32,7 +32,7 @@
             <th>
                 {{ $__("Restricts checkouts") }}
             </th>
-            <th>
+            <th v-if="actions">
                 {{ $__("Actions") }}
             </th>
         </thead>
@@ -257,7 +257,7 @@
                         }}
                     </span>
                 </td>
-                <td class="actions">
+                <td class="actions" v-if="actions">
                     <router-link
                         :to="{
                             name: 'CirculationTriggersFormEdit',
@@ -335,6 +335,7 @@ export default {
     props: [
         "triggerNumber",
         "modal",
+        "actions",
         "ruleSetBeingEdited",
         "triggerBeingEdited",
         "ruleSets",
