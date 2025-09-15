@@ -4,28 +4,13 @@
         formTitle="Confirm circulation trigger deletion"
     >
         <fieldset class="rows">
-            <div class="page-section bg-info">
-                <p>
-                    {{
-                        $__(
-                            "Deleting this trigger will delete rule sets below."
-                        )
-                    }}
-                </p>
-            </div>
-            <legend>
-                {{ $__(`Deleting trigger number ${triggerNumber} for`) }}
-            </legend>
-            <ol v-if="initialized">
-                <li>
-                    <p>
-                        <strong>{{ $__("Library") }}:</strong>
-                    </p>
-                    <p id="library_id">
-                        {{ handleContext(libraryId, libraries, "library_id") }}
-                    </p>
-                </li>
-            </ol>
+            <h2 v-if="initialized">
+                {{
+                    $__(
+                        `Delete Trigger ${triggerNumber} for: ${handleContext(libraryId, libraries, "library_id")}`
+                    )
+                }}
+            </h2>
             <div v-else>
                 <p>{{ $__("Loading library...") }}</p>
             </div>
@@ -38,8 +23,19 @@
                 :ruleSets="formattedEffectiveRuleSets"
             />
         </fieldset>
-        <fieldset class="rows" v-if="alertMessage">
-            <div class="alert alert-info">{{ alertMessage }}</div>
+        <fieldset class="rows">
+            <div class="page-section bg-info">
+                <p>
+                    {{
+                        $__(
+                            "Deleting this trigger will delete every rule set listed above, and therefore completely remove this trigger for the library selected."
+                        )
+                    }}
+                </p>
+            </div>
+            <div class="alert alert-info" v-if="alertMessage">
+                {{ alertMessage }}
+            </div>
         </fieldset>
     </CirculationTriggersForm>
 </template>
