@@ -1,291 +1,262 @@
 <template>
-    <form
-        id="circulation-trigger-form-confirm-reset"
-        @submit="resetCircRules($event)"
-        class="modal-content"
+    <CirculationTriggersForm
+        :submitAction="resetCircRules"
+        formTitle="Confirm circulation rule set reset"
     >
-        <div class="modal-header">
-            <h1 class="modal-title">
-                {{ $__("Confirm circulation rule set reset") }}
-            </h1>
-            <router-link
-                class="btn-close"
-                type="button"
-                :to="{
-                    name: 'CirculationTriggersList',
-                }"
-            ></router-link>
-        </div>
-        <div class="modal-body">
-            <fieldset class="rows">
-                <div class="page-section bg-info">
+        <fieldset class="rows">
+            <div class="page-section bg-info">
+                <p>
+                    {{
+                        $__(
+                            "Resetting this rule set for the chosen context will have an impact on all the contexts that used to fall back on this rule set."
+                        )
+                    }}
+                </p>
+                <p>
+                    {{
+                        $__(
+                            "To better understand which contexts will be affected, use 'Display all patron categories and items types.' on the circulations triggers page."
+                        )
+                    }}
+                </p>
+            </div>
+            <legend>{{ $__("Trigger context") }}</legend>
+            <ol v-if="initialized">
+                <li>
                     <p>
+                        <strong>{{ $__("Library") }}:</strong>
+                    </p>
+                    <p id="library_id">
+                        {{ handleContext(libraryId, libraries, "library_id") }}
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <strong>{{ $__("Patron category") }}:</strong>
+                    </p>
+                    <p id="patron_category_id">
                         {{
-                            $__(
-                                "Resetting this rule set for the chosen context will have an impact on all the contexts that used to fall back on this rule set."
+                            handleContext(
+                                patronCategoryId,
+                                patronCategories,
+                                "patron_category_id"
                             )
                         }}
                     </p>
+                </li>
+                <li>
                     <p>
+                        <strong>{{ $__("Item type") }}:</strong>
+                    </p>
+                    <p id="item_type_id">
                         {{
-                            $__(
-                                "To better understand which contexts will be affected, use 'Display all patron categories and items types.' on the circulations triggers page."
+                            handleContext(
+                                itemTypeId,
+                                itemTypes,
+                                "item_type_id",
+                                "description"
                             )
                         }}
                     </p>
-                </div>
-                <legend>{{ $__("Trigger context") }}</legend>
-                <ol v-if="initialized">
-                    <li>
-                        <p>
-                            <strong>{{ $__("Library") }}:</strong>
-                        </p>
-                        <p id="library_id">
-                            {{
-                                handleContext(
-                                    libraryId,
-                                    libraries,
-                                    "library_id"
-                                )
-                            }}
-                        </p>
-                    </li>
-                    <li>
-                        <p>
-                            <strong>{{ $__("Patron category") }}:</strong>
-                        </p>
-                        <p id="patron_category_id">
-                            {{
-                                handleContext(
-                                    patronCategoryId,
-                                    patronCategories,
-                                    "patron_category_id"
-                                )
-                            }}
-                        </p>
-                    </li>
-                    <li>
-                        <p>
-                            <strong>{{ $__("Item type") }}:</strong>
-                        </p>
-                        <p id="item_type_id">
-                            {{
-                                handleContext(
-                                    itemTypeId,
-                                    itemTypes,
-                                    "item_type_id",
-                                    "description"
-                                )
-                            }}
-                        </p>
-                    </li>
-                </ol>
-                <div v-else>
-                    <p>{{ $__("Loading circulation context...") }}</p>
-                </div>
-            </fieldset>
+                </li>
+            </ol>
+            <div v-else>
+                <p>{{ $__("Loading circulation context...") }}</p>
+            </div>
+        </fieldset>
 
-            <fieldset class="rows">
-                <legend>
-                    {{ $__("Rules (overrides) which will be deleted") }}
-                </legend>
-                <table>
-                    <thead>
-                        <th>
-                            {{ $__("Delay") }}
-                        </th>
-                        <th>
-                            {{ $__("Notice") }}
-                        </th>
-                        <th>
-                            {{ $__("Email") }}
-                        </th>
-                        <th>
-                            {{ $__("Print") }}
-                        </th>
-                        <th>
-                            {{ $__("SMS") }}
-                        </th>
-                        <th>
-                            {{ $__("Restricts checkouts") }}
-                        </th>
-                    </thead>
-                    <tbody v-if="initialized">
-                        <tr>
-                            <!-- Delay -->
-                            <td>
-                                <span
-                                    v-if="
+        <fieldset class="rows">
+            <legend>
+                {{ $__("Rules (overrides) which will be deleted") }}
+            </legend>
+            <table>
+                <thead>
+                    <th>
+                        {{ $__("Delay") }}
+                    </th>
+                    <th>
+                        {{ $__("Notice") }}
+                    </th>
+                    <th>
+                        {{ $__("Email") }}
+                    </th>
+                    <th>
+                        {{ $__("Print") }}
+                    </th>
+                    <th>
+                        {{ $__("SMS") }}
+                    </th>
+                    <th>
+                        {{ $__("Restricts checkouts") }}
+                    </th>
+                </thead>
+                <tbody v-if="initialized">
+                    <tr>
+                        <!-- Delay -->
+                        <td>
+                            <span
+                                v-if="
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_delay`
+                                    ]
+                                "
+                                :class="{
+                                    fallback:
                                         effectiveRuleSet[
                                             `overdue_${triggerNumber}_delay`
-                                        ]
-                                    "
-                                    :class="{
-                                        fallback:
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_delay`
-                                            ].isFallback,
-                                    }"
-                                >
-                                    {{
-                                        effectiveRuleSet[
-                                            `overdue_${triggerNumber}_delay`
-                                        ].value
-                                    }}
-                                </span>
-                            </td>
+                                        ].isFallback,
+                                }"
+                            >
+                                {{
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_delay`
+                                    ].value
+                                }}
+                            </span>
+                        </td>
 
-                            <!--  Notice -->
-                            <td>
-                                <span
-                                    v-if="
+                        <!--  Notice -->
+                        <td>
+                            <span
+                                v-if="
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_notice`
+                                    ]
+                                "
+                                :class="{
+                                    fallback:
                                         effectiveRuleSet[
                                             `overdue_${triggerNumber}_notice`
-                                        ]
-                                    "
-                                    :class="{
-                                        fallback:
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_notice`
-                                            ].isFallback,
-                                    }"
-                                >
-                                    {{
-                                        handleNotice(
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_notice`
-                                            ].value
-                                        )
-                                    }}
-                                </span>
-                            </td>
-                            <!-- Email -->
-                            <td>
-                                <span
-                                    v-if="
+                                        ].isFallback,
+                                }"
+                            >
+                                {{
+                                    handleNotice(
                                         effectiveRuleSet[
-                                            `overdue_${triggerNumber}_mtt`
-                                        ]?.length
-                                    "
-                                    :class="{
-                                        fallback:
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_mtt`
-                                            ].isFallback,
-                                    }"
-                                >
-                                    {{
-                                        handleTransport(
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_mtt`
-                                            ].value,
-                                            "email"
-                                        )
-                                    }}
-                                </span>
-                            </td>
-                            <!-- Print -->
-                            <td>
-                                <span
-                                    v-if="
-                                        effectiveRuleSet[
-                                            `overdue_${triggerNumber}_mtt`
-                                        ]?.length
-                                    "
-                                    :class="{
-                                        fallback:
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_mtt`
-                                            ].isFallback,
-                                    }"
-                                >
-                                    {{
-                                        handleTransport(
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_mtt`
-                                            ].value,
-                                            "print"
-                                        )
-                                    }}
-                                </span>
-                            </td>
-                            <!-- SMS -->
-                            <td>
-                                <span
-                                    v-if="
-                                        effectiveRuleSet[
-                                            `overdue_${triggerNumber}_mtt`
-                                        ]?.length
-                                    "
-                                    :class="{
-                                        fallback:
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_mtt`
-                                            ].isFallback,
-                                    }"
-                                >
-                                    {{
-                                        handleTransport(
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_mtt`
-                                            ].value,
-                                            "sms"
-                                        )
-                                    }}
-                                </span>
-                            </td>
-                            <!-- Restricts Checkouts -->
-                            <td>
-                                <span
-                                    v-if="
-                                        effectiveRuleSet[
-                                            `overdue_${triggerNumber}_restrict`
-                                        ]
-                                    "
-                                    :class="{
-                                        fallback:
-                                            effectiveRuleSet[
-                                                `overdue_${triggerNumber}_restrict`
-                                            ].isFallback,
-                                    }"
-                                >
-                                    {{
-                                        effectiveRuleSet[
-                                            `overdue_${triggerNumber}_restrict`
+                                            `overdue_${triggerNumber}_notice`
                                         ].value
-                                    }}
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tbody v-else>
-                        <tr>
-                            {{
-                                $__("Loading circulation rule set...")
-                            }}
-                        </tr>
-                    </tbody>
-                </table>
-            </fieldset>
+                                    )
+                                }}
+                            </span>
+                        </td>
+                        <!-- Email -->
+                        <td>
+                            <span
+                                v-if="
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_mtt`
+                                    ]?.length
+                                "
+                                :class="{
+                                    fallback:
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ].isFallback,
+                                }"
+                            >
+                                {{
+                                    handleTransport(
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ].value,
+                                        "email"
+                                    )
+                                }}
+                            </span>
+                        </td>
+                        <!-- Print -->
+                        <td>
+                            <span
+                                v-if="
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_mtt`
+                                    ]?.length
+                                "
+                                :class="{
+                                    fallback:
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ].isFallback,
+                                }"
+                            >
+                                {{
+                                    handleTransport(
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ].value,
+                                        "print"
+                                    )
+                                }}
+                            </span>
+                        </td>
+                        <!-- SMS -->
+                        <td>
+                            <span
+                                v-if="
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_mtt`
+                                    ]?.length
+                                "
+                                :class="{
+                                    fallback:
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ].isFallback,
+                                }"
+                            >
+                                {{
+                                    handleTransport(
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_mtt`
+                                        ].value,
+                                        "sms"
+                                    )
+                                }}
+                            </span>
+                        </td>
+                        <!-- Restricts Checkouts -->
+                        <td>
+                            <span
+                                v-if="
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_restrict`
+                                    ]
+                                "
+                                :class="{
+                                    fallback:
+                                        effectiveRuleSet[
+                                            `overdue_${triggerNumber}_restrict`
+                                        ].isFallback,
+                                }"
+                            >
+                                {{
+                                    effectiveRuleSet[
+                                        `overdue_${triggerNumber}_restrict`
+                                    ].value
+                                }}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+                <tbody v-else>
+                    <tr>
+                        {{
+                            $__("Loading circulation rule set...")
+                        }}
+                    </tr>
+                </tbody>
+            </table>
+        </fieldset>
 
-            <fieldset class="rows" v-if="alertMessage">
-                <div class="alert alert-info">{{ alertMessage }}</div>
-            </fieldset>
-        </div>
-        <div class="modal-footer">
-            <ButtonSubmit text="Confirm" />
-            <router-link
-                :to="{
-                    name: 'CirculationTriggersList',
-                }"
-                >{{ $__("Cancel") }}</router-link
-            >
-        </div>
-    </form>
+        <fieldset class="rows" v-if="alertMessage">
+            <div class="alert alert-info">{{ alertMessage }}</div>
+        </fieldset>
+    </CirculationTriggersForm>
 </template>
 
 <script>
 import ButtonSubmit from "../../ButtonSubmit.vue";
+import CirculationTriggersForm from "./CirculationTriggersForm.vue";
 import TriggerContext from "./TriggerContext.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
@@ -386,7 +357,7 @@ export default {
             this.triggerNumber = query.triggerNumber;
         },
     },
-    components: { ButtonSubmit, TriggerContext },
+    components: { ButtonSubmit, TriggerContext, CirculationTriggersForm },
 };
 </script>
 

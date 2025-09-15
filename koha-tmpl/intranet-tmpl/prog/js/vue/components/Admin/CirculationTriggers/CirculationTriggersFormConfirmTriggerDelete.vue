@@ -1,83 +1,51 @@
 <template>
-    <form
-        id="circulation-trigger-form-confirm-trigger-delete"
-        @submit="deleteTrigger($event)"
-        class="modal-content"
+    <CirculationTriggersForm
+        :submitAction="deleteTrigger"
+        formTitle="Confirm circulation trigger deletion"
     >
-        <div class="modal-header">
-            <h1 class="modal-title">
-                {{ $__("Confirm circulation rule set reset") }}
-            </h1>
-            <router-link
-                class="btn-close"
-                type="button"
-                :to="{
-                    name: 'CirculationTriggersList',
-                }"
-            ></router-link>
-        </div>
-        <div class="modal-body">
-            <fieldset class="rows">
-                <div class="page-section bg-info">
+        <fieldset class="rows">
+            <div class="page-section bg-info">
+                <p>
+                    {{
+                        $__(
+                            "Deleting this trigger will delete rule sets below."
+                        )
+                    }}
+                </p>
+            </div>
+            <legend>
+                {{ $__(`Deleting trigger number ${triggerNumber} for`) }}
+            </legend>
+            <ol v-if="initialized">
+                <li>
                     <p>
-                        {{
-                            $__(
-                                "Deleting this trigger will delete rule sets below."
-                            )
-                        }}
+                        <strong>{{ $__("Library") }}:</strong>
                     </p>
-                </div>
-                <legend>
-                    {{ $__(`Deleting trigger number ${triggerNumber} for`) }}
-                </legend>
-                <ol v-if="initialized">
-                    <li>
-                        <p>
-                            <strong>{{ $__("Library") }}:</strong>
-                        </p>
-                        <p id="library_id">
-                            {{
-                                handleContext(
-                                    libraryId,
-                                    libraries,
-                                    "library_id"
-                                )
-                            }}
-                        </p>
-                    </li>
-                </ol>
-                <div v-else>
-                    <p>{{ $__("Loading library...") }}</p>
-                </div>
-            </fieldset>
-
-            <fieldset class="rows">
-                <TriggersTable
-                    :triggerNumber="triggerNumber"
-                    :modal="false"
-                    :ruleSets="formattedEffectiveRuleSets"
-                />
-            </fieldset>
-
-            <fieldset class="rows" v-if="alertMessage">
-                <div class="alert alert-info">{{ alertMessage }}</div>
-            </fieldset>
-        </div>
-        <div class="modal-footer">
-            <ButtonSubmit text="Confirm" />
-            <router-link
-                :to="{
-                    name: 'CirculationTriggersList',
-                }"
-                >{{ $__("Cancel") }}</router-link
-            >
-        </div>
-    </form>
+                    <p id="library_id">
+                        {{ handleContext(libraryId, libraries, "library_id") }}
+                    </p>
+                </li>
+            </ol>
+            <div v-else>
+                <p>{{ $__("Loading library...") }}</p>
+            </div>
+        </fieldset>
+        <fieldset class="rows">
+            <TriggersTable
+                :triggerNumber="triggerNumber"
+                :modal="false"
+                :ruleSets="formattedEffectiveRuleSets"
+            />
+        </fieldset>
+        <fieldset class="rows" v-if="alertMessage">
+            <div class="alert alert-info">{{ alertMessage }}</div>
+        </fieldset>
+    </CirculationTriggersForm>
 </template>
 <script>
 import TriggersTable from "./TriggersTable.vue";
-import ButtonSubmit from "../../ButtonSubmit.vue";
 import TriggerContext from "./TriggerContext.vue";
+import CirculationTriggersForm from "./CirculationTriggersForm.vue";
 import { inject } from "vue";
 import { storeToRefs } from "pinia";
 
@@ -201,7 +169,7 @@ export default {
             this.triggerNumber = query.triggerNumber;
         },
     },
-    components: { ButtonSubmit, TriggerContext, TriggersTable },
+    components: { TriggerContext, TriggersTable, CirculationTriggersForm },
 };
 </script>
 
