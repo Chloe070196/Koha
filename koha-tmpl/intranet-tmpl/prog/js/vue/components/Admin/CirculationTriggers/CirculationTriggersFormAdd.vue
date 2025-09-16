@@ -40,7 +40,6 @@
                             label="name"
                             :reduce="lib => lib.library_id"
                             :options="libraries"
-                            @update:modelValue="refreshState($event)"
                             :disabled="editMode !== 'confirmContext'"
                         >
                             <template #search="{ attributes, events }">
@@ -64,7 +63,6 @@
                             label="name"
                             :reduce="cat => cat.patron_category_id"
                             :options="patronCategories"
-                            @update:modelValue="refreshState($event)"
                             :disabled="editMode !== 'confirmContext'"
                         >
                             <template #search="{ attributes, events }">
@@ -88,7 +86,6 @@
                             label="description"
                             :reduce="type => type.item_type_id"
                             :options="itemTypes"
-                            @update:modelValue="refreshState($event)"
                             :disabled="editMode !== 'confirmContext'"
                         >
                             <template #search="{ attributes, events }">
