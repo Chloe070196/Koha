@@ -329,45 +329,6 @@ export const useCircRulesStore = defineStore("circRules", {
             }
             return tabCount;
         },
-        setTriggerValues(
-            ruleSets,
-            selectedRuleSet,
-            triggerNumber,
-            context = null
-        ) {
-            const i = parseInt(triggerNumber);
-            const ruleSet = {
-                item_type_id:
-                    context?.item_type_id ??
-                    ruleSets[i - 1]?.context?.item_type_id ??
-                    "*",
-                library_id:
-                    context?.library_id ??
-                    ruleSets[i - 1]?.context?.library_id ??
-                    "*",
-                patron_category_id:
-                    context?.patron_category_id ??
-                    ruleSets[i - 1]?.context?.patron_category_id ??
-                    "*",
-                delay: ruleSets[i - 1]?.[`overdue_${i}_delay`]?.value ?? null,
-                notice: ruleSets[i - 1]?.[`overdue_${i}_notice`]?.value ?? null,
-                mtt:
-                    ruleSets[i - 1]?.[`overdue_${i}_mtt`]?.value?.split(",") ??
-                    [],
-                restrict:
-                    ruleSets[i - 1]?.[`overdue_${i}_restrict`]?.value ?? null,
-            };
-            const fallbackRuleSet = {
-                delay: this.findEffectiveRule(selectedRuleSet, "delay", i)
-                    .value,
-                notice: this.findEffectiveRule(selectedRuleSet, "notice", i)
-                    .value,
-                mtt: this.findEffectiveRule(selectedRuleSet, "mtt", i).value,
-                restrict: this.findEffectiveRule(selectedRuleSet, "restrict", i)
-                    .value,
-            };
-            return { ruleSet, fallbackRuleSet };
-        },
         setAllExhaustiveEffectiveRuleSets() {
             // clear array
             this.allExhaustiveEffectiveRuleSets = [];
