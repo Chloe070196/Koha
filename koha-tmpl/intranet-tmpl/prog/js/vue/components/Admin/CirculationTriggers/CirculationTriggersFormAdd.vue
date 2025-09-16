@@ -1,6 +1,5 @@
 <template>
     <form
-        v-if="initialized"
         class="modal-content"
         id="circulation-trigger-form-add"
         @submit="addCircRule($event)"
@@ -20,12 +19,15 @@
         <div class="modal-body">
             <div
                 class="page-section bg-info"
-                v-if="effectiveTriggerFilteredRuleSets.length"
+                v-if="ruleSetInitialized"
             >
                 <h2>{{ $__("Circulation context") }}</h2>
                 <TriggerContext :ruleSetInfo="ruleSetInfo" />
             </div>
-            <fieldset class="rows">
+            <div v-else-if="editMode !== 'confirmContext'">
+                <p>{{ $__("Loading rule set information...") }}</p>
+            </div>
+            <fieldset class="rows" v-if="contextInitialized">
                 <legend>{{ $__("Confirm trigger context") }}</legend>
                 <ol>
                     <li>
@@ -118,7 +120,7 @@
                 </div>
                 <div
                     class="page-section bg-warning-subtle"
-                    v-if="editMode !== 'confirmContext'"
+                    v-if="ruleSetInitialized && editMode !== 'confirmContext'"
                 >
                     <TriggersTable
                         :triggerNumber="triggerNumber"
@@ -130,12 +132,15 @@
                     />
                 </div>
             </fieldset>
+            <div v-else>
+                <p>{{ $__("Loading context...") }}</p>
+            </div>
             <fieldset class="rows" v-if="alertMessage">
                 <div class="alert alert-info">{{ alertMessage }}</div>
             </fieldset>
             <fieldset
                 class="rows"
-                v-if="editMode === 'edit' || editMode === 'add'"
+                v-if="ruleSetInitialized && editMode === 'edit' || editMode === 'add'"
             >
                 <legend v-if="editMode === 'add'">
                     {{ $__("Add new trigger") }}
@@ -273,9 +278,12 @@
                     </li>
                 </ol>
             </fieldset>
+            <div v-else-if="editMode === 'add' || editMode === 'edit'">
+                <p>{{ $__("Loading circulation rules...") }}</p>
+            </div>
             <fieldset
                 class="rows"
-                v-if="editMode === 'edit' || editMode === 'add'"
+                v-if="ruleSetInitialized && editMode === 'edit' || editMode === 'add'"
             >
                 <legend v-if="ruleSetInfo.triggerCount < triggerNumber">
                     {{ $__("Notice for trigger") }}
@@ -383,6 +391,9 @@
                     </li>
                 </ol>
             </fieldset>
+            <div v-else-if="editMode === 'add' || editMode === 'edit'">
+                <p>{{ $__("Loading circulation rules...") }}</p>
+            </div>
         </div>
         <div class="modal-footer">
             <ButtonSubmit
@@ -397,9 +408,7 @@
             >
         </div>
     </form>
-    <div v-else>
-        <p>{{ $__("Loading...") }}</p>
-    </div>
+
 </template>
 
 <script>
@@ -447,7 +456,6 @@ export default {
     },
     data() {
         return {
-            initialized: false,
             triggerNumber: 1,
             libraryId: "*",
             itemTypeId: "*",
@@ -471,12 +479,15 @@ export default {
             alertMessage: null,
             allowSubmission: false,
             effectiveTriggerFilteredRuleSets: [],
+            contextInitialized: false,
+            ruleSetInitialized: false,
         };
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             const { query } = to;
             vm.setContext(query);
+            vm.contextInitialized = true;
             vm.refreshState(query);
         });
     },
@@ -631,7 +642,7 @@ export default {
             this.setMaxDelay();
             this.setFilteredLetters();
             this.isReadyForSubmission();
-            this.initialized = true;
+            this.ruleSetInitialized = true;
         },
         setContext(query) {
             this.libraryId = query.library_id ?? "*";
