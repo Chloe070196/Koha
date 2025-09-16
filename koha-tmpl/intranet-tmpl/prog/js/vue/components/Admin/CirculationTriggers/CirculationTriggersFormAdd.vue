@@ -106,11 +106,9 @@
                         :to="{
                             name: 'CirculationTriggersSelectOrAdd',
                             query: {
-                                library_id: ruleSetToSubmit.context.library_id,
-                                item_type_id:
-                                    ruleSetToSubmit.context.item_type_id,
-                                patron_category_id:
-                                    ruleSetToSubmit.context.patron_category_id,
+                                library_id: libraryId,
+                                item_type_id: itemTypeId,
+                                patron_category_id: patronCategoryId,
                             },
                         }"
                         class="btn btn-default btn-xs"
@@ -486,16 +484,13 @@ export default {
         async addCircRule(e) {
             e.preventDefault();
 
-            const context = {
-                library_id: this.ruleSetToSubmit.context.library_id || "*",
-                item_type_id: this.ruleSetToSubmit.context.item_type_id || "*",
-                patron_category_id:
-                    this.ruleSetToSubmit.context.patron_category_id || "*",
+            const ruleSetToSubmit = {
+                context: {
+                    library_id: this.libraryId,
+                    item_type_id: this.itemTypeId,
+                    patron_category_id: this.patronCategoryId,
+                },
             };
-
-            const ruleSetToSubmit = cloneDeep({
-                context: { ...this.ruleSetToSubmit.context },
-            });
 
             // ensure that no property is set to null as this would delete the rule!
             if (
@@ -570,9 +565,9 @@ export default {
             if (this.editMode === "edit") {
                 // fetch db state so it matches the database
                 const ruleSetInDb = await this.getRawSelectedRuleSet(
-                    this.ruleSetToSubmit.context.library_id,
-                    this.ruleSetToSubmit.context.patron_category_id,
-                    this.ruleSetToSubmit.context.item_type_id
+                    this.libraryId,
+                    this.patronCategoryId,
+                    this.itemTypeId
                 );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
@@ -590,7 +585,9 @@ export default {
                     this.$router.push({
                         path: "/cgi-bin/koha/admin/circulation_triggers/edit",
                         query: {
-                            ...context,
+                            library_id: this.libraryId,
+                            patron_category_id: this.patronCategoryId,
+                            item_type_id: this.itemTypeId,
                             triggerNumber: this.triggerNumber,
                         },
                     });
@@ -605,9 +602,9 @@ export default {
             });
             this.$router.go(0);
         },
-        async refreshState(query = this.$route.query) {
+        async refreshState() {
             this.setEditMode();
-            this.setTriggerNumber(query.triggerNumber, query.library_id);
+            this.setTriggerNumber(this.triggerNumber, this.libraryId);
             this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
                 this.libraryId,
                 this.patronCategoryId,
@@ -653,8 +650,7 @@ export default {
                 fine: this.currentRuleSet.fine,
                 chargeperiod: this.currentRuleSet.chargeperiod,
                 lengthunit: this.currentRuleSet.lengthunit,
-                triggerCount:
-                    this.triggerCounts[this.currentRuleSet.context.library_id],
+                triggerCount: this.triggerCounts[this.libraryId],
             };
         },
         // save the ruleSet as loaded initially
@@ -733,7 +729,7 @@ export default {
                 : Infinity;
         },
         setFilteredLetters() {
-            let library = this.currentRuleSet.context.library_id;
+            let library = this.libraryId;
             const branchcodeMatches = letters.filter(
                 letter => letter.branchcode === library
             );
