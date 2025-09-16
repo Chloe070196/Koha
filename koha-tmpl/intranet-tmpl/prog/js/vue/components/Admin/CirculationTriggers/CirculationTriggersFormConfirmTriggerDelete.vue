@@ -7,7 +7,7 @@
             <h2 v-if="initialized">
                 {{
                     $__(
-                        `Delete Trigger ${triggerNumber} for: ${handleContext(libraryId, libraries, "library_id")}`
+                        `Delete Trigger ${triggerNumber} for: ${handleContext(library_id, libraries, "library_id")}`
                     )
                 }}
             </h2>
@@ -55,11 +55,8 @@ export default {
             setAllRawRuleSets,
             deleteRuleSet,
         } = circRulesStore;
-        const {
-            libraries,
-            allCurrentLibraryRawRuleSets,
-            ruleSuffixes,
-        } = storeToRefs(circRulesStore);
+        const { libraries, allCurrentLibraryRawRuleSets, ruleSuffixes } =
+            storeToRefs(circRulesStore);
         return {
             libraries,
             handleContext,
@@ -74,7 +71,7 @@ export default {
         return {
             alertMessage: null,
             initialized: false,
-            libraryId: "*",
+            library_id: "*",
             triggerNumber: null,
             formattedEffectiveRuleSets: [],
         };
@@ -138,9 +135,7 @@ export default {
             });
         },
         setContext(query) {
-            this.libraryId = query.library_id ?? "*";
-            this.itemTypeId = query.item_type_id ?? "*";
-            this.patronCategoryId = query.patron_category_id ?? "*";
+            this.library_id = query.library_id ?? "*";
             this.triggerNumber = query.triggerNumber;
         },
     },

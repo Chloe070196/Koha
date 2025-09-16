@@ -27,7 +27,7 @@
                         <strong>{{ $__("Library") }}:</strong>
                     </p>
                     <p id="library_id">
-                        {{ handleContext(libraryId, libraries, "library_id") }}
+                        {{ handleContext(library_id, libraries, "library_id") }}
                     </p>
                 </li>
                 <li>
@@ -37,7 +37,7 @@
                     <p id="patron_category_id">
                         {{
                             handleContext(
-                                patronCategoryId,
+                                patron_category_id,
                                 patronCategories,
                                 "patron_category_id"
                             )
@@ -51,7 +51,7 @@
                     <p id="item_type_id">
                         {{
                             handleContext(
-                                itemTypeId,
+                                item_type_id,
                                 itemTypes,
                                 "item_type_id",
                                 "description"
@@ -292,9 +292,9 @@ export default {
         return {
             alertMessage: null,
             initialized: false,
-            libraryId: "*",
-            itemTypeId: "*",
-            patronCategoryId: "*",
+            library_id: "*",
+            item_type_id: "*",
+            patron_category_id: "*",
             triggerNumber: null,
             ruleSet: null,
             currentRuleSet: null,
@@ -305,13 +305,11 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             vm.setContext(to.query);
-            vm.currentRuleSet = await vm.getSelectedRuleSet(
-                {
-                    libraryId: vm.libraryId,
-                    patronCategoryId: vm.patronCategoryId,
-                    itemTypeId: vm.itemTypeId
-                }
-            );
+            vm.currentRuleSet = await vm.getSelectedRuleSet({
+                library_id: vm.library_id,
+                patron_category_id: vm.patron_category_id,
+                item_type_id: vm.item_type_id,
+            });
             vm.effectiveRuleSet = vm.formatTriggerSpecificRuleSetForDisplay(
                 vm.currentRuleSet.context,
                 vm.triggerNumber,
@@ -335,7 +333,7 @@ export default {
                 this.$router.push({
                     path: "/cgi-bin/koha/admin/circulation_triggers/reset",
                     query: {
-                        ...ruleSet.context,
+                        ...this.currentRuleSet.context,
                         triggerNumber: triggerNumber,
                     },
                 });
@@ -346,9 +344,9 @@ export default {
             this.$router.go(0);
         },
         setContext(query) {
-            this.libraryId = query.library_id ?? "*";
-            this.itemTypeId = query.item_type_id ?? "*";
-            this.patronCategoryId = query.patron_category_id ?? "*";
+            this.library_id = query.library_id ?? "*";
+            this.item_type_id = query.item_type_id ?? "*";
+            this.patron_category_id = query.patron_category_id ?? "*";
             this.triggerNumber = query.triggerNumber;
         },
     },
