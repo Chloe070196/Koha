@@ -263,20 +263,14 @@ export const useCircRulesStore = defineStore("circRules", {
             patron_category_id = null,
             item_type_id = null
         ) {
-            const context = {
-                library_id,
-            };
-            item_type_id && (context.item_type_id = item_type_id);
-            patron_category_id &&
-                (context.patron_category_id = patron_category_id);
             const client = APIClient.circRule;
             let result;
             try {
-                result = await client.circRules.getAll({}, context);
+                result = await client.circRules.getAll({}, { library_id, patron_category_id, item_type_id, effective: false });
             } catch (e) {
                 throw e;
             }
-            return result[0];
+            return result[0] ?? null;
         },
         handleContext(value, data, type, displayProperty = "name") {
             const item = data.find(item => item[type] === value);
