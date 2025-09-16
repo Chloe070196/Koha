@@ -17,10 +17,7 @@
             ></router-link>
         </div>
         <div class="modal-body">
-            <div
-                class="page-section bg-info"
-                v-if="ruleSetInitialized"
-            >
+            <div class="page-section bg-info" v-if="ruleSetInitialized">
                 <h2>{{ $__("Circulation context") }}</h2>
                 <TriggerContext :ruleSetInfo="ruleSetInfo" />
             </div>
@@ -137,7 +134,10 @@
             </fieldset>
             <fieldset
                 class="rows"
-                v-if="ruleSetInitialized && editMode === 'edit' || editMode === 'add'"
+                v-if="
+                    (ruleSetInitialized && editMode === 'edit') ||
+                    editMode === 'add'
+                "
             >
                 <legend v-if="editMode === 'add'">
                     {{ $__("Add new trigger") }}
@@ -280,7 +280,10 @@
             </div>
             <fieldset
                 class="rows"
-                v-if="ruleSetInitialized && editMode === 'edit' || editMode === 'add'"
+                v-if="
+                    (ruleSetInitialized && editMode === 'edit') ||
+                    editMode === 'add'
+                "
             >
                 <legend v-if="ruleSetInfo.triggerCount < triggerNumber">
                     {{ $__("Notice for trigger") }}
@@ -405,7 +408,6 @@
             >
         </div>
     </form>
-
 </template>
 
 <script>
@@ -483,9 +485,18 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             const { query } = to;
+            vm.setEditMode();
             vm.setContext(query);
             vm.contextInitialized = true;
-            vm.refreshState(query);
+            vm.setTriggerNumber(vm.triggerNumber, vm.libraryId);
+
+            if (
+                ["selectOrAdd", "add", "edit"].some(str =>
+                    to.fullPath.includes(str)
+                )
+            ) {
+                vm.setRuleSets();
+            }
         });
     },
     methods: {
@@ -610,33 +621,34 @@ export default {
             });
             this.$router.go(0);
         },
-        async refreshState() {
-            this.setEditMode();
-            this.setTriggerNumber(this.triggerNumber, this.libraryId);
+        async setRuleSets() {
+            this.updateTriggerCount();
             this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
                 this.libraryId,
                 this.patronCategoryId,
                 this.itemTypeId
             );
-            this.updateTriggerCount(this.ruleSetToSubmit);
-            if (this.editMode === "add") {
-                (this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
-                    this.minDelay),
-                    (this.ruleSetToSubmit[
-                        `overdue_${this.triggerNumber}_notice`
-                    ] = null);
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] =
-                    null;
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_restrict`] =
-                    null;
+            this.setMinDelay();
+
+            if (this.ruleSetToSubmit === null) {
+                this.ruleSetToSubmit = {
+                    context: {
+                        library_id: this.libraryId,
+                        patron_category_id: this.patronCategoryId,
+                        item_type_id: this.itemTypeId,
+                    },
+                    [`overdue_${this.triggerNumber}_delay`]: this.minDelay,
+                    [`overdue_${this.triggerNumber}_notice`]: null,
+                    [`overdue_${this.triggerNumber}_mtt`]: null,
+                    [`overdue_${this.triggerNumber}_restrict`]: null,
+                };
             }
             this.setCurrentRuleSet();
+            this.setMaxDelay();
             this.setRuleSetInfo();
             this.effectiveTriggerFilteredRuleSets =
                 this.setEffectiveTriggerFilteredRuleSet(this.ruleSetToSubmit);
             this.setFallbackRuleSet();
-            this.setMinDelay();
-            this.setMaxDelay();
             this.setFilteredLetters();
             this.isReadyForSubmission();
             this.ruleSetInitialized = true;
@@ -711,7 +723,11 @@ export default {
             };
         },
         setMinDelay() {
-            if (this.triggerNumber === 0 || this.triggerNumber === 1) {
+            if (
+                this.ruleSetToSubmit === null ||
+                this.triggerNumber === 0 ||
+                this.triggerNumber === 1
+            ) {
                 this.minDelay = 0;
                 return;
             }
