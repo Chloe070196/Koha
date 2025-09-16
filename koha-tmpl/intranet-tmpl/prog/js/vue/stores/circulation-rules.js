@@ -266,7 +266,15 @@ export const useCircRulesStore = defineStore("circRules", {
             const client = APIClient.circRule;
             let result;
             try {
-                result = await client.circRules.getAll({}, { library_id, patron_category_id, item_type_id, effective: false });
+                result = await client.circRules.getAll(
+                    {},
+                    {
+                        library_id,
+                        patron_category_id,
+                        item_type_id,
+                        effective: false,
+                    }
+                );
             } catch (e) {
                 throw e;
             }
@@ -457,6 +465,9 @@ export const useCircRulesStore = defineStore("circRules", {
             ) {
                 const triggerSpecificRuleSet =
                     this.formatTriggerSpecificRuleSetForDisplay(ruleSet, i);
+                if (!triggerSpecificRuleSet) {
+                    continue;
+                }
                 effectiveTriggerFilteredRuleSets.push(triggerSpecificRuleSet);
             }
             return effectiveTriggerFilteredRuleSets;
