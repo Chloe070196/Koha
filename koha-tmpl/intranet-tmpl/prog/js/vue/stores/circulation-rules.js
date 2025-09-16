@@ -34,7 +34,7 @@ export const useCircRulesStore = defineStore("circRules", {
     }),
     actions: {
         async deleteRuleSet(ruleSet, triggerNumber) {
-            const ruleSetInDb = await this.getRawSelectedRuleSet(
+            const ruleSetInDb = await this.getSelectedRuleSet(
                 ruleSet.context
             );
 
@@ -248,7 +248,7 @@ export const useCircRulesStore = defineStore("circRules", {
             });
             this.patronCategories = patronCategories;
         },
-        async getRawSelectedRuleSet(context) {
+        async getSelectedRuleSet(context, effective = false) {
             if (context.library_id === null) {
                 context.library_id = "*";
             }
@@ -261,7 +261,7 @@ export const useCircRulesStore = defineStore("circRules", {
                         library_id: context.library_id,
                         patron_category_id: context.patron_category_id,
                         item_type_id: context.item_type_id,
-                        effective: false,
+                        effective,
                     }
                 );
             } catch (e) {

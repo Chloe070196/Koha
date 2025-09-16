@@ -270,7 +270,7 @@ export default {
             handleRestrictions,
             handleTransport,
             findEffectiveRule,
-            getRawSelectedRuleSet,
+            getSelectedRuleSet,
             updateCircRuleSets,
             hasConflict,
             formatTriggerSpecificRuleSetForDisplay,
@@ -288,7 +288,7 @@ export default {
             handleNotice,
             handleRestrictions,
             handleTransport,
-            getRawSelectedRuleSet,
+            getSelectedRuleSet,
             updateCircRuleSets,
             hasConflict,
             formatTriggerSpecificRuleSetForDisplay,
@@ -312,10 +312,12 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(async vm => {
             vm.setContext(to.query);
-            vm.currentRuleSet = await vm.getRawSelectedRuleSet(
-                vm.libraryId,
-                vm.patronCategoryId,
-                vm.itemTypeId
+            vm.currentRuleSet = await vm.getSelectedRuleSet(
+                {
+                    libraryId: vm.libraryId,
+                    patronCategoryId: vm.patronCategoryId,
+                    itemTypeId: vm.itemTypeId
+                }
             );
             vm.effectiveRuleSet = vm.formatTriggerSpecificRuleSetForDisplay(
                 vm.currentRuleSet.context,

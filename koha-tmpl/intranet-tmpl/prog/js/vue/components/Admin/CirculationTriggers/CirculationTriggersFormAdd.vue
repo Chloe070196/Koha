@@ -420,7 +420,7 @@ export default {
         const {
             updateTriggerCount,
             findEffectiveRule,
-            getRawSelectedRuleSet,
+            getSelectedRuleSet,
             setEffectiveTriggerFilteredRuleSet,
             updateCircRuleSets,
             hasConflict,
@@ -441,7 +441,7 @@ export default {
             transportTypes,
             triggerCounts,
             patronCategories,
-            getRawSelectedRuleSet,
+            getSelectedRuleSet,
             updateTriggerCount,
             findEffectiveRule,
             setEffectiveTriggerFilteredRuleSet,
@@ -577,7 +577,7 @@ export default {
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
                 // fetch db state so it matches the database
-                const ruleSetInDb = await this.getRawSelectedRuleSet(
+                const ruleSetInDb = await this.getSelectedRuleSet(
                     this.context
                 );
 
@@ -660,8 +660,9 @@ export default {
         },
         // save the ruleSet as loaded initially
         async setCurrentRuleSet() {
-            this.currentRuleSet = await this.getRawSelectedRuleSet(
-                this.context
+            this.currentRuleSet = await this.getSelectedRuleSet(
+                this.context,
+                true
             );
         },
         // assign the triggerNumber passed to the route or generate a new trigger number
