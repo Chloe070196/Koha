@@ -296,7 +296,6 @@ export default {
         const circRulesStore = inject("circRulesStore");
         circRulesStore.init();
         const {
-            setEffectiveTriggerFilteredRuleSets,
             updateTriggerCount,
             setAllRawRuleSets,
             setAllEffectiveRuleSets,
@@ -316,7 +315,6 @@ export default {
         } = storeToRefs(circRulesStore);
 
         return {
-            setEffectiveTriggerFilteredRuleSets,
             currentLibraryId,
             currentPatronCategoryId,
             currentItemTypeId,

@@ -269,28 +269,21 @@ export default {
             handleNotice,
             handleRestrictions,
             handleTransport,
-            findEffectiveRule,
             getSelectedRuleSet,
-            updateCircRuleSets,
-            hasConflict,
             formatTriggerSpecificRuleSetForDisplay,
             deleteRuleSet,
         } = circRulesStore;
-        const { letters, libraries, itemTypes, patronCategories } =
+        const { libraries, itemTypes, patronCategories } =
             storeToRefs(circRulesStore);
         return {
-            letters,
             libraries,
             itemTypes,
             patronCategories,
             handleContext,
-            findEffectiveRule,
             handleNotice,
             handleRestrictions,
             handleTransport,
             getSelectedRuleSet,
-            updateCircRuleSets,
-            hasConflict,
             formatTriggerSpecificRuleSetForDisplay,
             deleteRuleSet,
         };
