@@ -488,7 +488,7 @@ export default {
             vm.setEditMode();
             vm.setContext(query);
             vm.contextInitialized = true;
-            vm.setTriggerNumber(vm.triggerNumber, vm.libraryId);
+            vm.setTriggerNumber(query.triggerNumber, vm.libraryId);
 
             if (
                 ["selectOrAdd", "add", "edit"].some(str =>
