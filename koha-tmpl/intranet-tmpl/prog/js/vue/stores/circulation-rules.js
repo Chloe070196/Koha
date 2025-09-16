@@ -177,11 +177,8 @@ export const useCircRulesStore = defineStore("circRules", {
             includeFallbacks = true
         ) {
             const triggerSpecificRuleSet = {
-                context: { ...ruleSet.context },
+                context,
             };
-            if (ruleSet[`overdue_${triggerNumber}_has_rules`] === null) {
-                return false;
-            }
             this.ruleSuffixes.forEach(ruleSuffix => {
                 triggerSpecificRuleSet[
                     `overdue_${triggerNumber}_${ruleSuffix}`
@@ -392,7 +389,7 @@ export const useCircRulesStore = defineStore("circRules", {
                         this.ruleSuffixes.forEach(ruleSuffix => {
                             effectiveRuleSet[`overdue_${i}_${ruleSuffix}`] =
                                 this.findEffectiveRule(
-                                    effectiveRuleSet,
+                                    effectiveRuleSet.context,
                                     ruleSuffix,
                                     i
                                 );
@@ -421,7 +418,7 @@ export const useCircRulesStore = defineStore("circRules", {
                     this.ruleSuffixes.forEach(ruleSuffix => {
                         effectiveRuleSet[`overdue_${i}_${ruleSuffix}`] =
                             this.findEffectiveRule(
-                                effectiveRuleSet,
+                                ruleSet.context,
                                 ruleSuffix,
                                 i
                             );
