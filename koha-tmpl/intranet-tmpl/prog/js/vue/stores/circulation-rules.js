@@ -34,9 +34,7 @@ export const useCircRulesStore = defineStore("circRules", {
     }),
     actions: {
         async deleteRuleSet(ruleSet, triggerNumber) {
-            const ruleSetInDb = await this.getSelectedRuleSet(
-                ruleSet.context
-            );
+            const ruleSetInDb = await this.getSelectedRuleSet(ruleSet.context);
 
             if (this.hasConflict(ruleSet, ruleSetInDb, triggerNumber)) {
                 throw "The rule set for the selected trigger context could not be reset as it was updated elsewhere. Please see the updated trigger above.";
@@ -287,6 +285,9 @@ export const useCircRulesStore = defineStore("circRules", {
             return value.includes(type) ? $__("Yes") : $__("No");
         },
         hasConflict(oldRuleSet, newRuleSet, triggerNumber) {
+            if (!oldRuleSet) {
+                return false;
+            }
             return (
                 oldRuleSet.context.library_id !==
                     newRuleSet.context.library_id ||

@@ -577,15 +577,13 @@ export default {
             // prevent race condition related edit conflicts
             if (this.editMode === "edit") {
                 // fetch db state so it matches the database
-                const ruleSetInDb = await this.getSelectedRuleSet(
-                    this.context
-                );
+                const ruleSetInDb = await this.getSelectedRuleSet(this.context);
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
                 if (
                     this.hasConflict(
-                        this.currentRuleSet,
                         ruleSetInDb,
+                        this.currentRuleSet,
                         this.triggerNumber
                     )
                 ) {
