@@ -35,9 +35,7 @@ export const useCircRulesStore = defineStore("circRules", {
     actions: {
         async deleteRuleSet(ruleSet, triggerNumber) {
             const ruleSetInDb = await this.getRawSelectedRuleSet(
-                ruleSet.context.library_id,
-                ruleSet.context.patron_category_id,
-                ruleSet.context.item_type_id
+                ruleSet.context
             );
 
             if (this.hasConflict(ruleSet, ruleSetInDb, triggerNumber)) {
@@ -62,7 +60,7 @@ export const useCircRulesStore = defineStore("circRules", {
             this.updateCircRuleSets(rulesForDeletion, triggerNumber);
         },
         findEffectiveRule(
-            selectedRuleSet,
+            context,
             ruleSuffix,
             triggerNumber,
             includeFallbacks = true
@@ -85,12 +83,10 @@ export const useCircRulesStore = defineStore("circRules", {
                         undefined &&
                     ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
                         null &&
-                    ruleSet?.context.library_id ===
-                        selectedRuleSet.context.library_id &&
+                    ruleSet?.context.library_id === context.library_id &&
                     ruleSet?.context.patron_category_id ===
-                        selectedRuleSet.context.patron_category_id &&
-                    ruleSet?.context.item_type_id ===
-                        selectedRuleSet.context.item_type_id
+                        context.patron_category_id &&
+                    ruleSet?.context.item_type_id === context.item_type_id
             );
 
             // if handling 'has_rules', stop here
@@ -126,14 +122,12 @@ export const useCircRulesStore = defineStore("circRules", {
                         undefined &&
                     ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
                         null &&
-                    (ruleSet.context.library_id ===
-                        selectedRuleSet.context.library_id ||
+                    (ruleSet.context.library_id === context.library_id ||
                         ruleSet.context.library_id === "*") &&
                     (ruleSet.context.patron_category_id ===
-                        selectedRuleSet.context.patron_category_id ||
+                        context.patron_category_id ||
                         ruleSet.context.patron_category_id === "*") &&
-                    (ruleSet.context.item_type_id ===
-                        selectedRuleSet.context.item_type_id ||
+                    (ruleSet.context.item_type_id === context.item_type_id ||
                         ruleSet.context.item_type_id === "*")
             );
 
@@ -142,20 +136,18 @@ export const useCircRulesStore = defineStore("circRules", {
                 let score = 0;
                 if (
                     ruleSetContext.library_id !== "*" &&
-                    ruleSetContext.library_id ===
-                        selectedRuleSet.context.library_id
+                    ruleSetContext.library_id === context.library_id
                 )
                     score += 4;
                 if (
                     ruleSetContext.patron_category_id !== "*" &&
                     ruleSetContext.patron_category_id ===
-                        selectedRuleSet.context.patron_category_id
+                        context.patron_category_id
                 )
                     score += 2;
                 if (
                     ruleSetContext.item_type_id !== "*" &&
-                    ruleSetContext.item_type_id ===
-                        selectedRuleSet.context.item_type_id
+                    ruleSetContext.item_type_id === context.item_type_id
                 )
                     score += 1;
                 return score;
@@ -180,7 +172,7 @@ export const useCircRulesStore = defineStore("circRules", {
             };
         },
         formatTriggerSpecificRuleSetForDisplay(
-            ruleSet,
+            context,
             triggerNumber,
             includeFallbacks = true
         ) {
@@ -194,12 +186,13 @@ export const useCircRulesStore = defineStore("circRules", {
                 triggerSpecificRuleSet[
                     `overdue_${triggerNumber}_${ruleSuffix}`
                 ] = this.findEffectiveRule(
-                    triggerSpecificRuleSet,
+                    context,
                     ruleSuffix,
                     triggerNumber,
                     includeFallbacks
                 );
             });
+            triggerSpecificRuleSet.context = context;
             return triggerSpecificRuleSet;
         },
         async getItemTypes() {
@@ -258,20 +251,19 @@ export const useCircRulesStore = defineStore("circRules", {
             });
             this.patronCategories = patronCategories;
         },
-        async getRawSelectedRuleSet(
-            library_id = "*",
-            patron_category_id = null,
-            item_type_id = null
-        ) {
+        async getRawSelectedRuleSet(context) {
+            if (context.library_id === null) {
+                context.library_id = "*";
+            }
             const client = APIClient.circRule;
             let result;
             try {
                 result = await client.circRules.getAll(
                     {},
                     {
-                        library_id,
-                        patron_category_id,
-                        item_type_id,
+                        library_id: context.library_id,
+                        patron_category_id: context.patron_category_id,
+                        item_type_id: context.item_type_id,
                         effective: false,
                     }
                 );
@@ -456,7 +448,7 @@ export const useCircRulesStore = defineStore("circRules", {
                 // TODO: handle error
             }
         },
-        setEffectiveTriggerFilteredRuleSet(ruleSet) {
+        setEffectiveTriggerFilteredRuleSet(context) {
             const effectiveTriggerFilteredRuleSets = [];
             for (
                 let i = 1;
@@ -464,7 +456,7 @@ export const useCircRulesStore = defineStore("circRules", {
                 i++
             ) {
                 const triggerSpecificRuleSet =
-                    this.formatTriggerSpecificRuleSetForDisplay(ruleSet, i);
+                    this.formatTriggerSpecificRuleSetForDisplay(context, i);
                 if (!triggerSpecificRuleSet) {
                     continue;
                 }

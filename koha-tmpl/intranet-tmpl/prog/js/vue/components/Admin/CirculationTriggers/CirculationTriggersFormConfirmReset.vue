@@ -318,7 +318,7 @@ export default {
                 vm.itemTypeId
             );
             vm.effectiveRuleSet = vm.formatTriggerSpecificRuleSetForDisplay(
-                vm.currentRuleSet,
+                vm.currentRuleSet.context,
                 vm.triggerNumber,
                 false
             );

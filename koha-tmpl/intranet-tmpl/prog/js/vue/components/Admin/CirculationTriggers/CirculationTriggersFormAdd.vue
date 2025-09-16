@@ -33,7 +33,7 @@
                         >
                         <v-select
                             id="library_id"
-                            v-model="libraryId"
+                            v-model="context.library_id"
                             label="name"
                             :reduce="lib => lib.library_id"
                             :options="libraries"
@@ -41,7 +41,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    :required="!libraryId"
+                                    :required="!context.library_id"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -56,7 +56,7 @@
                         >
                         <v-select
                             id="patron_category_id"
-                            v-model="patronCategoryId"
+                            v-model="context.patron_category_id"
                             label="name"
                             :reduce="cat => cat.patron_category_id"
                             :options="patronCategories"
@@ -64,7 +64,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    :required="!patronCategoryId"
+                                    :required="!context.patron_category_id"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -79,7 +79,7 @@
                         >
                         <v-select
                             id="item_type_id"
-                            v-model="itemTypeId"
+                            v-model="context.item_type_id"
                             label="description"
                             :reduce="type => type.item_type_id"
                             :options="itemTypes"
@@ -87,7 +87,7 @@
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    :required="!itemTypeId"
+                                    :required="!context.item_type_id"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -101,11 +101,7 @@
                     <router-link
                         :to="{
                             name: 'CirculationTriggersSelectOrAdd',
-                            query: {
-                                library_id: libraryId,
-                                item_type_id: itemTypeId,
-                                patron_category_id: patronCategoryId,
-                            },
+                            query: context,
                         }"
                         class="btn btn-default btn-xs"
                         ><i class="fa-solid fa-pencil"></i>
@@ -456,9 +452,11 @@ export default {
     data() {
         return {
             triggerNumber: 1,
-            libraryId: "*",
-            itemTypeId: "*",
-            patronCategoryId: "*",
+            context: {
+                library_id: "*",
+                item_type_id: "*",
+                patron_category_id: "*",
+            },
             fallbackRuleSet: null,
             ruleSetInfo: {
                 issuelength: null,
@@ -488,7 +486,7 @@ export default {
             vm.setEditMode();
             vm.setContext(query);
             vm.contextInitialized = true;
-            vm.setTriggerNumber(query.triggerNumber, vm.libraryId);
+            vm.setTriggerNumber(query.triggerNumber, vm.context.library_id);
 
             if (
                 ["selectOrAdd", "add", "edit"].some(str =>
@@ -504,11 +502,7 @@ export default {
             e.preventDefault();
 
             const ruleSetToSubmit = {
-                context: {
-                    library_id: this.libraryId,
-                    item_type_id: this.itemTypeId,
-                    patron_category_id: this.patronCategoryId,
-                },
+                context: this.context,
             };
 
             // ensure that no property is set to null as this would delete the rule!
@@ -584,9 +578,7 @@ export default {
             if (this.editMode === "edit") {
                 // fetch db state so it matches the database
                 const ruleSetInDb = await this.getRawSelectedRuleSet(
-                    this.libraryId,
-                    this.patronCategoryId,
-                    this.itemTypeId
+                    this.context
                 );
 
                 // if any changes are detected, inform the user, display the new values and go back to editing
@@ -604,9 +596,9 @@ export default {
                     this.$router.push({
                         path: "/cgi-bin/koha/admin/circulation_triggers/edit",
                         query: {
-                            library_id: this.libraryId,
-                            patron_category_id: this.patronCategoryId,
-                            item_type_id: this.itemTypeId,
+                            library_id: this.context.library_id,
+                            patron_category_id: this.context.patron_category_id,
+                            item_type_id: this.context.item_type_id,
                             triggerNumber: this.triggerNumber,
                         },
                     });
@@ -623,40 +615,33 @@ export default {
         },
         async setRuleSets() {
             this.updateTriggerCount();
-            this.ruleSetToSubmit = await this.getRawSelectedRuleSet(
-                this.libraryId,
-                this.patronCategoryId,
-                this.itemTypeId
-            );
-            this.setMinDelay();
+            await this.setCurrentRuleSet();
 
+            this.ruleSetToSubmit = cloneDeep(this.currentRuleSet);
+
+            this.setMinDelay();
             if (this.ruleSetToSubmit === null) {
                 this.ruleSetToSubmit = {
-                    context: {
-                        library_id: this.libraryId,
-                        patron_category_id: this.patronCategoryId,
-                        item_type_id: this.itemTypeId,
-                    },
+                    context: this.context,
                     [`overdue_${this.triggerNumber}_delay`]: this.minDelay,
                     [`overdue_${this.triggerNumber}_notice`]: null,
                     [`overdue_${this.triggerNumber}_mtt`]: null,
                     [`overdue_${this.triggerNumber}_restrict`]: null,
                 };
             }
-            this.setCurrentRuleSet();
             this.setMaxDelay();
             this.setRuleSetInfo();
             this.effectiveTriggerFilteredRuleSets =
-                this.setEffectiveTriggerFilteredRuleSet(this.ruleSetToSubmit);
+                this.setEffectiveTriggerFilteredRuleSet(this.context);
             this.setFallbackRuleSet();
             this.setFilteredLetters();
             this.isReadyForSubmission();
             this.ruleSetInitialized = true;
         },
         setContext(query) {
-            this.libraryId = query.library_id ?? "*";
-            this.itemTypeId = query.item_type_id ?? "*";
-            this.patronCategoryId = query.patron_category_id ?? "*";
+            this.context.library_id = query.library_id ?? "*";
+            this.context.item_type_id = query.item_type_id ?? "*";
+            this.context.patron_category_id = query.patron_category_id ?? "*";
         },
         setEditMode() {
             this.editMode = this.$route.path.substring(
@@ -670,25 +655,27 @@ export default {
                 fine: this.currentRuleSet.fine,
                 chargeperiod: this.currentRuleSet.chargeperiod,
                 lengthunit: this.currentRuleSet.lengthunit,
-                triggerCount: this.triggerCounts[this.libraryId],
+                triggerCount: this.triggerCounts[this.context.library_id],
             };
         },
         // save the ruleSet as loaded initially
-        setCurrentRuleSet() {
-            this.currentRuleSet = cloneDeep(this.ruleSetToSubmit);
+        async setCurrentRuleSet() {
+            this.currentRuleSet = await this.getRawSelectedRuleSet(
+                this.context
+            );
         },
         // assign the triggerNumber passed to the route or generate a new trigger number
-        setTriggerNumber(triggerNumber, libraryId) {
+        setTriggerNumber(triggerNumber, library_id) {
             this.triggerNumber =
                 this.editMode === "edit"
                     ? triggerNumber
-                    : this.triggerCounts[libraryId] + 1;
+                    : this.triggerCounts[library_id] + 1;
         },
         // TODO: move into store, refactor - and check need for this also
         setFallbackRuleSet() {
             this.fallbackRuleSet = {
                 [`overdue_${this.triggerNumber}_delay`]: this.findEffectiveRule(
-                    this.ruleSetToSubmit,
+                    this.context,
                     "delay",
                     i
                 ).value,
@@ -699,24 +686,24 @@ export default {
             }
             this.fallbackRuleSet = {
                 [`overdue_${this.triggerNumber}_delay`]: this.findEffectiveRule(
-                    this.ruleSetToSubmit,
+                    this.context,
                     "delay",
                     this.triggerNumber
                 ).value,
                 [`overdue_${this.triggerNumber}_notice`]:
                     this.findEffectiveRule(
-                        this.ruleSetToSubmit,
+                        this.context,
                         "notice",
                         this.triggerNumber
                     ).value,
                 [`overdue_${this.triggerNumber}_mtt`]: this.findEffectiveRule(
-                    this.ruleSetToSubmit,
+                    this.context,
                     "mtt",
                     this.triggerNumber
                 ).value,
                 [`overdue_${this.triggerNumber}_restrict`]:
                     this.findEffectiveRule(
-                        this.ruleSetToSubmit,
+                        this.context,
                         "restrict",
                         this.triggerNumber
                     ).value,
@@ -732,7 +719,7 @@ export default {
                 return;
             }
             const priorTriggerNumber = this.triggerNumber - 1;
-            this.minDelay = this.ruleSetToSubmit[
+            this.minDelay = this.currentRuleSet[
                 `overdue_${priorTriggerNumber}_delay`
             ]
                 ? parseInt(
@@ -753,7 +740,7 @@ export default {
                 : Infinity;
         },
         setFilteredLetters() {
-            let library = this.libraryId;
+            let library = this.context.library_id;
             const branchcodeMatches = letters.filter(
                 letter => letter.branchcode === library
             );
