@@ -176,11 +176,7 @@
                                     "
                                     type="button"
                                     class="clear-btn"
-                                    @click="
-                                        ruleSetToSubmit[
-                                            `overdue_${triggerNumber}_delay`
-                                        ] = null
-                                    "
+                                    @click="handleSetDelayToNull"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -803,15 +799,25 @@ export default {
         },
         isReadyForSubmission() {
             this.allowSubmission =
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] !==
-                    null ||
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] !==
-                    null ||
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`]
-                    ?.length !== 0 ||
-                this.ruleSetToSubmit[
+                (this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] &&
+                    this.ruleSetToSubmit[
+                        `overdue_${this.triggerNumber}_delay`
+                    ] !== null) ||
+                // for 'notice', null means being set to 'No Letter', which is a valid override value
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] ||
+                (this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] &&
+                    this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`]
+                        ?.length !== 0) ||
+                (this.ruleSetToSubmit[
                     `overdue_${this.triggerNumber}_restrict`
-                ] !== null;
+                ] &&
+                    this.ruleSetToSubmit[
+                        `overdue_${this.triggerNumber}_restrict`
+                    ] !== null);
+        },
+        handleSetDelayToNull() {
+            this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] = null;
+            this.isReadyForSubmission();
         },
     },
     watch: {
