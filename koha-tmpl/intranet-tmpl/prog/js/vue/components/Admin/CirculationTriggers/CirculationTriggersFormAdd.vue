@@ -428,6 +428,7 @@ export default {
             transportTypes,
             patronCategories,
             triggerCounts,
+            storeInitialized,
         } = storeToRefs(circRulesStore);
 
         return {
@@ -443,6 +444,7 @@ export default {
             setEffectiveTriggerFilteredRuleSet,
             updateCircRuleSets,
             hasConflict,
+            storeInitialized,
         };
     },
     data() {
@@ -476,24 +478,40 @@ export default {
             ruleSetInitialized: false,
         };
     },
+    // TODO: debug stepper route access through buttons failing
+    beforeMount() {
+        // handle har refreshed mid-stepper workflow by ensuring store is initialized
+        if (!this.storeInitialized) {
+            this.$watch("storeInitialized", newVal => {
+                if (newVal) {
+                    this.initializeComponent();
+                }
+            });
+            return;
+        }
+        this.initializeComponent();
+    },
     beforeRouteEnter(to, from, next) {
-        next(async vm => {
-            const { query } = to;
-            vm.setEditMode();
-            vm.setContext(query);
-            vm.contextInitialized = true;
-            vm.setTriggerNumber(query.triggerNumber, vm.context.library_id);
-
-            if (
-                ["selectOrAdd", "add", "edit"].some(str =>
-                    to.fullPath.includes(str)
-                )
-            ) {
-                vm.setRuleSets();
-            }
-        });
+        if (!from.name) {
+            next();
+        }
+        next(vm => vm.initializeComponent());
     },
     methods: {
+        initializeComponent() {
+            const { query } = this.$route;
+            this.setEditMode();
+            this.setContext(query);
+            this.contextInitialized = true;
+            this.setTriggerNumber(query.triggerNumber, this.context.library_id);
+            if (
+                ["selectOrAdd", "add", "edit"].some(str =>
+                    this.$route.fullPath.includes(str)
+                )
+            ) {
+                this.setRuleSets();
+            }
+        },
         async addCircRule(e) {
             e.preventDefault();
 

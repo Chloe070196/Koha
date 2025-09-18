@@ -312,6 +312,7 @@ export default {
             triggerCounts,
             allExhaustiveEffectiveRuleSets,
             allEffectiveRuleSets,
+            storeInitialized,
         } = storeToRefs(circRulesStore);
 
         return {
@@ -329,6 +330,7 @@ export default {
             setAllExhaustiveEffectiveRuleSets,
             allEffectiveRuleSets,
             isLastTrigger,
+            storeInitialized,
             from_branch,
         };
     },
@@ -357,6 +359,7 @@ export default {
             this.updateTriggerCount();
             this.setAllEffectiveRuleSets();
             this.setAllExhaustiveEffectiveRuleSets();
+            this.storeInitialized = true;
 
             const selectedParams = {};
             selectedParams.effective = true;

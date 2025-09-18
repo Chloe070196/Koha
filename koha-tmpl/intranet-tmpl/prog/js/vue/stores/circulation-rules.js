@@ -31,6 +31,7 @@ export const useCircRulesStore = defineStore("circRules", {
         allCurrentLibraryRawRuleSets: [], // source of truth for current library
         allEffectiveRuleSets: [], // main data set for display explicitly set rules for current library
         allExhaustiveEffectiveRuleSets: [], // main data set for display all applied rules for current library
+        storeInitialized: false,
     }),
     actions: {
         async deleteRuleSet(ruleSet, triggerNumber) {
