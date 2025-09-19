@@ -478,9 +478,8 @@ export default {
             ruleSetInitialized: false,
         };
     },
-    // TODO: debug stepper route access through buttons failing
     beforeMount() {
-        // handle har refreshed mid-stepper workflow by ensuring store is initialized
+        // handle hard refresh mid-stepper workflow by ensuring store is initialized
         if (!this.storeInitialized) {
             this.$watch("storeInitialized", newVal => {
                 if (newVal) {
