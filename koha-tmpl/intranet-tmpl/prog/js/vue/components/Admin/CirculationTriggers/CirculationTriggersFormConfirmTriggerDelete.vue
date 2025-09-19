@@ -52,7 +52,7 @@ export default {
         const {
             handleContext,
             findEffectiveRule,
-            setAllRawRuleSets,
+            getAllRawRuleSets,
             deleteRuleSet,
         } = circRulesStore;
         const { libraries, allCurrentLibraryRawRuleSets, ruleSuffixes } =
@@ -62,7 +62,7 @@ export default {
             handleContext,
             findEffectiveRule,
             allCurrentLibraryRawRuleSets,
-            setAllRawRuleSets,
+            getAllRawRuleSets,
             ruleSuffixes,
             deleteRuleSet,
         };
@@ -78,7 +78,7 @@ export default {
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            await vm.setAllRawRuleSets();
+            await vm.getAllRawRuleSets();
             vm.setContext(to.query);
             vm.setFormattedEffectiveRuleSets();
             vm.initialized = true;

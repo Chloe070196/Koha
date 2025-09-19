@@ -297,7 +297,7 @@ export default {
         circRulesStore.init();
         const {
             updateTriggerCount,
-            setAllRawRuleSets,
+            getAllRawRuleSets,
             setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
             isLastTrigger,
@@ -325,7 +325,7 @@ export default {
             patronCategories,
             updateTriggerCount,
             allExhaustiveEffectiveRuleSets,
-            setAllRawRuleSets,
+            getAllRawRuleSets,
             setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
             allEffectiveRuleSets,
@@ -355,7 +355,7 @@ export default {
 
             // load the rules sets
             // FIXME: only do so for library id changes
-            await this.setAllRawRuleSets();
+            await this.getAllRawRuleSets();
             this.updateTriggerCount();
             this.setAllEffectiveRuleSets();
             this.setAllExhaustiveEffectiveRuleSets();
