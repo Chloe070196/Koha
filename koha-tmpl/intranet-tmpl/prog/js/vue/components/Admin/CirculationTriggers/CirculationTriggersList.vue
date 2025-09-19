@@ -121,6 +121,7 @@
                                 @update:modelValue="
                                     filterRuleSetsbySearchParam()
                                 "
+                                :clearable="false"
                                 placeholder="Default rules for all libraries"
                             >
                                 <template #search="{ attributes, events }">
