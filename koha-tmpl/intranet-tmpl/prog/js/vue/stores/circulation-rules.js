@@ -318,8 +318,9 @@ export const useCircRulesStore = defineStore("circRules", {
                 this.triggerCounts["*"] = ruleNames.filter(
                     ruleSuffix =>
                         this.regex.test(ruleSuffix) &&
-                        this.allDefaultLibraryRawRuleSets[0][ruleSuffix] !==
-                            null
+                        this.allDefaultLibraryRawRuleSets.some(
+                            ruleSet => ruleSet[ruleSuffix] !== null
+                        )
                 ).length;
                 return;
             }
