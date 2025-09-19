@@ -177,7 +177,10 @@
                                 ruleSet[
                                     `overdue_${modal ? i + 1 : triggerNumber}_mtt`
                                 ].value,
-                                "email"
+                                "email",
+                                !ruleSet[
+                                    `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                ].value
                             )
                         }}
                     </span>
@@ -203,7 +206,10 @@
                                 ruleSet[
                                     `overdue_${modal ? i + 1 : triggerNumber}_mtt`
                                 ].value,
-                                "print"
+                                "print",
+                                !ruleSet[
+                                    `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                ].value
                             )
                         }}
                     </span>
@@ -229,7 +235,10 @@
                                 ruleSet[
                                     `overdue_${modal ? i + 1 : triggerNumber}_mtt`
                                 ].value,
-                                "sms"
+                                "sms",
+                                !ruleSet[
+                                    `overdue_${modal ? i + 1 : triggerNumber}_notice`
+                                ].value
                             )
                         }}
                     </span>

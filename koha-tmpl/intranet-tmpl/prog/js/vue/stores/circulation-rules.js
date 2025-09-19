@@ -74,8 +74,8 @@ export const useCircRulesStore = defineStore("circRules", {
         handleRestrictions(value) {
             return value === "1" ? $__("Yes") : $__("No");
         },
-        handleTransport(value, type) {
-            if (!value) {
+        handleTransport(value, type, noLetter) {
+            if (!value || noLetter) {
                 return "";
             }
             return value.includes(type) ? $__("Yes") : $__("No");
