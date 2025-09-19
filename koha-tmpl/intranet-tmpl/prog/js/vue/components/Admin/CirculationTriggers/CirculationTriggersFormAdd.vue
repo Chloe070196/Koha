@@ -675,6 +675,8 @@ export default {
                 this.context,
                 true
             );
+            // override the context to ensure it matches the selected context
+            this.currentRuleSet.context = this.context;
         },
         // assign the triggerNumber passed to the route or generate a new trigger number
         setTriggerNumber(triggerNumber, library_id) {
