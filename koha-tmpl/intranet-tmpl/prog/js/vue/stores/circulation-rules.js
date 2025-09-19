@@ -321,16 +321,6 @@ export const useCircRulesStore = defineStore("circRules", {
                 this.triggerCounts[this.currentLibraryId]
             );
         },
-        // FIXME: use updateTriggerCount instead
-        setNumberOfTabs(triggerCounts, tabCount) {
-            if (triggerCounts[this.currentLibraryId] > tabCount) {
-                return Array.from(
-                    { length: triggerCounts[this.currentLibraryId] },
-                    (_, i) => i + 1
-                );
-            }
-            return tabCount;
-        },
         setAllExhaustiveEffectiveRuleSets() {
             // clear array
             this.allExhaustiveEffectiveRuleSets = [];
