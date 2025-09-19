@@ -572,7 +572,7 @@ export default {
                 Array.isArray(
                     this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`]
                 ) &&
-                isEqual(
+                !isEqual(
                     this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`],
                     this.fallbackRuleSet[`overdue_${this.triggerNumber}_mtt`]
                 )
