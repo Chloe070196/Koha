@@ -148,7 +148,7 @@
                         <div class="numeric-input-wrapper">
                             <div class="input-with-clear">
                                 <input
-                                    @change="isReadyForSubmission"
+                                    @input="setAllowSubmission"
                                     id="overdue_delay"
                                     v-model="
                                         ruleSetToSubmit[
@@ -213,7 +213,7 @@
                         >
                         <div>
                             <input
-                                @change="isReadyForSubmission"
+                                @click="setAllowSubmission"
                                 type="radio"
                                 id="restricts-yes"
                                 v-model="
@@ -225,7 +225,7 @@
                             />
                             {{ $__("Yes") }}
                             <input
-                                @change="isReadyForSubmission"
+                                @click="setAllowSubmission"
                                 type="radio"
                                 id="restricts-no"
                                 v-model="
@@ -237,7 +237,7 @@
                             />
                             {{ $__("No") }}
                             <input
-                                @change="isReadyForSubmission"
+                                @click="setAllowSubmission"
                                 type="radio"
                                 id="restricts-fallback"
                                 v-model="
@@ -298,11 +298,10 @@
                             label="name"
                             :reduce="type => type.code"
                             :options="filteredLetters"
-                            @change="isReadyForSubmission"
+                            @update:modelValue="setAllowSubmission"
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    @change="isReadyForSubmission"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -355,10 +354,11 @@
                             :reduce="type => type.code"
                             :options="transportTypes"
                             multiple
+                            :required="true"
+                            @update:modelValue="setAllowSubmission"
                         >
                             <template #search="{ attributes, events }">
                                 <input
-                                    @change="isReadyForSubmission"
                                     class="vs__search"
                                     v-bind="attributes"
                                     v-on="events"
@@ -646,7 +646,7 @@ export default {
                 this.setEffectiveTriggerFilteredRuleSet(this.context);
             this.setFallbackRuleSet();
             this.setFilteredLetters();
-            this.isReadyForSubmission();
+            this.setAllowSubmission();
             this.ruleSetInitialized = true;
         },
         setContext(query) {
@@ -802,7 +802,7 @@ export default {
                         max
                     );
             }
-            this.isReadyForSubmission();
+            this.setAllowSubmission();
         },
         decrementDelay() {
             // Check for minDelay
@@ -814,29 +814,54 @@ export default {
             ) {
                 this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`]--;
             }
-            this.isReadyForSubmission();
+            this.setAllowSubmission();
         },
-        isReadyForSubmission() {
-            this.allowSubmission =
-                (this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] &&
-                    this.ruleSetToSubmit[
-                        `overdue_${this.triggerNumber}_delay`
-                    ] !== null) ||
-                // for 'notice', null means being set to 'No Letter', which is a valid override value
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_notice`] ||
-                (this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`] &&
-                    this.ruleSetToSubmit[`overdue_${this.triggerNumber}_mtt`]
-                        ?.length !== 0) ||
-                (this.ruleSetToSubmit[
+        setAllowSubmission() {
+            // if notice is set to "", this translates to 'No letter', for which submisison is allowed, and mtt is redundant
+            const noticeAllowSubmissionAndBypassMtt =
+                this.ruleSetToSubmit?.[
+                    `overdue_${this.triggerNumber}_notice`
+                ] === "";
+            if (noticeAllowSubmissionAndBypassMtt) {
+                this.allowSubmission = true;
+                return;
+            }
+
+            // check specificity required as 0 is a value that submission must be allowed for
+            const delayAllowsSubmission =
+                this.ruleSetToSubmit?.[`overdue_${this.triggerNumber}_delay`] !=
+                null;
+            if (delayAllowsSubmission) {
+                this.allowSubmission = true;
+                return;
+            }
+
+            // if notice is set, then ensure at least one transport has been set
+            const noticeAllowSubmisison =
+                this.ruleSetToSubmit?.[
+                    `overdue_${this.triggerNumber}_notice`
+                ] != null;
+            const mttHasItems =
+                this.ruleSetToSubmit?.[`overdue_${this.triggerNumber}_mtt`]
+                    ?.length;
+            if (noticeAllowSubmisison && mttHasItems) {
+                this.allowSubmission = true;
+                return;
+            }
+
+            const restrictAllowsSubmission =
+                this.ruleSetToSubmit?.[
                     `overdue_${this.triggerNumber}_restrict`
-                ] &&
-                    this.ruleSetToSubmit[
-                        `overdue_${this.triggerNumber}_restrict`
-                    ] !== null);
+                ] != null;
+            if (restrictAllowsSubmission) {
+                this.allowSubmission = true;
+                return;
+            }
+            this.allowSubmission = false;
         },
         handleSetDelayToNull() {
             this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] = null;
-            this.isReadyForSubmission();
+            this.setAllowSubmission();
         },
     },
     watch: {
