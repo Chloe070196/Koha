@@ -618,11 +618,10 @@ export default {
             }
 
             await this.updateCircRuleSets(ruleSetToSubmit, this.triggerNumber);
-
-            await this.$router.replace({
+            await this.$router.push({
                 name: "CirculationTriggersList",
+                query: { refresh: Date.now() },
             });
-            this.$router.go(0);
         },
         async setRuleSets() {
             this.updateTriggerCount();

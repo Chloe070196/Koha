@@ -348,8 +348,8 @@ export default {
             }
             await this.$router.push({
                 name: "CirculationTriggersList",
+                query: { refresh: Date.now() },
             });
-            this.$router.go(0);
         },
         setContext(query) {
             this.library_id = query.library_id ?? "*";

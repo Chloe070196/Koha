@@ -449,6 +449,14 @@ export default {
                 this.showModal = newVal.meta && newVal.meta.showModal;
             },
         },
+        "$route.query.refresh": {
+            async handler(newVal) {
+                if (newVal) {
+                    await this.filterRuleSetsbySearchParam();
+                }
+            },
+            immediate: true,
+        },
     },
     components: { TriggersTable, Toolbar, ToolbarButton },
 };

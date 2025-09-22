@@ -105,8 +105,8 @@ export default {
             }
             await this.$router.push({
                 name: "CirculationTriggersList",
+                query: { refresh: Date.now() },
             });
-            this.$router.go(0);
         },
         setFormattedEffectiveRuleSets() {
             // clear array
