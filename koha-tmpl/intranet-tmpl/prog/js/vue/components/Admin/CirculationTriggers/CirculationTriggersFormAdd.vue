@@ -743,7 +743,7 @@ export default {
                 this.minDelay;
         },
         setMaxDelay() {
-            const nextTriggerNumber = this.triggerNumber + 1;
+            const nextTriggerNumber = parseInt(this.triggerNumber) + 1;
             this.maxDelay = this.currentRuleSet?.[
                 `overdue_${nextTriggerNumber}_delay`
             ]
