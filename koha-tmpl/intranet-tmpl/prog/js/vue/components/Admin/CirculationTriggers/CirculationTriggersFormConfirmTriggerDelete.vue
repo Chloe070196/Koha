@@ -49,12 +49,8 @@ import { storeToRefs } from "pinia";
 export default {
     setup() {
         const circRulesStore = inject("circRulesStore");
-        const {
-            handleContext,
-            findEffectiveRule,
-            getAllRawRuleSets,
-            deleteRuleSet,
-        } = circRulesStore;
+        const { handleContext, findEffectiveRule, deleteRuleSet } =
+            circRulesStore;
         const { libraries, allCurrentLibraryRawRuleSets, ruleSuffixes } =
             storeToRefs(circRulesStore);
         return {
@@ -62,7 +58,6 @@ export default {
             handleContext,
             findEffectiveRule,
             allCurrentLibraryRawRuleSets,
-            getAllRawRuleSets,
             ruleSuffixes,
             deleteRuleSet,
         };
@@ -78,7 +73,6 @@ export default {
     },
     beforeRouteEnter(to, from, next) {
         next(async vm => {
-            await vm.getAllRawRuleSets();
             vm.setContext(to.query);
             vm.setFormattedEffectiveRuleSets();
             vm.initialized = true;

@@ -291,7 +291,7 @@ export default {
         circRulesStore.init();
         const {
             updateTriggerCount,
-            getAllRawRuleSets,
+            setAllRawRuleSets,
             setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
             isLastTrigger,
@@ -319,7 +319,7 @@ export default {
             patronCategories,
             updateTriggerCount,
             allExhaustiveEffectiveRuleSets,
-            getAllRawRuleSets,
+            setAllRawRuleSets,
             setAllEffectiveRuleSets,
             setAllExhaustiveEffectiveRuleSets,
             allEffectiveRuleSets,
@@ -346,7 +346,7 @@ export default {
     methods: {
         async loadRuleSets() {
             this.ruleSetInitialized = false;
-            await this.getAllRawRuleSets();
+            await this.setAllRawRuleSets();
             this.updateTriggerCount();
             this.setAllEffectiveRuleSets();
             this.setAllExhaustiveEffectiveRuleSets();

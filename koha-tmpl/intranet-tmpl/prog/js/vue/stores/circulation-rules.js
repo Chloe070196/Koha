@@ -34,6 +34,7 @@ export const useCircRulesStore = defineStore("circRules", {
         allCurrentLibraryRawRuleSets: [], // source of truth for current library
         allEffectiveRuleSets: [], // main data set for display explicitly set rules for current library
         allExhaustiveEffectiveRuleSets: [], // main data set for display all applied rules for current library
+        currentAndDefaultRawRuleSets: [], // data set to identify effective rules from (combines allDefaultLibraryRawRuleSets and allCurrentLibraryRawRuleSets)
         storeInitialized: false,
     }),
     actions: {
@@ -128,19 +129,15 @@ export const useCircRulesStore = defineStore("circRules", {
             triggerNumber,
             includeFallbacks = true
         ) {
-            const currentAndDefaultRawRuleSets = [
-                ...this.allCurrentLibraryRawRuleSets,
-                ...this.allDefaultLibraryRawRuleSets,
-            ];
             if (
-                !currentAndDefaultRawRuleSets ||
-                !Array.isArray(currentAndDefaultRawRuleSets) ||
-                currentAndDefaultRawRuleSets.length === 0
+                !this.currentAndDefaultRawRuleSets ||
+                !Array.isArray(this.currentAndDefaultRawRuleSets) ||
+                this.currentAndDefaultRawRuleSets.length === 0
             ) {
                 return { value: null, isFallback: true };
             }
             // Check if the current ruleSet's value for the ruleSuffix is undefined
-            const existingRule = currentAndDefaultRawRuleSets.find(
+            const existingRule = this.currentAndDefaultRawRuleSets.find(
                 ruleSet =>
                     ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
                         undefined &&
@@ -179,7 +176,7 @@ export const useCircRulesStore = defineStore("circRules", {
 
             // Filter ruleSets to only those with non-null values for the specified ruleSuffix
             // and that are no excluded from the selected context
-            const relevantRules = currentAndDefaultRawRuleSets.filter(
+            const relevantRules = this.currentAndDefaultRawRuleSets.filter(
                 ruleSet =>
                     ruleSet[`overdue_${triggerNumber}_${ruleSuffix}`] !==
                         undefined &&
@@ -349,6 +346,18 @@ export const useCircRulesStore = defineStore("circRules", {
             }
             this.triggerCounts[this.currentLibraryId] = i - 1;
         },
+        async setAllRawRuleSets() {
+            const client = APIClient.circRule;
+            try {
+                await this.getAllRawRuleSets();
+            } catch (e) {
+                //TODO: handle e
+            }
+            this.currentAndDefaultRawRuleSets = [
+                ...this.allCurrentLibraryRawRuleSets,
+                ...this.allDefaultLibraryRawRuleSets,
+            ];
+        },
         // repositories
         async deleteRuleSet(ruleSet, triggerNumber) {
             const ruleSetInDb = await this.getSelectedRuleSet(ruleSet.context);
@@ -388,7 +397,7 @@ export const useCircRulesStore = defineStore("circRules", {
                         { library_id: this.currentLibraryId, effective: false }
                     );
             } catch (e) {
-                // TODO: handle error
+                throw e;
             }
         },
         async getItemTypes() {
