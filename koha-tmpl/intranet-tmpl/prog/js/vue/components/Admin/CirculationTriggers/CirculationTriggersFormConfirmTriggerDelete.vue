@@ -116,7 +116,7 @@ export default {
                     effectiveRuleSet[
                         `overdue_${this.triggerNumber}_${ruleSuffix}`
                     ] = this.findEffectiveRule(
-                        effectiveRuleSet,
+                        ruleSet.context,
                         ruleSuffix,
                         this.triggerNumber
                     );
