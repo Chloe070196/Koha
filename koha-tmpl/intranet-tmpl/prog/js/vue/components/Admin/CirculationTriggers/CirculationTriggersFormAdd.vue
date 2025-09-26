@@ -502,6 +502,7 @@ export default {
     beforeRouteEnter(to, from, next) {
         if (!from.name) {
             next();
+            return;
         }
         next(vm => vm.initializeComponent());
     },
