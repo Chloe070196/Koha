@@ -123,6 +123,56 @@ sub object_class {
     return 'Koha::Checkout';
 }
 
+=head3 GetOverduesForKnownTriggerDelays
+
+my $overdues = Koha::Checkouts::GetOverduesForKnownTriggerDelays( $known_delay_values )
+
+Fetches all overdues that are active on the current date.
+
+=cut
+
+sub GetOverduesForKnownTriggerDelays {
+    my ( $self, $known_delay_values ) = @_;
+    my $today = dt_from_string;
+    my $where = {
+        'me.date_due' => { '<' => $today->ymd },
+    };
+    my $attributes = {
+        join      => { 'item' => undef, 'borrower' => 'borrower_preferences' },
+        '+select' => [
+            'item.itemnumber',
+            'item.biblionumber',
+            'item.itype',
+            'me.borrowernumber',
+            'me.date_due',
+            'borrower.categorycode',
+            'borrower.branchcode',
+            { 'DATEDIFF' => [ $today->ymd, \'DATE(me.date_due)' ] },
+            'borrower_preferences.notice_preferences',
+        ],
+        '+as' => [
+            'itemnumber',
+            'biblionumber',
+            'item_type',
+            'borrowernumber',
+            'date_due',
+            'patron_category',
+            'library_id',
+            'days_overdue',
+            'notice_preferences',
+        ],
+        having   => { 'days_overdue' => $known_delay_values },
+        order_by => \'days_overdue, me.borrowernumber',
+    };
+
+    try {
+        my $rs = $self->search( $where, $attributes );
+        return $rs->all;
+    } catch {
+        $self->unhandled_exception($_);
+    };
+}
+
 =head3 GetOverduesBy
 
 my $overdues = Koha::Checkouts::GetOverdues( $parameters )
