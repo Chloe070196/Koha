@@ -176,7 +176,7 @@
 # - Fail gracefully if calendar data unavailable
 
 # ### Configuration
-# - System preference: `IgnoreClosedDaysInOverdueCalculation`
+# - System preference: `IgnoreClosedDaysInOverdueCalculation` DONE
 # - Patron preference: digest settings per notice type
 # - Rule configuration: existing circulation rules structure
 

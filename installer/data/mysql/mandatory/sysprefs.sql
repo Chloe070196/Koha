@@ -329,6 +329,7 @@ INSERT INTO systempreferences ( `variable`, `value`, `options`, `explanation`, `
 ('HTML5MediaExtensions','webm|ogg|ogv|oga|vtt','','Media file extensions','free'),
 ('HTML5MediaYouTube',0,'Embed|Don\'t embed','YouTube links as videos','YesNo'),
 ('IdRef','0','','Disable/enable the IdRef webservice from the OPAC detail page.','YesNo'),
+('IgnoreClosedDaysInOverdueCalculation', 0, '','If ON, the overdue triggers cronjob will ignore closed days , and the actions will be performed regardless.', 'YesNo')
 ('ILLCheckAvailability', 0, '', 'If ON, during the ILL request process third party sources will be checked for current availability', 'YesNo'),
 ('ILLDefaultStaffEmail', '', NULL, 'Fallback email address for staff ILL notices to be sent to in the absence of a branch address', 'Free'),
 ('ILLHiddenRequestStatuses', '', NULL, 'ILL statuses that are considered finished and should not be displayed in the ILL module', 'multiple'),

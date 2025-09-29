@@ -644,6 +644,14 @@ Circulation:
               choices: authval
               source: LOST
             - "when the outstanding balance is written off."
+    Circulation Triggers:
+        -
+            - pref: IgnoreClosedDaysInOverdueCalculation
+              choices:
+                  1: "Do"
+                  0: "Don't"
+            - ignore close days when running the overdue triggers cronjob. If you do ignore them, then the actions will be performed regardless.
+        -
     Checkin policy:
         -
             - pref: TrapHoldsOnOrder
