@@ -638,7 +638,7 @@ export default {
             if (this.ruleSetToSubmit === null) {
                 this.ruleSetToSubmit = {
                     context: this.context,
-                    [`overdue_${this.triggerNumber}_delay`]: this.minDelay,
+                    [`overdue_${this.triggerNumber}_delay`]: `${this.minDelay}`,
                     [`overdue_${this.triggerNumber}_notice`]: null,
                     [`overdue_${this.triggerNumber}_mtt`]: null,
                     [`overdue_${this.triggerNumber}_restrict`]: null,
@@ -742,8 +742,6 @@ export default {
                       this.currentRuleSet[`overdue_${priorTriggerNumber}_delay`]
                   ) + 1
                 : 0;
-            this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
-                this.minDelay;
         },
         setMaxDelay() {
             const nextTriggerNumber = parseInt(this.triggerNumber) + 1;
@@ -791,16 +789,18 @@ export default {
                     null
             ) {
                 this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
-                    min;
+                    `${min}`;
             }
 
             // Increment within the valid range
             else {
                 this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
                     Math.min(
-                        this.ruleSetToSubmit[
-                            `overdue_${this.triggerNumber}_delay`
-                        ] + 1,
+                        parseInt(
+                            this.ruleSetToSubmit[
+                                `overdue_${this.triggerNumber}_delay`
+                            ]
+                        ) + 1,
                         max
                     );
             }
@@ -809,12 +809,14 @@ export default {
         decrementDelay() {
             // Check for minDelay
             const min = this.minDelay !== undefined ? this.minDelay : 1;
+            let delay = parseInt(
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`]
+            );
             // Decrement only if greater than minDelay
-            if (
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] >
-                min
-            ) {
-                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`]--;
+            if (delay > min) {
+                delay--;
+                this.ruleSetToSubmit[`overdue_${this.triggerNumber}_delay`] =
+                    `${delay}`;
             }
             this.setAllowSubmission();
         },
