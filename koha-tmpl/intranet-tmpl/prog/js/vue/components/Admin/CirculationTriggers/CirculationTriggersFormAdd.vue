@@ -26,7 +26,7 @@
             </div>
             <fieldset class="rows" v-if="contextInitialized">
                 <legend>{{ $__("Confirm trigger context") }}</legend>
-                <ol>
+                <ol id="confirm-context-list">
                     <li>
                         <label for="library_id" class="required"
                             >{{ $__("Library") }}:</label
@@ -1000,5 +1000,33 @@ input[type="number"] {
 .modal-header {
     display: flex;
     justify-content: space-between;
+}
+
+#confirm-context-list {
+    display: flex;
+    /* flex-wrap: wrap; */
+    gap: 20px;
+}
+
+#confirm-context-list li {
+    display: flex;
+    flex-direction: column;
+    width: 320px;
+}
+
+#confirm-context-list .v-select {
+    width: 100%;
+}
+
+#confirm-context-list label {
+    width: 100%;
+    text-align: left;
+    padding: 0 0 4px 10px;
+}
+
+#confirm-context-list span {
+    width: 100%;
+    align-content: right;
+    padding-top: 4px;
 }
 </style>
