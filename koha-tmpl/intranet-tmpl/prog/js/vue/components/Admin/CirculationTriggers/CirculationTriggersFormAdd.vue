@@ -103,7 +103,7 @@
                             name: 'CirculationTriggersSelectOrAdd',
                             query: context,
                         }"
-                        class="btn btn-default btn-xs"
+                        class="btn btn-default btn-xs float-end"
                         ><i class="fa-solid fa-pencil"></i>
                         {{ $__("Confirm context") }}</router-link
                     >
@@ -1028,10 +1028,14 @@ input[type="number"] {
     justify-content: space-between;
 }
 
+.modal-body {
+    min-height: 280px;
+}
+
 #confirm-context-list {
     display: flex;
-    /* flex-wrap: wrap; */
     gap: 20px;
+    height: fit-content;
 }
 
 #confirm-context-list li {
@@ -1054,5 +1058,11 @@ input[type="number"] {
     width: 100%;
     align-content: right;
     padding-top: 4px;
+}
+</style>
+
+<style>
+#confirm-context-list .v-select ul {
+    max-height: 120px;
 }
 </style>
